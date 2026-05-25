@@ -262,6 +262,7 @@
         <button class="btn btn-red btn-sm" onclick="loadAllVideos()" id="refreshBtn">🔄 Refresh & score videos</button>
       </div>
 
+      <div id="cacheNote" style="font-size:12px;color:var(--gray-500);margin-bottom:8px;padding:0 4px"></div>
       <div class="table-wrap">
         <div class="table-head">
           <div class="th"></div>
@@ -375,7 +376,7 @@ function initiateOAuth() {
         return;
       }
       accessToken = response.access_token;
-      if (accessToken) { setAuthStatus(true); showScreen('screenDash'); }
+      if (accessToken) { setAuthStatus(true); showScreen('screenDash'); loadAllVideos(); }
     }
   });
   client.requestAccessToken();
@@ -497,6 +498,11 @@ async function loadAllVideos() {
       return { id: v.id, title: s.title || '', description: s.description || '', tags, thumbUrl: s.thumbnails?.medium?.url || '', publishedAt: s.publishedAt || '', titleScore: ts, descScore: ds, tagsScore: tagsS, thumbScore: thS, overall, grade: scoreToGrade(overall) };
     });
 
+    // Save to cache
+    localStorage.setItem(cacheKey, JSON.stringify(allVideos));
+    localStorage.setItem(cacheTimeKey, Date.now().toString());
+    document.getElementById('cacheNote').textContent = 'Loaded fresh from YouTube. Will use cached data for 60 minutes to save your API quota.';
+
     updateStats();
     sortAndRender();
   } catch(e) {
@@ -504,6 +510,11 @@ async function loadAllVideos() {
   } finally {
     btn.disabled = false; btn.textContent = '🔄 Refresh & score videos';
   }
+}
+
+function forceRefresh() {
+  window._forceRefresh = true;
+  loadAllVideos();
 }
 
 function updateStats() {
