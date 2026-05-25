@@ -619,10 +619,31 @@ In this video, your kids will learn all about ${topicWord} in a fun and engaging
 
 #${topicWord.replace(/\s+/g,'')} #KidsLearning #ChildrensYouTube #ToddlerLearning #FamilyFriendly`;
 
-  // Build optimised tags
-  const baseTags = ['kids learning', 'children youtube', 'toddler videos', 'educational kids', 'family friendly', 'preschool learning', 'kids videos', 'learning for kids', 'fun for kids', 'early learning'];
-  const topicTags = topicWord.toLowerCase().split(' ').filter(w => w.length > 2);
-  const newTags = [...new Set([...topicTags, ...tags.slice(0,5), ...baseTags])].slice(0,15);
+  // Build optimised tags — clean, relevant, no single words, no hashtags
+  const stopWords = new Set(['for','the','a','an','and','or','but','in','on','at','to','of','is','it','its','with','my','your','our','this','that','are','was','be','by','as','up','do','so','we','he','she','they','what','when','where','how','why','who','not','all','can','will','just','from','into','about','than','then','like','have','has','had','get','got','let','did','no','yes','am','if','me','him','her','us','them','you','i','go','too','very','also','more','some','any','out','off','over','own','see','been']);
+  const baseTags = [
+    'kids youtube', 'children learning', 'toddler learning', 'educational videos for kids',
+    'family friendly videos', 'preschool learning', 'kids educational content',
+    'learning for toddlers', 'fun kids videos', 'early childhood learning',
+    'kids brain development', 'children entertainment'
+  ];
+  // Build topic-specific tags from the video title — filter junk
+  const titleWords = title.toLowerCase().replace(/[^a-z0-9 ]/g, '').split(' ')
+    .filter(w => w.length > 2 && !stopWords.has(w));
+  const topicTags = [];
+  // Single meaningful words
+  titleWords.forEach(w => { if (!stopWords.has(w)) topicTags.push(w + ' for kids'); });
+  // Two-word combos
+  for (let i = 0; i < titleWords.length - 1; i++) {
+    const combo = titleWords[i] + ' ' + titleWords[i+1];
+    if (!stopWords.has(titleWords[i]) && !stopWords.has(titleWords[i+1])) topicTags.push(combo);
+  }
+  // Clean and deduplicate — no hashtags, no single words, no duplicates
+  const allTags = [...new Set([...topicTags, ...baseTags])]
+    .map(t => t.replace(/#/g, '').trim())
+    .filter(t => t.split(' ').length > 1 && t.length > 3 && t.length < 50)
+    .slice(0, 15);
+  const newTags = allTags;
 
   // Thumbnail prompt
   const thumbnailPrompt = `YouTube thumbnail for children's educational content about "${title}". Bright, bold, eye-catching design. Style: colorful cartoon illustration with clean white background. Main subject: happy smiling child or cute character related to ${topicWord}. Large bold text overlay saying "${newTitle.substring(0,25)}". Colors: bright primary colors (red, yellow, blue). High contrast. No clutter. Age range 2-6. Aspect ratio 16:9. Make it pop on mobile screens.`;
