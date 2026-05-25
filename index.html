@@ -729,9 +729,9 @@ function getTagsTip(s,tags){
 }
 function howToGetA(v){
   var items=[];
-  if(v.titleScore<85) items.push('Title: '+getTitleTip(v.titleScore,v.title).replace('⚠️ ',''));
-  if(v.descScore<85) items.push('Description: '+getDescTip(v.descScore,v.description).replace('⚠️ ',''));
-  if(v.tagsScore<85) items.push('Tags: '+getTagsTip(v.tagsScore,v.tags).replace('⚠️ ',''));
+  if(v.titleScore<85){ var t=getTitleTip(v.titleScore,v.title).replace('⚠️ ','').trim(); if(t) items.push('Title: '+t); }
+  if(v.descScore<85){ var d=getDescTip(v.descScore,v.description).replace('⚠️ ','').trim(); if(d) items.push('Description: '+d); }
+  if(v.tagsScore<85){ var tg=getTagsTip(v.tagsScore,v.tags).replace('⚠️ ','').trim(); if(tg) items.push('Tags: '+tg); }
   return items;
 }
 
