@@ -92,10 +92,10 @@ textarea{resize:vertical}
 .sort-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray-500)}
 .sort-row select{width:auto;padding:7px 12px;font-size:13px}
 .table-wrap{background:white;border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden}
-.table-head{display:grid;grid-template-columns:52px 1fr 70px 80px 80px 80px 80px 100px;background:var(--gray-50);border-bottom:2px solid var(--gray-200);padding:0 12px}
+.table-head{display:grid;grid-template-columns:52px 1fr 70px 80px 120px;background:var(--gray-50);border-bottom:2px solid var(--gray-200);padding:0 12px}
 .th{font-size:11px;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.06em;padding:11px 6px;cursor:pointer;user-select:none;font-family:'Nunito',sans-serif}
 .th:hover{color:var(--gray-900)}
-.video-row{display:grid;grid-template-columns:52px 1fr 70px 80px 80px 80px 80px 100px;padding:0 12px;border-bottom:1px solid var(--gray-100);align-items:center;cursor:pointer;transition:background 0.15s}
+.video-row{display:grid;grid-template-columns:52px 1fr 70px 80px 120px;padding:0 12px;border-bottom:1px solid var(--gray-100);align-items:center;cursor:pointer;transition:background 0.15s}
 .video-row:hover{background:var(--blue-l)}
 .video-row.expanded{background:#EEF1FF;border-left:3px solid var(--blue)}
 .video-row:last-child{border-bottom:none}
@@ -205,6 +205,10 @@ textarea{resize:vertical}
 .alert-success{background:var(--green-l);color:#065F46;border:1px solid #A7F3D0}
 .alert-danger{background:var(--red-l);color:#991B1B;border:1px solid #FECACA}
 
+.playlist-chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 12px;border-radius:999px;background:var(--purple-l);color:var(--purple);border:1.5px solid #C084FC;cursor:pointer;font-weight:700;transition:all 0.15s;font-family:'Nunito',sans-serif}
+.playlist-chip.selected{background:var(--purple);color:white;border-color:var(--purple)}
+.playlist-chip:hover{opacity:0.85}
+
 @media(max-width:768px){
   .table-head,.video-row{grid-template-columns:42px 1fr 60px 70px}
   .th:nth-child(n+5),.td:nth-child(n+5){display:none}
@@ -274,6 +278,7 @@ textarea{resize:vertical}
     <!-- TABS -->
     <div class="nav-tabs">
       <button class="nav-tab active" onclick="showTab('tabVideos')">📹 My Videos</button>
+      <button class="nav-tab" onclick="showTab('tabStrategy')">🧠 Strategy</button>
       <button class="nav-tab" onclick="showTab('tabPulse')">🔥 Competitor Pulse</button>
       <button class="nav-tab" onclick="showTab('tabNew')">✨ New Video</button>
       <button class="nav-tab" onclick="showTab('tabHistory')">📋 History</button>
@@ -312,10 +317,7 @@ textarea{resize:vertical}
           <div class="th"></div>
           <div class="th" onclick="setSortAndRender('title-asc')">Video ↕</div>
           <div class="th" onclick="setSortAndRender('grade-asc')">Grade ↕</div>
-          <div class="th" onclick="setSortAndRender('title-score')">Title ↕</div>
-          <div class="th" onclick="setSortAndRender('tags-score')">Tags ↕</div>
-          <div class="th" onclick="setSortAndRender('desc-score')">Desc ↕</div>
-          <div class="th" onclick="setSortAndRender('thumb-score')">Thumb ↕</div>
+          <div class="th" onclick="setSortAndRender('grade-asc')">Score ↕</div>
           <div class="th" onclick="setSortAndRender('date-desc')">Published ↕</div>
         </div>
         <div id="videoTableBody">
@@ -324,6 +326,19 @@ textarea{resize:vertical}
             <p style="margin-bottom:16px">Click "Sync from YouTube" to load your channel. This uses quota — you only need to do it once a month!</p>
             <button class="btn btn-red" onclick="confirmSync()">☁️ Sync from YouTube</button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STRATEGY TAB -->
+    <div id="tabStrategy" style="display:none">
+      <div class="alert alert-info" style="margin-bottom:16px">🧠 <strong>Channel Strategy</strong> analyzes your entire video library and gives you a personalized action plan. 100% free — no quota used!</div>
+      <div id="strategyContent">
+        <div style="background:white;border-radius:var(--r-lg);padding:48px;text-align:center;box-shadow:var(--shadow)">
+          <div style="font-size:48px;margin-bottom:16px">🧠</div>
+          <h3 style="font-size:20px;font-weight:900;margin-bottom:8px">Ready to analyze your channel</h3>
+          <p style="font-size:14px;color:var(--gray-500);margin-bottom:20px">Make sure your videos are synced first, then click below for your full strategy report.</p>
+          <button class="btn btn-primary" onclick="generateStrategy()">🚀 Generate My Strategy Report</button>
         </div>
       </div>
     </div>
@@ -566,10 +581,11 @@ function showConnectMsg(msg, type){
 // TABS
 // ============================================================
 function showTab(id){
-  ['tabVideos','tabPulse','tabNew','tabHistory'].forEach(t=>document.getElementById(t).style.display=t===id?'block':'none');
-  document.querySelectorAll('.nav-tab').forEach((b,i)=>b.classList.toggle('active',['tabVideos','tabPulse','tabNew','tabHistory'][i]===id));
+  ['tabVideos','tabStrategy','tabPulse','tabNew','tabHistory'].forEach(t=>document.getElementById(t).style.display=t===id?'block':'none');
+  document.querySelectorAll('.nav-tab').forEach((b,i)=>b.classList.toggle('active',['tabVideos','tabStrategy','tabPulse','tabNew','tabHistory'][i]===id));
   if(id==='tabHistory') renderHistory();
   if(id==='tabNew') renderDrafts();
+  if(id==='tabStrategy') initStrategy();
 }
 
 // ============================================================
@@ -845,10 +861,47 @@ function toggleDetail(id){
   const panel=document.getElementById('detail-'+id);
   const row=document.getElementById('row-'+id);
   const isOpen=panel.classList.contains('open');
-  // Close all panels first
   document.querySelectorAll('.detail-panel').forEach(function(p){ p.classList.remove('open'); });
   document.querySelectorAll('.video-row').forEach(function(r){ r.classList.remove('expanded'); });
-  if(!isOpen){ panel.classList.add('open'); row.classList.add('expanded'); }
+  if(!isOpen){
+    panel.classList.add('open'); row.classList.add('expanded');
+    loadPlaylists(id);
+  }
+}
+
+async function loadPlaylists(videoId){
+  const container = document.getElementById('playlists-'+videoId);
+  if(!container) return;
+  if(!accessToken){ container.innerHTML='<span style="font-size:13px;color:var(--gray-400)">Connect YouTube to see playlists</span>'; return; }
+  if(!window._playlists){
+    try{
+      const r = await fetch('https://www.googleapis.com/youtube/v3/playlists?part=snippet&mine=true&maxResults=50&key='+savedApiKey(), {headers:{Authorization:'Bearer '+accessToken}});
+      const d = await r.json();
+      window._playlists = (d.items||[]).map(function(p){ return {id:p.id, title:p.snippet.title}; });
+    }catch(e){ window._playlists=[]; }
+  }
+  if(!window._playlists.length){ container.innerHTML='<span style="font-size:13px;color:var(--gray-400)">No playlists found on your channel</span>'; return; }
+  // Auto-select up to 3 best matches
+  const video = allVideos.find(function(v){ return v.id===videoId; });
+  const titleLower = video ? video.title.toLowerCase() : '';
+  const scored = window._playlists.map(function(p){
+    const words = p.title.toLowerCase().split(' ');
+    const matches = words.filter(function(w){ return w.length>3&&titleLower.includes(w); }).length;
+    return Object.assign({},p,{score:matches});
+  }).sort(function(a,b){ return b.score-a.score; });
+  const autoSelected = new Set(scored.slice(0,3).map(function(p){ return p.id; }));
+  window['_selectedPlaylists_'+videoId] = new Set(autoSelected);
+  container.innerHTML = window._playlists.map(function(p){
+    const sel = autoSelected.has(p.id);
+    return '<span class="playlist-chip '+(sel?'selected':'')+'" onclick="togglePlaylistChip(''+videoId+'',''+p.id+'',this)">'+esc(p.title)+'</span>';
+  }).join('');
+}
+
+function togglePlaylistChip(videoId, playlistId, el){
+  const key = '_selectedPlaylists_'+videoId;
+  if(!window[key]) window[key] = new Set();
+  if(window[key].has(playlistId)){ window[key].delete(playlistId); el.classList.remove('selected'); }
+  else{ window[key].add(playlistId); el.classList.add('selected'); }
 }
 
 function buildDetailPanel(v){
@@ -912,6 +965,10 @@ function buildDetailPanel(v){
   // Thumbnail prompt
   '<div class="detail-label" style="margin:14px 0 6px">🖼️ Thumbnail AI Prompt <span style="color:var(--gray-400);font-weight:400;font-size:10px">— paste into ChatGPT, Gemini, or DALL-E</span></div>' +
   '<div class="thumb-prompt"><p id="thumbPrompt-'+v.id+'">'+esc(thumbPrompt)+'</p></div>' +
+
+  // Playlists
+  '<div class="detail-label" style="margin:14px 0 6px">🎵 Playlists — auto-selected, tap to change</div>' +
+  '<div id="playlists-'+v.id+'" style="display:flex;flex-wrap:wrap;gap:8px;min-height:36px"><span style="font-size:13px;color:var(--gray-400);padding:4px 0">Loading playlists…</span></div>' +
 
   // Actions
   '<div class="detail-actions">' +
@@ -1048,7 +1105,20 @@ async function proceedPush(){
       pushCount++; updateStats();
     }
 
-    showSyncAlert('✅ Successfully pushed to YouTube! Grade updated.','success');
+    // Push to selected playlists
+    const playlistKey = '_selectedPlaylists_'+videoId;
+    if(window[playlistKey] && window[playlistKey].size>0){
+      for(const plId of window[playlistKey]){
+        try{
+          await fetch('https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&key='+savedApiKey(),{
+            method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},
+            body:JSON.stringify({snippet:{playlistId:plId,resourceId:{kind:'youtube#video',videoId:videoId}}})
+          });
+          useQuota(50);
+        }catch(e){ console.log('playlist err',e); }
+      }
+    }
+    showSyncAlert('✅ Successfully pushed to YouTube! Grade updated instantly.','success');
     toggleDetail(videoId);
   } catch(e){
     showSyncAlert('❌ Push failed: '+e.message,'danger');
@@ -1234,6 +1304,123 @@ function exportCSV(){
   const rows=[['Date','Video ID','Old Title','New Title','Old Grade','New Grade','Old Score','New Score'],...pushHistory.map(function(h){ return [h.date,h.videoId,h.oldTitle,h.newTitle,h.oldGrade,h.newGrade,h.oldScore,h.newScore]; })];
   const csv=rows.map(function(r){ return r.map(function(c){ return '"'+(c||'').toString().replace(/"/g,'""')+'"'; }).join(','); }).join('\n');
   const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv); a.download='youtube-push-history.csv'; a.click();
+}
+
+
+// ============================================================
+// STRATEGY TAB
+// ============================================================
+function initStrategy(){
+  if(!allVideos.length){
+    document.getElementById('strategyContent').innerHTML='<div style="background:white;border-radius:var(--r-lg);padding:48px;text-align:center;box-shadow:var(--shadow)"><p style="font-size:15px;color:var(--gray-500)">Sync your videos first, then come back here for your strategy report!</p><button class="btn btn-red btn-sm" style="margin-top:16px" onclick="showTab('tabVideos')">← Go sync videos</button></div>';
+  }
+}
+
+async function generateStrategy(){
+  const el = document.getElementById('strategyContent');
+  el.innerHTML='<div style="background:white;border-radius:var(--r-lg);padding:48px;text-align:center;box-shadow:var(--shadow)"><div class="spinner"></div><p style="margin-top:12px;font-size:14px;color:var(--gray-500)">Analyzing your entire channel… this takes about 15 seconds</p></div>';
+
+  // Build channel summary from cached data
+  const total = allVideos.length;
+  const grades = {A:0,B:0,C:0,D:0,F:0};
+  allVideos.forEach(function(v){ grades[v.grade]=(grades[v.grade]||0)+1; });
+  const avgScore = total>0 ? Math.round(allVideos.reduce(function(a,v){ return a+v.overall; },0)/total) : 0;
+  const worstVideos = [...allVideos].sort(function(a,b){ return a.overall-b.overall; }).slice(0,5).map(function(v){ return v.title; });
+  const bestVideos = [...allVideos].sort(function(a,b){ return b.overall-a.overall; }).slice(0,3).map(function(v){ return v.title; });
+  const lowTags = allVideos.filter(function(v){ return v.tagsScore<50; }).length;
+  const lowDesc = allVideos.filter(function(v){ return v.descScore<50; }).length;
+  const lowThumb = allVideos.filter(function(v){ return v.thumbScore<50; }).length;
+  const lowTitle = allVideos.filter(function(v){ return v.titleScore<50; }).length;
+
+  const prompt = 'You are a YouTube growth strategist specializing in kids educational content. Analyze this channel data and give a specific, actionable strategy report.
+
+CHANNEL DATA:
+- Total videos: '+total+'
+- Grade breakdown: A:'+grades.A+', B:'+grades.B+', C:'+grades.C+', D:'+grades.D+', F:'+grades.F+'
+- Average SEO score: '+avgScore+'/100
+- Videos with weak tags (<50): '+lowTags+'
+- Videos with weak descriptions (<50): '+lowDesc+'
+- Videos with weak thumbnails (<50): '+lowThumb+'
+- Videos with weak titles (<50): '+lowTitle+'
+- 5 worst performing videos: '+worstVideos.join(', ')+'
+- 3 best performing videos: '+bestVideos.join(', ')+'
+
+Return ONLY valid JSON (no markdown): {"overallHealth":"one sentence channel health summary","urgentFixes":[{"action":"specific action","impact":"why this matters","effort":"Easy/Medium/Hard"}],"videoPriority":[{"title":"video title from worst list","whyFirst":"why tackle this one first"}],"newVideoIdeas":[{"title":"specific video title idea","why":"why this would perform well for kids youtube right now"}],"biggestWin":"the single most impactful thing they can do this week"}';
+
+  try{
+    const r = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompt}]})
+    });
+    const d = await r.json();
+    const text = d.content.map(function(b){ return b.type==='text'?b.text:''; }).join('');
+    const clean = text.replace(/```json|```/g,'').trim();
+    let res; try{ res=JSON.parse(clean); }catch(e){ const m=clean.match(/\{[\s\S]*\}/); res=m?JSON.parse(m[0]):null; }
+    if(!res) throw new Error('Could not parse strategy');
+    renderStrategy(res, grades, avgScore, total);
+  }catch(e){
+    el.innerHTML='<div class="alert alert-danger">Could not generate strategy right now: '+e.message+'. Try again in a moment.</div><button class="btn btn-primary" onclick="generateStrategy()" style="margin-top:12px">Try Again</button>';
+  }
+}
+
+function renderStrategy(res, grades, avgScore, total){
+  const el = document.getElementById('strategyContent');
+  el.innerHTML =
+    // Health header
+    '<div style="background:white;border-radius:var(--r-lg);padding:24px;box-shadow:var(--shadow);margin-bottom:16px">'+
+      '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">'+
+        '<div style="text-align:center;min-width:80px"><div style="font-size:48px;font-weight:900;font-family:Nunito,sans-serif;color:'+barColor(avgScore)+'">'+avgScore+'</div><div style="font-size:12px;color:var(--gray-500);font-weight:600">Channel Score</div></div>'+
+        '<div style="flex:1"><h3 style="font-size:18px;font-weight:900;margin-bottom:4px">Channel Health Report</h3><p style="font-size:14px;color:var(--gray-500);line-height:1.6">'+esc(res.overallHealth)+'</p></div>'+
+      '</div>'+
+      '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:16px">'+
+        ['A','B','C','D','F'].map(function(g){ return '<div style="text-align:center;background:var(--gray-50);border-radius:8px;padding:8px"><div style="font-size:22px;font-weight:900;font-family:Nunito,sans-serif;color:'+gradeColor(g)+'">'+grades[g]+'</div><div style="font-size:11px;color:var(--gray-500)">Grade '+g+'</div></div>'; }).join('')+
+      '</div>'+
+    '</div>'+
+
+    // Biggest win
+    '<div style="background:linear-gradient(135deg,#FFF7ED,#FEF3C7);border:2px solid #FCD34D;border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow);margin-bottom:16px">'+
+      '<div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#B45309;margin-bottom:6px;font-family:Nunito,sans-serif">⚡ BIGGEST WIN THIS WEEK</div>'+
+      '<p style="font-size:15px;font-weight:700;color:#92400E;line-height:1.6">'+esc(res.biggestWin)+'</p>'+
+    '</div>'+
+
+    // Urgent fixes
+    '<div style="background:white;border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow);margin-bottom:16px">'+
+      '<h3 style="font-size:16px;font-weight:900;margin-bottom:14px">🔥 Top 3 Things to Fix Right Now</h3>'+
+      (res.urgentFixes||[]).map(function(f,i){
+        const effortColor={'Easy':'#059669','Medium':'#D97706','Hard':'#DC2626'}[f.effort]||'#6B7280';
+        return '<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--gray-100)">'+
+          '<span style="font-size:22px;font-weight:900;color:var(--blue);font-family:Nunito,sans-serif;min-width:28px">'+(i+1)+'</span>'+
+          '<div style="flex:1"><div style="font-size:14px;font-weight:700;margin-bottom:3px">'+esc(f.action)+'</div>'+
+          '<div style="font-size:12px;color:var(--gray-500);margin-bottom:4px">'+esc(f.impact)+'</div>'+
+          '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:'+effortColor+'20;color:'+effortColor+'">'+f.effort+' effort</span></div>'+
+        '</div>';
+      }).join('')+
+    '</div>'+
+
+    // Video priority
+    '<div style="background:white;border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow);margin-bottom:16px">'+
+      '<h3 style="font-size:16px;font-weight:900;margin-bottom:14px">🎯 Videos to Prioritize First</h3>'+
+      (res.videoPriority||[]).map(function(v){
+        return '<div style="padding:10px 12px;background:var(--red-l);border-radius:var(--r-sm);margin-bottom:8px;border-left:3px solid var(--red)">'+
+          '<div style="font-size:13px;font-weight:700;margin-bottom:3px">'+esc(v.title)+'</div>'+
+          '<div style="font-size:12px;color:var(--gray-500)">'+esc(v.whyFirst)+'</div>'+
+        '</div>';
+      }).join('')+
+    '</div>'+
+
+    // New video ideas
+    '<div style="background:white;border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow);margin-bottom:16px">'+
+      '<h3 style="font-size:16px;font-weight:900;margin-bottom:14px">✨ New Video Ideas to Create</h3>'+
+      (res.newVideoIdeas||[]).map(function(v,i){
+        return '<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-100)">'+
+          '<span style="font-size:18px;font-weight:900;color:var(--purple);font-family:Nunito,sans-serif;min-width:24px">'+(i+1)+'</span>'+
+          '<div><div style="font-size:13px;font-weight:700;margin-bottom:2px">'+esc(v.title)+'</div>'+
+          '<div style="font-size:12px;color:var(--gray-500)">'+esc(v.why)+'</div></div>'+
+        '</div>';
+      }).join('')+
+    '</div>'+
+
+    '<button class="btn btn-ghost btn-sm" onclick="generateStrategy()" style="margin-top:4px">🔄 Regenerate Report</button>';
 }
 
 // ============================================================
