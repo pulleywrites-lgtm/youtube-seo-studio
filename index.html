@@ -1396,16 +1396,16 @@ function renderStrategy(res, grades, avgScore, total){
       }).join('')+
     '</div>'+
 
-    // Video priority
-    '<div style="background:white;border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow);margin-bottom:16px">'+
-      '<h3 style="font-size:16px;font-weight:900;margin-bottom:14px">🎯 Videos to Prioritize First</h3>'+
-      (res.videoPriority||[]).map(function(v){
-        return '<div style="padding:10px 12px;background:var(--red-l);border-radius:var(--r-sm);margin-bottom:8px;border-left:3px solid var(--red)">'+
-          '<div style="font-size:13px;font-weight:700;margin-bottom:3px">'+esc(v.title)+'</div>'+
-          '<div style="font-size:12px;color:var(--gray-500)">'+esc(v.whyFirst)+'</div>'+
-        '</div>';
-      }).join('')+
-    '</div>'+
+    // Videos to prioritize
+html += '<div class="strategy-card"><h3>🎯 Videos to Update First</h3>';
+worst.forEach(function(v){
+  html += '<div class="priority-video" onclick="showTab(\'tabVideos\'); setTimeout(function(){ toggleDetail(\''+v.id+'\'); }, 100)">' +
+            '<div style="font-size:13px;font-weight:700;margin-bottom:3px;color:var(--blue);text-decoration:underline">'+esc(v.title)+'</div>' +
+            '<div style="font-size:12px;color:var(--gray-500)">Score: '+v.overall+'/100 · Grade '+v.grade+' — '+(v.titleScore<50?'Weak title. ':v.descScore<50?'Weak description. ':v.tagsScore<50?'Weak tags. ':'Needs overall improvement.')+'</div>' +
+          '</div>';
+});
+html += '</div>';
+
 
     // New video ideas
     '<div style="background:white;border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow);margin-bottom:16px">'+
