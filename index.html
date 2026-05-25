@@ -3,19 +3,21 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
 <title>YouTube SEO Studio</title>
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://apis.google.com/js/api.js"></script>
 
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 
 <style>
+
 body{
-  font-family:'DM Sans',sans-serif;
-  background:#f5f7ff;
   margin:0;
   padding:30px;
+  background:#f5f7ff;
+  font-family:'DM Sans',sans-serif;
   color:#111827;
 }
 
@@ -32,9 +34,20 @@ body{
   margin-bottom:20px;
 }
 
-h1{
+h1,h2,h3{
   font-family:'Nunito',sans-serif;
-  margin-bottom:6px;
+}
+
+input,
+textarea,
+select{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid #d1d5db;
+  margin-top:6px;
+  margin-bottom:16px;
+  font-family:'DM Sans',sans-serif;
 }
 
 button{
@@ -46,13 +59,13 @@ button{
   font-family:'Nunito',sans-serif;
 }
 
-.primary{
-  background:#2563eb;
+.red{
+  background:#ff0000;
   color:white;
 }
 
-.red{
-  background:#ff0000;
+.blue{
+  background:#2563eb;
   color:white;
 }
 
@@ -61,23 +74,19 @@ button{
   color:white;
 }
 
-input, textarea, select{
-  width:100%;
-  padding:12px;
-  border-radius:10px;
-  border:1px solid #d1d5db;
-  margin-top:6px;
-  margin-bottom:14px;
-  font-family:'DM Sans',sans-serif;
+.small{
+  font-size:13px;
+  color:#6b7280;
 }
 
 .video{
   display:grid;
-  grid-template-columns:120px 1fr 120px;
+  grid-template-columns:120px 1fr 80px;
   gap:16px;
   align-items:center;
   padding:14px;
   border-bottom:1px solid #eee;
+  cursor:pointer;
 }
 
 .video:hover{
@@ -86,19 +95,19 @@ input, textarea, select{
 
 .thumb{
   width:120px;
-  border-radius:10px;
+  border-radius:12px;
 }
 
 .grade{
-  width:50px;
-  height:50px;
+  width:54px;
+  height:54px;
   border-radius:14px;
   display:flex;
   align-items:center;
   justify-content:center;
+  color:white;
   font-weight:800;
   font-size:22px;
-  color:white;
 }
 
 .A{background:#059669;}
@@ -107,8 +116,14 @@ input, textarea, select{
 .D{background:#ea580c;}
 .F{background:#dc2626;}
 
-.hidden{
-  display:none;
+.tag{
+  display:inline-block;
+  background:#eef2ff;
+  color:#3730a3;
+  padding:6px 10px;
+  border-radius:999px;
+  margin:4px;
+  font-size:12px;
 }
 
 #previewModal{
@@ -132,20 +147,22 @@ input, textarea, select{
   overflow:auto;
 }
 
-.small{
-  font-size:13px;
-  color:#6b7280;
+.error{
+  background:#fee2e2;
+  color:#991b1b;
+  padding:12px;
+  border-radius:12px;
+  margin-top:14px;
 }
 
-.tag{
-  display:inline-block;
-  background:#eef2ff;
-  color:#3730a3;
-  padding:6px 10px;
-  border-radius:999px;
-  margin:4px;
-  font-size:12px;
+.success{
+  background:#dcfce7;
+  color:#166534;
+  padding:12px;
+  border-radius:12px;
+  margin-top:14px;
 }
+
 </style>
 </head>
 
@@ -154,141 +171,211 @@ input, textarea, select{
 <div class="container">
 
 <div class="card">
-  <h1>YouTube SEO Studio</h1>
-  <div class="small">Children's Content SEO Optimizer</div>
 
-  <label>OAuth Client ID</label>
-  <input id="clientIdInput" type="text" placeholder="xxxxx.apps.googleusercontent.com">
+<h1>YouTube SEO Studio</h1>
 
-  <label>API Key</label>
-  <input id="apiKeyInput" type="password" placeholder="AIza...">
+<div class="small">
+Children's Content SEO Optimizer
+</div>
 
-  <button class="red" onclick="saveAndConnect()">
-    Connect To YouTube
-  </button>
+<label>OAuth Client ID</label>
 
-  <div id="errorBox"></div>
+<input
+  id="clientIdInput"
+  type="text"
+  placeholder="xxxxx.apps.googleusercontent.com"
+/>
+
+<label>API Key</label>
+
+<input
+  id="apiKeyInput"
+  type="password"
+  placeholder="AIza..."
+/>
+
+<button class="red" onclick="saveAndConnect()">
+Connect To YouTube
+</button>
+
+<div id="statusBox"></div>
+
 </div>
 
 <div class="card">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
-    <h2>Your Videos</h2>
 
-    <button class="primary" onclick="loadAllVideos()">
-      Refresh Videos
-    </button>
-  </div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
 
-  <div id="videoList">
-    <div class="small">
-      Connect your YouTube account first.
-    </div>
-  </div>
+<h2>Your Videos</h2>
+
+<button class="blue" onclick="loadAllVideos()">
+Refresh Videos
+</button>
+
+</div>
+
+<div id="videoList">
+
+<div class="small">
+Connect your YouTube account first.
+</div>
+
+</div>
+
 </div>
 
 </div>
 
 <div id="previewModal">
-  <div id="previewCard">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <h2 id="previewTitle">Preview</h2>
 
-      <button onclick="closePreview()">
-        Close
-      </button>
-    </div>
+<div id="previewCard">
 
-    <div id="previewContent"></div>
-  </div>
+<div style="display:flex;justify-content:space-between;align-items:center;">
+
+<h2 id="previewTitle">Preview</h2>
+
+<button onclick="closePreview()">
+Close
+</button>
+
+</div>
+
+<div id="previewContent"></div>
+
+</div>
+
 </div>
 
 <script>
 
-const SCOPES = 'https://www.googleapis.com/auth/youtube.force-ssl';
+const SCOPES =
+'https://www.googleapis.com/auth/youtube.force-ssl';
 
 let accessToken = null;
 let allVideos = [];
 let currentVideo = null;
 
-const cacheKey = 'yt_uploads_cache_v1';
-const cacheTimeKey = 'yt_uploads_cache_time_v1';
+function showError(message){
 
-function showError(msg){
-  document.getElementById('errorBox').innerHTML =
-    '<div style="margin-top:14px;background:#fee2e2;color:#991b1b;padding:12px;border-radius:10px;">' +
-    msg +
-    '</div>';
+  document.getElementById('statusBox').innerHTML =
+    `<div class="error">${message}</div>`;
+}
+
+function showSuccess(message){
+
+  document.getElementById('statusBox').innerHTML =
+    `<div class="success">${message}</div>`;
+}
+
+function getApiKey(){
+
+  return localStorage.getItem('ytApiKey') || '';
 }
 
 function saveAndConnect(){
 
-  const cid = document.getElementById('clientIdInput').value.trim();
-  const key = document.getElementById('apiKeyInput').value.trim();
+  const clientId =
+    document.getElementById('clientIdInput')
+    .value
+    .trim();
 
-  if(!cid || !key){
-    showError('Please enter both API credentials.');
+  const apiKey =
+    document.getElementById('apiKeyInput')
+    .value
+    .trim();
+
+  if(!clientId || !apiKey){
+
+    showError('Please enter both credentials.');
+
     return;
   }
 
-  localStorage.setItem('ytClientId', cid);
-  localStorage.setItem('ytApiKey', key);
+  localStorage.setItem(
+    'ytClientId',
+    clientId
+  );
+
+  localStorage.setItem(
+    'ytApiKey',
+    apiKey
+  );
 
   initiateOAuth();
 }
 
 function initiateOAuth(){
 
-  const clientId = localStorage.getItem('ytClientId');
+  const clientId =
+    localStorage.getItem('ytClientId');
 
   if(!window.google || !google.accounts){
-    showError('Google SDK still loading.');
+
+    showError(
+      'Google SDK still loading.'
+    );
+
     return;
   }
 
-  const client = google.accounts.oauth2.initTokenClient({
-    client_id: clientId,
-    scope: SCOPES,
+  const client =
+    google.accounts.oauth2.initTokenClient({
 
-    callback: async (response) => {
+      client_id:clientId,
 
-      if(response.error){
-        showError(response.error);
-        return;
+      scope:SCOPES,
+
+      callback:async(response)=>{
+
+        if(response.error){
+
+          showError(response.error);
+
+          return;
+        }
+
+        accessToken =
+          response.access_token;
+
+        showSuccess(
+          'Connected successfully!'
+        );
+
+        await loadAllVideos();
       }
-
-      accessToken = response.access_token;
-
-      await loadAllVideos();
-    }
-  });
+    });
 
   client.requestAccessToken();
-}
-
-function getApiKey(){
-  return localStorage.getItem('ytApiKey') || '';
 }
 
 function scoreTitle(title){
 
   let score = 40;
 
-  if(title.length >= 30 && title.length <= 60){
+  if(
+    title.length >= 30 &&
+    title.length <= 60
+  ){
     score += 20;
   }
 
-  const powerWords = [
+  const words = [
     'kids',
     'learn',
     'fun',
+    'toddlers',
     'abc',
     'numbers',
-    'toddlers',
-    'baby'
+    'colors'
   ];
 
-  powerWords.forEach(word=>{
-    if(title.toLowerCase().includes(word)){
+  words.forEach(word=>{
+
+    if(
+      title
+      .toLowerCase()
+      .includes(word)
+    ){
       score += 5;
     }
   });
@@ -302,9 +389,20 @@ function scoreDescription(desc){
 
   let score = 20;
 
-  if(desc.length > 150) score += 20;
-  if(desc.includes('#')) score += 10;
-  if(desc.toLowerCase().includes('subscribe')) score += 10;
+  if(desc.length > 150){
+    score += 20;
+  }
+
+  if(desc.includes('#')){
+    score += 10;
+  }
+
+  if(
+    desc.toLowerCase()
+    .includes('subscribe')
+  ){
+    score += 10;
+  }
 
   return Math.min(score,100);
 }
@@ -317,8 +415,13 @@ function scoreTags(tags){
 
   let score = 30;
 
-  if(tags.length >= 5) score += 20;
-  if(tags.length >= 10) score += 20;
+  if(tags.length >= 5){
+    score += 20;
+  }
+
+  if(tags.length >= 10){
+    score += 20;
+  }
 
   return Math.min(score,100);
 }
@@ -336,98 +439,184 @@ function getGrade(score){
 async function loadAllVideos(){
 
   if(!accessToken){
-    showError('Please connect first.');
+
+    showError(
+      'Please connect first.'
+    );
+
     return;
   }
 
   const apiKey = getApiKey();
 
-  document.getElementById('videoList').innerHTML =
+  document.getElementById('videoList')
+  .innerHTML =
     '<div>Loading videos...</div>';
 
   try{
 
-    let allItems = [];
+    // CHANNEL INFO
+
+    const channelResponse =
+      await fetch(
+        `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&mine=true&key=${apiKey}`,
+        {
+          headers:{
+            Authorization:
+              'Bearer ' + accessToken
+          }
+        }
+      );
+
+    const channelData =
+      await channelResponse.json();
+
+    if(channelData.error){
+
+      throw new Error(
+        channelData.error.message
+      );
+    }
+
+    const uploadsPlaylistId =
+      channelData
+      .items[0]
+      .contentDetails
+      .relatedPlaylists
+      .uploads;
+
+    // GET VIDEOS FROM UPLOADS PLAYLIST
+
     let pageToken = '';
+    let videoIds = [];
 
     do{
 
-      const url =
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&forMine=true&type=video&maxResults=50&order=date${pageToken ? '&pageToken=' + pageToken : ''}&key=${apiKey}`;
+      const playlistResponse =
+        await fetch(
+          `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadsPlaylistId}&maxResults=50&pageToken=${pageToken}&key=${apiKey}`,
+          {
+            headers:{
+              Authorization:
+                'Bearer ' + accessToken
+            }
+          }
+        );
 
-      const response = await fetch(url,{
-        headers:{
-          Authorization:'Bearer ' + accessToken
-        }
-      });
+      const playlistData =
+        await playlistResponse.json();
 
-      const data = await response.json();
+      if(playlistData.error){
 
-      if(data.error){
-        throw new Error(data.error.message);
+        throw new Error(
+          playlistData.error.message
+        );
       }
 
-      allItems = allItems.concat(data.items || []);
-      pageToken = data.nextPageToken || '';
+      const ids =
+        (playlistData.items || [])
+        .map(
+          item=>
+            item
+            .snippet
+            .resourceId
+            .videoId
+        )
+        .filter(Boolean);
+
+      videoIds =
+        videoIds.concat(ids);
+
+      pageToken =
+        playlistData.nextPageToken || '';
 
     }while(pageToken);
 
-    const ids = allItems
-      .map(v=>v.id.videoId)
-      .filter(Boolean);
+    // VIDEO DETAILS
 
     let details = [];
 
-    for(let i=0;i<ids.length;i+=50){
+    for(
+      let i=0;
+      i<videoIds.length;
+      i+=50
+    ){
 
-      const chunk = ids.slice(i,i+50).join(',');
+      const chunk =
+        videoIds
+        .slice(i,i+50)
+        .join(',');
 
-      const url2 =
-        `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${chunk}&key=${apiKey}`;
-
-      const r2 = await fetch(url2,{
-        headers:{
-          Authorization:'Bearer ' + accessToken
-        }
-      });
-
-      const d2 = await r2.json();
-
-      details = details.concat(d2.items || []);
-    }
-
-    allVideos = details.map(video=>{
-
-      const s = video.snippet || {};
-
-      const titleScore = scoreTitle(s.title || '');
-      const descScore = scoreDescription(s.description || '');
-      const tagsScore = scoreTags(s.tags || []);
-
-      const overall =
-        Math.round(
-          (titleScore + descScore + tagsScore) / 3
+      const videoResponse =
+        await fetch(
+          `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${chunk}&key=${apiKey}`,
+          {
+            headers:{
+              Authorization:
+                'Bearer ' + accessToken
+            }
+          }
         );
 
-      return{
-        id:video.id,
-        title:s.title || '',
-        description:s.description || '',
-        tags:s.tags || [],
-        thumb:s.thumbnails?.medium?.url || '',
-        score:overall,
-        grade:getGrade(overall),
-        categoryId:s.categoryId || '22'
-      };
-    });
+      const videoData =
+        await videoResponse.json();
+
+      details =
+        details.concat(
+          videoData.items || []
+        );
+    }
+
+    allVideos =
+      details.map(video=>{
+
+        const s =
+          video.snippet || {};
+
+        const titleScore =
+          scoreTitle(s.title || '');
+
+        const descScore =
+          scoreDescription(
+            s.description || ''
+          );
+
+        const tagsScore =
+          scoreTags(
+            s.tags || []
+          );
+
+        const overall =
+          Math.round(
+            (
+              titleScore +
+              descScore +
+              tagsScore
+            ) / 3
+          );
+
+        return{
+          id:video.id,
+          title:s.title || '',
+          description:s.description || '',
+          tags:s.tags || [],
+          thumb:
+            s.thumbnails?.medium?.url || '',
+          score:overall,
+          grade:getGrade(overall),
+          categoryId:
+            s.categoryId || '22'
+        };
+      });
 
     renderVideos();
 
-  }catch(err){
+  }catch(error){
 
-    showError(err.message);
+    showError(error.message);
 
-    document.getElementById('videoList').innerHTML =
+    document.getElementById('videoList')
+    .innerHTML =
       '<div>Error loading videos.</div>';
   }
 }
@@ -436,27 +625,40 @@ function renderVideos(){
 
   if(!allVideos.length){
 
-    document.getElementById('videoList').innerHTML =
+    document.getElementById('videoList')
+    .innerHTML =
       '<div>No videos found.</div>';
 
     return;
   }
 
-  document.getElementById('videoList').innerHTML =
+  document.getElementById('videoList')
+  .innerHTML =
     allVideos.map(video=>`
 
-      <div class="video" onclick="openPreview('${video.id}')">
+      <div
+        class="video"
+        onclick="openPreview('${video.id}')"
+      >
 
-        <img class="thumb" src="${video.thumb}">
+        <img
+          class="thumb"
+          src="${video.thumb}"
+        />
 
         <div>
-          <div style="font-weight:700;margin-bottom:4px;">
+
+          <div
+            style="font-weight:700;margin-bottom:4px;"
+          >
             ${escapeHtml(video.title)}
           </div>
 
           <div class="small">
-            SEO Score: ${video.score}
+            SEO Score:
+            ${video.score}
           </div>
+
         </div>
 
         <div class="grade ${video.grade}">
@@ -470,14 +672,18 @@ function renderVideos(){
 
 function openPreview(videoId){
 
-  const video = allVideos.find(v=>v.id===videoId);
+  const video =
+    allVideos.find(
+      v=>v.id===videoId
+    );
 
   if(!video) return;
 
   currentVideo = video;
 
   const improvedTitle =
-    video.title + ' | Fun Learning For Kids!';
+    video.title +
+    ' | Fun Learning For Kids!';
 
   const improvedDescription =
 `🌟 Welcome to today's educational kids video!
@@ -501,45 +707,83 @@ In this fun learning video your child will enjoy exciting educational moments de
     'fun learning'
   ];
 
-  document.getElementById('previewTitle').innerText =
+  document.getElementById(
+    'previewTitle'
+  ).innerText =
     video.title;
 
-  document.getElementById('previewContent').innerHTML = `
+  document.getElementById(
+    'previewContent'
+  ).innerHTML = `
 
     <h3>Optimized Title</h3>
 
-    <textarea id="editTitle" rows="2">${improvedTitle}</textarea>
+    <textarea
+      id="editTitle"
+      rows="2"
+    >${improvedTitle}</textarea>
 
     <h3>Description</h3>
 
-    <textarea id="editDescription" rows="8">${improvedDescription}</textarea>
+    <textarea
+      id="editDescription"
+      rows="8"
+    >${improvedDescription}</textarea>
 
     <h3>Tags</h3>
 
     <div>
-      ${improvedTags.map(t=>`<span class="tag">${t}</span>`).join('')}
+      ${improvedTags
+        .map(
+          t=>`<span class="tag">${t}</span>`
+        )
+        .join('')
+      }
     </div>
 
-    <textarea id="editTags" rows="3">${improvedTags.join(', ')}</textarea>
+    <textarea
+      id="editTags"
+      rows="3"
+    >${improvedTags.join(', ')}</textarea>
 
     <h3>Category</h3>
 
     <select id="editCategory">
-      <option value="22">People & Blogs</option>
-      <option value="27" selected>Education</option>
-      <option value="10">Music</option>
-      <option value="24">Entertainment</option>
+      <option value="22">
+        People & Blogs
+      </option>
+
+      <option
+        value="27"
+        selected
+      >
+        Education
+      </option>
+
+      <option value="10">
+        Music
+      </option>
+
+      <option value="24">
+        Entertainment
+      </option>
     </select>
 
     <div style="margin-top:20px;">
-      <button class="green" onclick="pushToYouTube()">
+
+      <button
+        class="green"
+        onclick="pushToYouTube()"
+      >
         Push To YouTube
       </button>
-    </div>
 
+    </div>
   `;
 
-  document.getElementById('previewModal').style.display =
+  document.getElementById(
+    'previewModal'
+  ).style.display =
     'flex';
 }
 
@@ -552,94 +796,129 @@ async function pushToYouTube(){
   try{
 
     const title =
-      document.getElementById('editTitle').value;
+      document.getElementById(
+        'editTitle'
+      ).value;
 
     const description =
-      document.getElementById('editDescription').value;
+      document.getElementById(
+        'editDescription'
+      ).value;
 
     const tags =
       document
-        .getElementById('editTags')
-        .value
-        .split(',')
-        .map(t=>t.trim())
-        .filter(Boolean);
+      .getElementById('editTags')
+      .value
+      .split(',')
+      .map(t=>t.trim())
+      .filter(Boolean);
 
     const categoryId =
-      document.getElementById('editCategory').value;
+      document.getElementById(
+        'editCategory'
+      ).value;
 
-    const apiKey = getApiKey();
+    const apiKey =
+      getApiKey();
 
-    // GET EXISTING VIDEO DATA FIRST
-    const getUrl =
-      `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${currentVideo.id}&key=${apiKey}`;
+    // FETCH EXISTING VIDEO
 
-    const getResponse = await fetch(getUrl,{
-      headers:{
-        Authorization:'Bearer ' + accessToken
-      }
-    });
+    const getResponse =
+      await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${currentVideo.id}&key=${apiKey}`,
+        {
+          headers:{
+            Authorization:
+              'Bearer ' + accessToken
+          }
+        }
+      );
 
-    const getData = await getResponse.json();
+    const getData =
+      await getResponse.json();
 
     const existing =
       getData.items[0];
 
     if(!existing){
-      throw new Error('Could not fetch video.');
+
+      throw new Error(
+        'Could not fetch video.'
+      );
     }
 
     const snippet =
       existing.snippet;
 
     // UPDATE VIDEO
-    const updateResponse = await fetch(
-      `https://www.googleapis.com/youtube/v3/videos?part=snippet&key=${apiKey}`,
-      {
-        method:'PUT',
 
-        headers:{
-          Authorization:'Bearer ' + accessToken,
-          'Content-Type':'application/json'
-        },
+    const updateResponse =
+      await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?part=snippet&key=${apiKey}`,
+        {
+          method:'PUT',
 
-        body:JSON.stringify({
-          id:currentVideo.id,
+          headers:{
+            Authorization:
+              'Bearer ' + accessToken,
 
-          snippet:{
-            categoryId:categoryId,
-            title:title,
-            description:description,
-            tags:tags,
-            defaultLanguage:snippet.defaultLanguage,
-            channelId:snippet.channelId
-          }
-        })
-      }
-    );
+            'Content-Type':
+              'application/json'
+          },
+
+          body:JSON.stringify({
+
+            id:currentVideo.id,
+
+            snippet:{
+
+              categoryId:categoryId,
+
+              title:title,
+
+              description:description,
+
+              tags:tags,
+
+              defaultLanguage:
+                snippet.defaultLanguage,
+
+              channelId:
+                snippet.channelId
+            }
+          })
+        }
+      );
 
     const updateData =
       await updateResponse.json();
 
     if(updateData.error){
-      throw new Error(updateData.error.message);
+
+      throw new Error(
+        updateData.error.message
+      );
     }
 
-    alert('Successfully updated video metadata!');
+    showSuccess(
+      'Video updated successfully!'
+    );
 
     closePreview();
 
     await loadAllVideos();
 
-  }catch(err){
+  }catch(error){
 
-    alert(err.message);
+    alert(error.message);
   }
 }
 
 function closePreview(){
 
-  document.getElementById('previewModal').style.display =
+  document.getElementById(
+    'previewModal'
+  ).style.display =
     'none';
 }
 
@@ -654,21 +933,33 @@ function escapeHtml(text){
 
 window.addEventListener('load',()=>{
 
-  console.log('YouTube SEO Studio loaded successfully');
+  console.log(
+    'YouTube SEO Studio loaded successfully'
+  );
 
   const savedClientId =
-    localStorage.getItem('ytClientId');
+    localStorage.getItem(
+      'ytClientId'
+    );
 
   const savedApiKey =
-    localStorage.getItem('ytApiKey');
+    localStorage.getItem(
+      'ytApiKey'
+    );
 
   if(savedClientId){
-    document.getElementById('clientIdInput').value =
+
+    document.getElementById(
+      'clientIdInput'
+    ).value =
       savedClientId;
   }
 
   if(savedApiKey){
-    document.getElementById('apiKeyInput').value =
+
+    document.getElementById(
+      'apiKeyInput'
+    ).value =
       savedApiKey;
   }
 });
