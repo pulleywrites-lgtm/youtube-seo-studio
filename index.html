@@ -492,401 +492,981 @@ textarea{resize:vertical}
 </div>
 
 <script>
-
-const CLIENT_ID =
-'PASTE_YOUR_NEW_OAUTH_CLIENT_ID_HERE';
-
-const API_KEY =
-'PASTE_YOUR_NEW_API_KEY_HERE';
-
-const SCOPES =
-'https://www.googleapis.com/auth/youtube.force-ssl';
-
+// Wrap in try-catch so syntax errors are visible
+try {
+// ============================================================
+// STATE
+// ============================================================
+const SCOPES = 'https://www.googleapis.com/auth/youtube.force-ssl';
 let accessToken = null;
 let allVideos = [];
-let currentVideo = null;
+let pushCount = 0;
+let quotaUsed = parseInt(localStorage.getItem('quotaUsed_'+today()) || '0');
+let pushHistory = JSON.parse(localStorage.getItem('ytHistory') || '[]');
+let drafts = JSON.parse(localStorage.getItem('ytDrafts') || '[]');
+let pendingPushData = null;
 
-function showError(message){
+function today(){ return new Date().toDateString(); }
 
-  document.getElementById('statusBox').innerHTML =
-    `<div class="error">${message}</div>`;
-}
+const CLIENT_ID_DEFAULT = '35258696737-jf4dg4hjaksc42o0nmm7npm28npjkehj.apps.googleusercontent.com';
+const API_KEY_DEFAULT = 'AIzaSyAuCjH_oNav9ij4axUXMBrP2Vvgtz44H1I';
 
-function showSuccess(message){
+// Pre-fill credentials
+window.addEventListener('DOMContentLoaded', function(){
+  document.getElementById('clientIdInput').value = localStorage.getItem('ytClientId') || CLIENT_ID_DEFAULT;
+  document.getElementById('apiKeyInput').value = localStorage.getItem('ytApiKey') || API_KEY_DEFAULT;
+  updateQuotaMeter();
+  renderDrafts();
+  updateSyncInfo();
+});
 
-  document.getElementById('statusBox').innerHTML =
-    `<div class="success">${message}</div>`;
+function savedApiKey(){ return localStorage.getItem('ytApiKey') || API_KEY_DEFAULT; }
+function savedClientId(){ return localStorage.getItem('ytClientId') || CLIENT_ID_DEFAULT; }
+
+// ============================================================
+// AUTH
+// ============================================================
+function saveAndConnect(){
+  const cid = document.getElementById('clientIdInput').value.trim();
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if(!cid||!key){ showConnectMsg('Please enter both credentials.','danger'); return; }
+  localStorage.setItem('ytClientId', cid);
+  localStorage.setItem('ytApiKey', key);
+  initiateOAuth();
 }
 
 function initiateOAuth(){
-
-  if(!window.google || !google.accounts){
-
-    showError(
-      'Google SDK still loading.'
-    );
-
+  if(!window.google||!window.google.accounts||!window.google.accounts.oauth2){
+    showConnectMsg('Google sign-in is loading... trying again in 2 seconds.','warn');
+    setTimeout(initiateOAuth, 2000);
     return;
   }
-
-  const client =
-    google.accounts.oauth2.initTokenClient({
-
-      client_id:CLIENT_ID,
-
-      scope:SCOPES,
-
-      callback:async(response)=>{
-
-        if(response.error){
-
-          showError(response.error);
-
-          return;
-        }
-
-        accessToken =
-          response.access_token;
-
-        showSuccess(
-          'Connected successfully!'
-        );
-
-        await loadWorstVideos();
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: savedClientId(),
+    scope: SCOPES,
+    callback: function(resp){
+      if(resp.error){ showConnectMsg('Connection failed: '+resp.error,'danger'); return; }
+      accessToken = resp.access_token;
+      setAuthStatus(true);
+      showScreen('screenMain');
+      const cached = localStorage.getItem('ytVideoCache');
+      if(cached){
+        allVideos = JSON.parse(cached);
+        updateStats();
+        sortAndRender();
+        updateSyncInfo();
+        showSyncAlert('📦 Loaded from cache — no quota used! Last synced: '+getLastSyncText(),'info');
+      } else {
+        showSyncAlert('👋 Welcome! Click "Sync from YouTube" to load your videos for the first time. You only need to do this once a month!','warn');
       }
-    });
-
+    }
+  });
   client.requestAccessToken();
 }
 
-function scoreTitle(title){
-
-  let score = 40;
-
-  if(
-    title.length >= 30 &&
-    title.length <= 60
-  ){
-    score += 20;
-  }
-
-  const words = [
-    'kids',
-    'learn',
-    'fun',
-    'toddlers',
-    'abc',
-    'numbers',
-    'colors'
-  ];
-
-  words.forEach(word=>{
-
-    if(
-      title
-      .toLowerCase()
-      .includes(word)
-    ){
-      score += 5;
-    }
-  });
-
-  return Math.min(score,100);
+function handleAuthClick(){
+  if(accessToken){ if(confirm('Disconnect from YouTube?')){ accessToken=null; setAuthStatus(false); showScreen('screenConnect'); } }
+  else showScreen('screenConnect');
 }
 
-function scoreDescription(desc){
-
-  if(!desc) return 10;
-
-  let score = 20;
-
-  if(desc.length > 150){
-    score += 20;
-  }
-
-  if(desc.includes('#')){
-    score += 10;
-  }
-
-  if(
-    desc.toLowerCase()
-    .includes('subscribe')
-  ){
-    score += 10;
-  }
-
-  return Math.min(score,100);
+function setAuthStatus(on){
+  document.getElementById('authDot').className='dot '+(on?'dot-green':'dot-red');
+  document.getElementById('authLabel').textContent=on?'Connected ✓':'Connect YouTube';
 }
 
-function scoreTags(tags){
-
-  if(!tags || !tags.length){
-    return 10;
-  }
-
-  let score = 30;
-
-  if(tags.length >= 5){
-    score += 20;
-  }
-
-  if(tags.length >= 10){
-    score += 20;
-  }
-
-  return Math.min(score,100);
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
 }
 
-function getGrade(score){
-
-  if(score >= 85) return 'A';
-  if(score >= 70) return 'B';
-  if(score >= 55) return 'C';
-  if(score >= 40) return 'D';
-
-  return 'F';
+function showConnectMsg(msg, type){
+  document.getElementById('connectMsg').innerHTML='<div class="alert alert-'+type+'">'+msg+'</div>';
 }
 
-async function loadWorstVideos(){
+// ============================================================
+// TABS
+// ============================================================
+function showTab(id){
+  ['tabVideos','tabStrategy','tabPulse','tabNew','tabHistory'].forEach(t=>document.getElementById(t).style.display=t===id?'block':'none');
+  document.querySelectorAll('.nav-tab').forEach((b,i)=>b.classList.toggle('active',['tabVideos','tabStrategy','tabPulse','tabNew','tabHistory'][i]===id));
+  if(id==='tabHistory') renderHistory();
+  if(id==='tabNew') renderDrafts();
+  if(id==='tabStrategy') initStrategy();
+}
 
-  if(!accessToken){
+// ============================================================
+// QUOTA
+// ============================================================
+function useQuota(units){
+  quotaUsed += units;
+  localStorage.setItem('quotaUsed_'+today(), quotaUsed);
+  updateQuotaMeter();
+}
 
-    showError(
-      'Please connect first.'
-    );
+function updateQuotaMeter(){
+  const pct = Math.min((quotaUsed/10000)*100, 100);
+  const fill = document.getElementById('quotaFill');
+  fill.style.width = pct+'%';
+  fill.className = 'quota-bar-fill ' + (pct<50?'quota-safe':pct<80?'quota-warn':'quota-danger');
+  document.getElementById('quotaText').textContent = quotaUsed.toLocaleString()+' / 10,000 units used';
+  const resetTime = new Date(); resetTime.setHours(24,0,0,0);
+  document.getElementById('quotaReset').textContent = 'Resets at midnight PT · '+Math.round((resetTime-Date.now())/3600000)+'h away';
+}
 
-    return;
-  }
+// ============================================================
+// SYNC
+// ============================================================
+function updateSyncInfo(){
+  const last = localStorage.getItem('ytLastSync');
+  if(!last){ document.getElementById('syncInfo').textContent='Never synced'; return; }
+  const d = new Date(parseInt(last));
+  const next = new Date(parseInt(last) + 30*24*60*60*1000);
+  document.getElementById('syncInfo').textContent='Synced '+d.toLocaleDateString()+' · Next: '+next.toLocaleDateString();
+}
 
-  document.getElementById('videoList')
-  .innerHTML =
-    '<div>Loading channel videos...</div>';
+function getLastSyncText(){
+  const last = localStorage.getItem('ytLastSync');
+  return last ? new Date(parseInt(last)).toLocaleDateString() : 'Never';
+}
+
+function confirmSync(){
+  const last = localStorage.getItem('ytLastSync');
+  const now = Date.now();
+  document.getElementById('modalLastSync').textContent = last ? new Date(parseInt(last)).toLocaleDateString() : 'Never';
+  if(last){ const next = new Date(parseInt(last)+30*24*60*60*1000); document.getElementById('modalNextSync').textContent = next.toLocaleDateString(); }
+  else document.getElementById('modalNextSync').textContent = '30 days from today';
+  document.getElementById('syncModal').classList.add('open');
+}
+
+function closeSyncModal(){ document.getElementById('syncModal').classList.remove('open'); }
+
+async function doSync(){
+  closeSyncModal();
+  if(!accessToken){ showSyncAlert('Please connect to YouTube first.','danger'); return; }
+  const btn = document.getElementById('syncBtn');
+  btn.disabled=true; btn.textContent='⏳ Syncing...';
+  document.getElementById('videoTableBody').innerHTML='<div class="loading-rows"><div class="spinner"></div><p style="margin-top:12px">Syncing your channel... hang tight!</p></div>';
+  showSyncAlert('☁️ Syncing from YouTube — this may take a moment for large channels...','info');
 
   try{
+    // Get uploads playlist (1 unit)
+    const chanR = await fetch('https://www.googleapis.com/youtube/v3/channels?part=contentDetails&mine=true&key='+savedApiKey(), {headers:{Authorization:'Bearer '+accessToken}});
+    const chanD = await chanR.json();
+    if(chanD.error) throw new Error(chanD.error.message);
+    useQuota(1);
+    const uploadsId = chanD.items[0].contentDetails.relatedPlaylists.uploads;
 
-    const searchResponse =
-      await fetch(
-        'https://www.googleapis.com/youtube/v3/search?part=snippet&forMine=true&type=video&maxResults=50&order=viewCount',
-        {
-          headers:{
-            Authorization:
-              'Bearer ' + accessToken
-          }
-        }
-      );
+    // Get all video IDs from uploads playlist (1 unit per page)
+    let pageToken='', videoIds=[];
+    do{
+      const r = await fetch('https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId='+uploadsId+'&maxResults=50&key='+savedApiKey()+(pageToken?'&pageToken='+pageToken:''), {headers:{Authorization:'Bearer '+accessToken}});
+      const d = await r.json();
+      if(d.error) throw new Error(d.error.message);
+      useQuota(1);
+      (d.items||[]).forEach(i=>{ if(i.snippet&&i.snippet.resourceId) videoIds.push(i.snippet.resourceId.videoId); });
+      pageToken = d.nextPageToken||'';
+    }while(pageToken);
 
-    const searchData =
-      await searchResponse.json();
-
-    if(searchData.error){
-
-      throw new Error(
-        searchData.error.message
-      );
+    // Get full video details in batches of 50 (1 unit per batch)
+    let details=[];
+    for(let i=0;i<videoIds.length;i+=50){
+      const chunk=videoIds.slice(i,i+50).join(',');
+      const r2=await fetch('https://www.googleapis.com/youtube/v3/videos?part=snippet&id='+chunk+'&key='+savedApiKey(), {headers:{Authorization:'Bearer '+accessToken}});
+      const d2=await r2.json();
+      if(d2.error) throw new Error(d2.error.message);
+      useQuota(1);
+      details=details.concat(d2.items||[]);
     }
 
-    const videoIds =
-      (searchData.items || [])
-      .map(v=>v.id.videoId)
-      .filter(Boolean);
+    // Score and save
+    allVideos = details.map(function(v){
+      const s=v.snippet||{};
+      const tags=s.tags||[];
+      const ts=scoreTitle(s.title||'');
+      const ds=scoreDesc(s.description||'');
+      const tagsS=scoreTags(tags);
+      const thS=scoreThumb(s.thumbnails);
+      const overall=Math.round((ts+ds+tagsS+thS)/4);
+      return {
+        id:v.id, title:s.title||'', description:s.description||'', tags:tags,
+        thumbUrl:s.thumbnails&&s.thumbnails.medium?s.thumbnails.medium.url:'',
+        publishedAt:s.publishedAt||'', categoryId:s.categoryId||'22',
+        titleScore:ts, descScore:ds, tagsScore:tagsS, thumbScore:thS, overall:overall,
+        grade:scoreToGrade(overall)
+      };
+    });
 
-    const videoResponse =
-      await fetch(
-        `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoIds.join(',')}`,
-        {
-          headers:{
-            Authorization:
-              'Bearer ' + accessToken
-          }
-        }
-      );
+    localStorage.setItem('ytVideoCache', JSON.stringify(allVideos));
+    localStorage.setItem('ytLastSync', Date.now().toString());
+    updateSyncInfo();
+    updateStats();
+    sortAndRender();
+    showSyncAlert('✅ Sync complete! '+allVideos.length+' videos loaded and scored. Next sync needed in 30 days.','success');
+  } catch(e){
+    showSyncAlert('❌ Sync failed: '+e.message,'danger');
+    document.getElementById('videoTableBody').innerHTML='<div class="empty-state"><h3>Sync failed</h3><p>'+e.message+'</p></div>';
+  } finally{
+    btn.disabled=false; btn.textContent='☁️ Sync from YouTube';
+  }
+}
 
-    const videoData =
-      await videoResponse.json();
+function dailyRefresh(){
+  if(!allVideos.length){ showSyncAlert('No videos cached yet. Click "Sync from YouTube" first.','warn'); return; }
+  allVideos = allVideos.map(function(v){
+    const ts=scoreTitle(v.title); const ds=scoreDesc(v.description); const tagsS=scoreTags(v.tags); const thS=v.thumbScore||50;
+    const overall=Math.round((ts+ds+tagsS+thS)/4);
+    return Object.assign({},v,{titleScore:ts,descScore:ds,tagsScore:tagsS,overall:overall,grade:scoreToGrade(overall)});
+  });
+  localStorage.setItem('ytVideoCache', JSON.stringify(allVideos));
+  updateStats(); sortAndRender();
+  showSyncAlert('🔄 View refreshed — scores updated locally. No quota used!','success');
+}
 
-    const details =
-      videoData.items || [];
+function showSyncAlert(msg, type){ document.getElementById('syncAlert').innerHTML='<div class="alert alert-'+type+'">'+msg+'</div>'; }
 
-    allVideos =
-      details.map(video=>{
+// ============================================================
+// SCORING
+// ============================================================
+function scoreTitle(t){
+  if(!t) return 5;
+  let s=30;
+  if(t.length>=30&&t.length<=70) s+=25; else if(t.length>0) s+=10;
+  const pw=['kids','children','toddler','baby','learn','fun','easy','how','what','amazing','super','best','abc','numbers','colors','shapes','songs'];
+  pw.forEach(function(w){ if(t.toLowerCase().includes(w)) s+=5; });
+  if(/\d/.test(t)) s+=5;
+  if(/[?!]/.test(t)) s+=5;
+  return Math.min(s,100);
+}
+function scoreDesc(d){
+  if(!d) return 5;
+  let s=20;
+  if(d.length>150) s+=15; if(d.length>400) s+=20;
+  if(d.toLowerCase().includes('subscribe')) s+=15;
+  if(d.includes('#')) s+=10;
+  if(d.toLowerCase().includes('like')||d.toLowerCase().includes('comment')) s+=10;
+  if(d.toLowerCase().includes('learn')||d.toLowerCase().includes('watch')) s+=10;
+  return Math.min(s,100);
+}
+function scoreTags(tags){
+  if(!tags||!tags.length) return 5;
+  let s=25;
+  if(tags.length>=5) s+=15; if(tags.length>=10) s+=20; if(tags.length>=15) s+=15;
+  const clean=tags.filter(function(t){ return t.split(' ').length>1&&t.length>3&&!t.startsWith('#'); });
+  if(clean.length>=5) s+=15; if(clean.length>=10) s+=10;
+  return Math.min(s,100);
+}
+function scoreThumb(thumbs){
+  if(!thumbs) return 25;
+  if(thumbs.maxres) return 90;
+  if(thumbs.standard) return 75;
+  if(thumbs.high) return 60;
+  if(thumbs.medium) return 45;
+  return 25;
+}
+function scoreToGrade(s){ if(s>=85) return 'A'; if(s>=70) return 'B'; if(s>=55) return 'C'; if(s>=40) return 'D'; return 'F'; }
+function gradeColor(g){ return {A:'#15803D',B:'#2563EB',C:'#B45309',D:'#C2410C',F:'#DC2626'}[g]||'#6B7280'; }
+function barColor(s){ if(s>=85) return '#06D6A0'; if(s>=70) return '#4361EE'; if(s>=55) return '#FFD166'; if(s>=40) return '#FF8C42'; return '#ef4444'; }
 
-        const s =
-          video.snippet || {};
+function getTitleTip(s, title){
+  if(s>=85) return '✅ Great title!';
+  const tips=[];
+  if(title.length<30) tips.push('Too short — aim for 40-70 characters');
+  if(title.length>70) tips.push('Too long — keep it under 70 chars so it shows fully in search');
+  const pw=['kids','children','toddler','learn','fun']; const hasPower=pw.some(function(w){ return title.toLowerCase().includes(w); });
+  if(!hasPower) tips.push('Add a power word like "Kids", "Learn", "Fun", or "Toddler"');
+  if(!/[?!]/.test(title)) tips.push('Consider adding a "?" or "!" to boost curiosity clicks');
+  return '⚠️ '+tips.join(' · ');
+}
+function getDescTip(s, desc){
+  if(s>=85) return '✅ Great description!';
+  const tips=[];
+  if(!desc||desc.length<150) tips.push('Too short — write at least 150 words');
+  if(desc&&!desc.toLowerCase().includes('subscribe')) tips.push('Add a "Subscribe" call to action');
+  if(desc&&!desc.includes('#')) tips.push('Add 3-5 hashtags at the end');
+  return '⚠️ '+tips.join(' · ');
+}
+function getTagsTip(s, tags){
+  if(s>=85) return '✅ Great tags!';
+  const tips=[];
+  if(!tags||tags.length<10) tips.push('Add more tags — aim for 15');
+  const bad=tags?tags.filter(function(t){ return t.split(' ').length===1&&t.length<=3; }):[];
+  if(bad.length>0) tips.push('Remove junk tags: "'+bad.slice(0,3).join('", "')+'"');
+  const hash=tags?tags.filter(function(t){ return t.startsWith('#'); }):[];
+  if(hash.length>0) tips.push('Remove hashtags from tags field — hashtags go in the description only');
+  return '⚠️ '+tips.join(' · ');
+}
+function getThumbTip(s){
+  if(s>=85) return '✅ Great thumbnail!';
+  if(s>=60) return '⚠️ Your thumbnail could be higher resolution. Upload a custom 1280x720px image for best results.';
+  if(s>=40) return '⚠️ Your thumbnail resolution is low. Create a custom thumbnail — bright colors, big text, happy face works best for kids content.';
+  return '❌ No custom thumbnail detected! This is hurting your click rate badly. Create one ASAP — bright background, large bold text, cute character.';
+}
+function howToGetA(v){
+  const items=[];
+  if(v.titleScore<85) items.push('Title: '+getTitleTip(v.titleScore, v.title).replace('⚠️ ',''));
+  if(v.descScore<85) items.push('Description: '+getDescTip(v.descScore, v.description).replace('⚠️ ',''));
+  if(v.tagsScore<85) items.push('Tags: '+getTagsTip(v.tagsScore, v.tags).replace('⚠️ ',''));
+  if(v.thumbScore<85) items.push('Thumbnail: '+getThumbTip(v.thumbScore).replace('⚠️ ','').replace('❌ ',''));
+  return items;
+}
 
-        const titleScore =
-          scoreTitle(s.title || '');
+// ============================================================
+// RENDER TABLE
+// ============================================================
+function updateStats(){
+  document.getElementById('statTotal').textContent=allVideos.length;
+  document.getElementById('statA').textContent=allVideos.filter(function(v){ return v.grade==='A'; }).length;
+  document.getElementById('statB').textContent=allVideos.filter(function(v){ return v.grade==='B'; }).length;
+  document.getElementById('statNeedsWork').textContent=allVideos.filter(function(v){ return ['C','D','F'].includes(v.grade); }).length;
+  document.getElementById('statPushed').textContent=pushCount;
+}
 
-        const descScore =
-          scoreDescription(
-            s.description || ''
-          );
+function setSortAndRender(mode){ document.getElementById('sortSel').value=mode; sortAndRender(); }
 
-        const tagsScore =
-          scoreTags(
-            s.tags || []
-          );
+function sortAndRender(){
+  const mode=document.getElementById('sortSel').value;
+  const sorted=[...allVideos].sort(function(a,b){
+    if(mode==='grade-asc') return a.overall-b.overall;
+    if(mode==='grade-desc') return b.overall-a.overall;
+    if(mode==='date-desc') return new Date(b.publishedAt)-new Date(a.publishedAt);
+    if(mode==='date-asc') return new Date(a.publishedAt)-new Date(b.publishedAt);
+    if(mode==='title-asc') return a.title.localeCompare(b.title);
+    if(mode==='title-score') return a.titleScore-b.titleScore;
+    if(mode==='tags-score') return a.tagsScore-b.tagsScore;
+    if(mode==='desc-score') return a.descScore-b.descScore;
+    if(mode==='thumb-score') return a.thumbScore-b.thumbScore;
+    return 0;
+  });
+  renderTable(sorted);
+}
 
-        const overall =
-          Math.round(
-            (
-              titleScore +
-              descScore +
-              tagsScore
-            ) / 3
-          );
+function renderTable(videos){
+  if(!videos.length){ document.getElementById('videoTableBody').innerHTML='<div class="empty-state"><h3>No videos</h3><p>Sync your channel first!</p></div>'; return; }
+  document.getElementById('videoTableBody').innerHTML=videos.map(function(v){
+    return '<div class="video-row" id="row-'+v.id+'" onclick="toggleDetail(\''+v.id+'\')">' +
+      '<div class="td"><img class="thumb" src="'+v.thumbUrl+'" alt="" onerror="this.style.background=\'#E5E7EB\'"/></div>' +
+      '<div class="td"><div class="vid-title-text">'+esc(v.title)+'</div><div class="vid-date">'+(v.publishedAt?new Date(v.publishedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'')+'</div></div>' +
+      '<div class="td" id="grade-cell-'+v.id+'"><span class="grade-badge grade-'+v.grade+'">'+v.grade+'</span></div>' +
+      '<div class="td">'+bar(v.titleScore)+'</div>' +
+      '<div class="td">'+bar(v.tagsScore)+'</div>' +
+      '<div class="td">'+bar(v.descScore)+'</div>' +
+      '<div class="td">'+bar(v.thumbScore)+'</div>' +
+      '<div class="td" style="font-size:11px;color:var(--gray-400)">'+(v.publishedAt?new Date(v.publishedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—')+'</div>' +
+    '</div>' +
+    '<div class="detail-panel" id="detail-'+v.id+'">'+buildDetailPanel(v)+'</div>';
+  }).join('');
+}
 
-        return{
-          id:video.id,
-          title:s.title || '',
-          description:s.description || '',
-          tags:s.tags || [],
-          thumb:
-            s.thumbnails?.medium?.url || '',
-          score:overall,
-          grade:getGrade(overall)
-        };
+function bar(s){ return '<div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:'+s+'%;background:'+barColor(s)+'"></div></div><span class="bar-num">'+s+'</span></div>'; }
+function esc(t){ return (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ============================================================
+// DETAIL PANEL
+// ============================================================
+function toggleDetail(id){
+  const panel=document.getElementById('detail-'+id);
+  const row=document.getElementById('row-'+id);
+  const isOpen=panel.classList.contains('open');
+  document.querySelectorAll('.detail-panel').forEach(function(p){ p.classList.remove('open'); });
+  document.querySelectorAll('.video-row').forEach(function(r){ r.classList.remove('expanded'); });
+  if(!isOpen){
+    panel.classList.add('open'); row.classList.add('expanded');
+    loadPlaylists(id);
+  }
+}
+
+async function loadPlaylists(videoId){
+  const container = document.getElementById('playlists-'+videoId);
+  if(!container) return;
+  if(!accessToken){ container.innerHTML='<span style="font-size:13px;color:var(--gray-400)">Connect YouTube to see playlists</span>'; return; }
+  if(!window._playlists){
+    try{
+      const r = await fetch('https://www.googleapis.com/youtube/v3/playlists?part=snippet&mine=true&maxResults=50&key='+savedApiKey(), {headers:{Authorization:'Bearer '+accessToken}});
+      const d = await r.json();
+      window._playlists = (d.items||[]).map(function(p){ return {id:p.id, title:p.snippet.title}; });
+    }catch(e){ window._playlists=[]; }
+  }
+  if(!window._playlists.length){ container.innerHTML='<span style="font-size:13px;color:var(--gray-400)">No playlists found on your channel</span>'; return; }
+  // Auto-select up to 3 best matches
+  const video = allVideos.find(function(v){ return v.id===videoId; });
+  const titleLower = video ? video.title.toLowerCase() : '';
+  const scored = window._playlists.map(function(p){
+    const words = p.title.toLowerCase().split(' ');
+    const matches = words.filter(function(w){ return w.length>3&&titleLower.includes(w); }).length;
+    return Object.assign({},p,{score:matches});
+  }).sort(function(a,b){ return b.score-a.score; });
+  const autoSelected = new Set(scored.slice(0,3).map(function(p){ return p.id; }));
+  window['_selectedPlaylists_'+videoId] = new Set(autoSelected);
+  container.innerHTML = window._playlists.map(function(p){
+    const sel = autoSelected.has(p.id);
+    const chipHtml = window._playlists.map(function(p){ const sel=autoSelected.has(p.id); return '<span class="playlist-chip'+(sel?' selected':'')+'" data-vid="'+videoId+'" data-pid="'+p.id+'">'+esc(p.title)+'</span>'; }).join('');
+  }).join('');
+}
+
+function togglePlaylistChip(videoId, playlistId, el){
+  const key = '_selectedPlaylists_'+videoId;
+  if(!window[key]) window[key] = new Set();
+  if(window[key].has(playlistId)){ window[key].delete(playlistId); el.classList.remove('selected'); }
+  else{ window[key].add(playlistId); el.classList.add('selected'); }
+}
+
+function initPlaylistClicks(container, videoId){
+  container.querySelectorAll('.playlist-chip').forEach(function(chip){
+    chip.onclick = function(){ togglePlaylistChip(videoId, chip.dataset.pid, chip); };
+  });
+}
+
+function buildDetailPanel(v){
+  const howTo=howToGetA(v);
+  const sugTitle=generateSuggestedTitle(v.title);
+  const sugDesc=generateSuggestedDesc(v.title, v.description);
+  const sugTags=generateSuggestedTags(v.title, v.tags);
+  const thumbPrompt=generateThumbPrompt(v.title);
+
+  return '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">' +
+    '<h3 style="font-size:16px;font-weight:900">📊 Full SEO Breakdown + Suggestions</h3>' +
+    '<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();toggleDetail(\''+v.id+'\')">✕ Close</button>' +
+  '</div>' +
+
+  // Score breakdown
+  '<div class="score-breakdown">' +
+    scoreItem('📝 Title', v.titleScore, getTitleTip(v.titleScore, v.title)) +
+    scoreItem('🏷️ Tags', v.tagsScore, getTagsTip(v.tagsScore, v.tags)) +
+    scoreItem('📄 Description', v.descScore, getDescTip(v.descScore, v.description)) +
+    scoreItem('🖼️ Thumbnail', v.thumbScore, getThumbTip(v.thumbScore)) +
+  '</div>' +
+
+  // How to get an A
+  (howTo.length>0?
+    '<div class="how-to-a"><h4>🎯 How to get this video to an A:</h4><ul>'+howTo.map(function(h){ return '<li>→ '+esc(h)+'</li>'; }).join('')+'</ul></div>'
+    :'<div class="how-to-a"><h4>🌟 This video is already an A! Great work!</h4></div>') +
+
+  // Title before/after
+  '<div class="detail-label" style="margin-bottom:6px">📝 Suggested Title <span style="color:var(--gray-400);font-weight:400;font-size:10px">(max 70 chars)</span></div>' +
+  '<div class="ba-grid">' +
+    '<div class="ba-before"><div class="ba-label">Current</div><div class="ba-val">'+esc(v.title)+'</div><div style="font-size:11px;color:var(--gray-400);margin-top:3px">'+v.title.length+' chars</div></div>' +
+    '<div class="ba-after"><div class="ba-label">Suggested ✨</div><div class="ba-val">'+esc(sugTitle)+'</div><div style="font-size:11px;color:#059669;margin-top:3px">'+sugTitle.length+' chars</div></div>' +
+  '</div>' +
+  '<textarea class="editable" id="editTitle-'+v.id+'" rows="2" oninput="countChars(this,70)">'+esc(sugTitle)+'</textarea>' +
+  '<div style="font-size:11px;color:var(--gray-400);margin-top:2px" id="titleCount-'+v.id+'">'+sugTitle.length+'/70 characters</div>' +
+
+  // Description
+  '<div class="detail-label" style="margin:14px 0 6px">📄 Suggested Description</div>' +
+  '<div class="ba-grid">' +
+    '<div class="ba-before"><div class="ba-label">Current</div><div class="ba-val" style="max-height:70px;overflow:hidden">'+esc((v.description||'No description').substring(0,200))+'…</div></div>' +
+    '<div class="ba-after"><div class="ba-label">Suggested ✨</div><div class="ba-val" style="max-height:70px;overflow:hidden">'+esc(sugDesc.substring(0,200))+'…</div></div>' +
+  '</div>' +
+  '<textarea class="editable" id="editDesc-'+v.id+'" rows="5">'+esc(sugDesc)+'</textarea>' +
+
+  // Tags
+  '<div class="detail-label" style="margin:14px 0 6px">🏷️ Suggested Tags</div>' +
+  '<div class="tags-chips">'+sugTags.map(function(t){ return '<span class="tag-chip">'+esc(t)+'</span>'; }).join('')+'</div>' +
+  '<textarea class="editable" id="editTags-'+v.id+'" rows="2" style="margin-top:8px">'+esc(sugTags.join(', '))+'</textarea>' +
+
+  // Category
+  '<div class="detail-label" style="margin:14px 0 6px">📁 Category</div>' +
+  '<select class="editable" id="editCat-'+v.id+'" style="padding:8px 11px">' +
+    '<option value="27" '+(v.categoryId==='27'?'selected':'')+'>Education</option>' +
+    '<option value="22" '+(v.categoryId==='22'?'selected':'')+'>People & Blogs</option>' +
+    '<option value="10" '+(v.categoryId==='10'?'selected':'')+'>Music</option>' +
+    '<option value="20" '+(v.categoryId==='20'?'selected':'')+'>Gaming</option>' +
+    '<option value="24" '+(v.categoryId==='24'?'selected':'')+'>Entertainment</option>' +
+    '<option value="26" '+(v.categoryId==='26'?'selected':'')+'>Howto & Style</option>' +
+  '</select>' +
+
+  // Thumbnail prompt
+  '<div class="detail-label" style="margin:14px 0 6px">🖼️ Thumbnail AI Prompt <span style="color:var(--gray-400);font-weight:400;font-size:10px">— paste into ChatGPT, Gemini, or DALL-E</span></div>' +
+  '<div class="thumb-prompt"><p id="thumbPrompt-'+v.id+'">'+esc(thumbPrompt)+'</p></div>' +
+
+  // Playlists
+  '<div class="detail-label" style="margin:14px 0 6px">🎵 Playlists — auto-selected, tap to change</div>' +
+  '<div id="playlists-'+v.id+'" style="display:flex;flex-wrap:wrap;gap:8px;min-height:36px"><span style="font-size:13px;color:var(--gray-400);padding:4px 0">Loading playlists…</span></div>' +
+
+  // Actions
+  '<div class="detail-actions">' +
+    '<button class="btn btn-green btn-sm" onclick="event.stopPropagation();initiatePush(\''+v.id+'\')">🚀 Push to YouTube</button>' +
+    '<button class="copy-btn" onclick="event.stopPropagation();copyField(\'editTitle-'+v.id+'\')">Copy Title</button>' +
+    '<button class="copy-btn" onclick="event.stopPropagation();copyField(\'editDesc-'+v.id+'\')">Copy Description</button>' +
+    '<button class="copy-btn" onclick="event.stopPropagation();copyField(\'editTags-'+v.id+'\')">Copy Tags</button>' +
+    '<button class="copy-btn" onclick="event.stopPropagation();copyEl(\'thumbPrompt-'+v.id+'\')">Copy Thumbnail Prompt</button>' +
+  '</div>';
+}
+
+function scoreItem(label, score, tip){
+  return '<div class="score-item">' +
+    '<div class="score-item-label">'+label+'</div>' +
+    '<div class="score-item-val" style="color:'+barColor(score)+'">'+score+'<span style="font-size:14px;color:var(--gray-300)">/100</span></div>' +
+    '<div class="score-item-tip">'+tip+'</div>' +
+  '</div>';
+}
+
+function countChars(el, max){
+  const id=el.id.replace('editTitle-','titleCount-');
+  const counter=document.getElementById(id);
+  if(counter){ counter.textContent=el.value.length+'/'+max+' characters'; counter.style.color=el.value.length>max?'var(--red)':'var(--gray-400)'; }
+}
+
+// ============================================================
+// CONTENT GENERATION
+// ============================================================
+const STOP_WORDS=new Set(['for','the','a','an','and','or','but','in','on','at','to','of','is','it','its','with','my','your','our','this','that','are','was','be','by','as','up','do','so','we','he','she','they','what','when','where','how','why','who','not','all','can','will','just','from','into','about','than','then','like','have','has','had','get','got','let','did','no','yes','am','if','me','him','her','us','them','you','i','go','too','very','also','more','some','any','out','off','over','see','been','their','its']);
+
+function generateSuggestedTitle(title){
+  if(!title) return '';
+  const t=title.trim();
+  const lower=t.toLowerCase();
+  const hasKidsWord=['kids','children','toddler','baby','preschool'].some(function(w){ return lower.includes(w); });
+  const hasHook=['how','what','why','learn','fun','easy','best'].some(function(w){ return lower.startsWith(w); });
+  let suggested=t;
+  if(!hasKidsWord&&!hasHook){
+    if(lower.includes('abc')||lower.includes('alphabet')) suggested='Fun ABC Learning for Kids! '+t;
+    else if(lower.includes('number')||lower.includes('count')) suggested='Count with Me! '+t+' | Kids Learning';
+    else if(lower.includes('color')) suggested='Learn Colors for Kids! '+t;
+    else if(lower.includes('song')||lower.includes('music')) suggested='Fun Kids Song! '+t;
+    else suggested=t+' | Fun for Kids & Toddlers!';
+  }
+  if(suggested.length>70) suggested=suggested.substring(0,70);
+  return suggested;
+}
+
+function generateSuggestedDesc(title, existingDesc){
+  const topic=title||'this topic';
+  return '🌟 Welcome! Today we\'re learning all about '+topic+'!\n\n'+
+    'In this video, your little ones will discover '+topic+' in a super fun and engaging way! Perfect for toddlers, preschoolers, and early learners aged 2-7.\n\n'+
+    '✅ What your child will learn:\n'+
+    '• Key concepts about '+topic+'\n'+
+    '• Fun facts and activities to try at home\n'+
+    '• Interactive learning moments\n\n'+
+    '👉 SUBSCRIBE so you never miss a new video — we post new kids content every week!\n\n'+
+    '💬 Leave a comment and tell us what your child thought — we LOVE hearing from families like yours!\n\n'+
+    '👍 LIKE this video if your little one enjoyed it!\n\n'+
+    '#KidsLearning #ChildrensYouTube #ToddlerLearning #FamilyFriendly #EducationalKids';
+}
+
+function generateSuggestedTags(title, existingTags){
+  const base=['kids learning','children youtube','toddler learning','educational videos for kids','family friendly videos','preschool learning','kids educational content','early childhood learning','fun kids videos','learning for toddlers','kids brain development','children entertainment','educational kids channel','toddler videos','kids youtube'];
+  const titleWords=(title||'').toLowerCase().replace(/[^a-z0-9 ]/g,'').split(' ').filter(function(w){ return w.length>3&&!STOP_WORDS.has(w); });
+  const topicTags=titleWords.map(function(w){ return w+' for kids'; });
+  const allTags=[...new Set([...topicTags,...base])].filter(function(t){ return !t.startsWith('#')&&t.split(' ').length>1&&t.length>3&&t.length<50; }).slice(0,15);
+  return allTags;
+}
+
+function generateThumbPrompt(title){
+  return 'Create a bright, eye-catching YouTube thumbnail for a children\'s educational video about "'+title+'". Style: colorful cartoon illustration. Include: a happy smiling child or cute friendly character related to the topic, bold large text saying "'+generateSuggestedTitle(title).substring(0,25)+'", bright primary colors (red, yellow, blue, green), high contrast white background, playful and exciting mood. The thumbnail should appeal to parents scrolling on mobile. Aspect ratio 16:9, 1280x720px. No clutter — keep it simple and bold. Make it POP!';
+}
+
+// ============================================================
+// PUSH TO YOUTUBE
+// ============================================================
+function initiatePush(videoId){
+  if(!accessToken){ alert('Please connect to YouTube first.'); return; }
+  pendingPushData = { videoId };
+  const cost=50; const after=10000-quotaUsed-cost;
+  document.getElementById('modalUsed').textContent=quotaUsed.toLocaleString()+' units';
+  document.getElementById('modalCost').textContent='~'+cost+' units';
+  document.getElementById('modalAfter').textContent=Math.max(0,after).toLocaleString()+' units remaining';
+  document.getElementById('quotaModal').classList.add('open');
+}
+
+function closeModal(){ document.getElementById('quotaModal').classList.remove('open'); pendingPushData=null; }
+
+async function proceedPush(){
+  if(!pendingPushData) return;
+  const videoId=pendingPushData.videoId;
+  closeModal();
+  const title=(document.getElementById('editTitle-'+videoId)||{}).value||'';
+  const desc=(document.getElementById('editDesc-'+videoId)||{}).value||'';
+  const tagsRaw=(document.getElementById('editTags-'+videoId)||{}).value||'';
+  const tags=tagsRaw.split(',').map(function(t){ return t.trim(); }).filter(function(t){ return t&&!t.startsWith('#')&&t.split(' ').length>1; });
+  const catId=(document.getElementById('editCat-'+videoId)||{}).value||'27';
+  const oldVideo=allVideos.find(function(v){ return v.id===videoId; });
+
+  try{
+    const r=await fetch('https://www.googleapis.com/youtube/v3/videos?part=snippet&key='+savedApiKey(), {
+      method:'PUT',
+      headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},
+      body:JSON.stringify({id:videoId,snippet:{title:title,description:desc,tags:tags,categoryId:catId}})
+    });
+    const d=await r.json();
+    if(d.error) throw new Error(d.error.message);
+    useQuota(50);
+
+    // Update local data
+    const idx=allVideos.findIndex(function(v){ return v.id===videoId; });
+    if(idx>=0){
+      allVideos[idx].title=title; allVideos[idx].description=desc; allVideos[idx].tags=tags;
+      const ts=scoreTitle(title); const ds=scoreDesc(desc); const tagsS=scoreTags(tags); const thS=allVideos[idx].thumbScore||50;
+      const overall=Math.round((ts+ds+tagsS+thS)/4); const newGrade=scoreToGrade(overall);
+      allVideos[idx].titleScore=ts; allVideos[idx].descScore=ds; allVideos[idx].tagsScore=tagsS; allVideos[idx].overall=overall; allVideos[idx].grade=newGrade;
+      localStorage.setItem('ytVideoCache', JSON.stringify(allVideos));
+
+      // Update grade cell instantly
+      const gradeCell=document.getElementById('grade-cell-'+videoId);
+      if(gradeCell) gradeCell.innerHTML='<span class="grade-badge grade-'+newGrade+'" style="transform:scale(1.2);transition:transform 0.3s">'+newGrade+'</span>';
+
+      // Log history
+      pushHistory.unshift({
+        date:new Date().toISOString(), videoId:videoId,
+        oldTitle:oldVideo?oldVideo.title:'', newTitle:title,
+        oldDesc:oldVideo?(oldVideo.description||'').substring(0,300):'', newDesc:desc.substring(0,300),
+        oldTags:oldVideo?oldVideo.tags:[], newTags:tags,
+        oldGrade:oldVideo?oldVideo.grade:'?', newGrade:newGrade,
+        oldScore:oldVideo?oldVideo.overall:0, newScore:overall
       });
+      localStorage.setItem('ytHistory', JSON.stringify(pushHistory));
+      pushCount++; updateStats();
+    }
 
-    allVideos.sort(
-      (a,b)=>a.score-b.score
-    );
-
-    renderVideos();
-
-  }catch(error){
-
-    showError(error.message);
-
-    document.getElementById('videoList')
-    .innerHTML =
-      '<div>Error loading videos.</div>';
+    // Push to selected playlists
+    const playlistKey = '_selectedPlaylists_'+videoId;
+    if(window[playlistKey] && window[playlistKey].size>0){
+      for(const plId of window[playlistKey]){
+        try{
+          await fetch('https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&key='+savedApiKey(),{
+            method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},
+            body:JSON.stringify({snippet:{playlistId:plId,resourceId:{kind:'youtube#video',videoId:videoId}}})
+          });
+          useQuota(50);
+        }catch(e){ console.log('playlist err',e); }
+      }
+    }
+    showSyncAlert('✅ Successfully pushed to YouTube! Grade updated instantly.','success');
+    toggleDetail(videoId);
+  } catch(e){
+    showSyncAlert('❌ Push failed: '+e.message,'danger');
   }
 }
 
-function renderVideos(){
+// ============================================================
+// COMPETITOR PULSE
+// ============================================================
+async function loadTrending(){
+  document.getElementById('trendingList').innerHTML='<div class="spinner" style="width:24px;height:24px;border-width:2px"></div>';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:600,
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        messages:[{role:'user',content:'Search for what is trending on kids YouTube right now in 2025. List the top 8 trending topics, video formats, or themes that are performing well for children\'s educational YouTube channels. Return ONLY a JSON array like: [{"topic":"topic name","why":"one short sentence why it\'s trending"}]. No markdown, no backticks.'}]
+      })
+    });
+    const d=await r.json();
+    const text=d.content.map(function(b){ return b.type==='text'?b.text:''; }).join('');
+    const clean=text.replace(/```json|```/g,'').trim();
+    let items; try{ items=JSON.parse(clean); }catch(e){ const m=clean.match(/\[[\s\S]*\]/); items=m?JSON.parse(m[0]):[]; }
+    document.getElementById('trendingList').innerHTML=items.map(function(item,i){
+      return '<div class="trend-item"><span class="trend-num">'+(i+1)+'</span><div><strong>'+esc(item.topic)+'</strong><br><span style="color:var(--gray-500);font-size:12px">'+esc(item.why)+'</span></div></div>';
+    }).join('');
+  }catch(e){ document.getElementById('trendingList').innerHTML='<p style="font-size:13px;color:var(--gray-500)">Could not load trends right now. Try again!</p>'; }
+}
 
+async function analyzeCompetitor(){
+  const name=document.getElementById('competitorInput').value.trim();
+  if(!name) return;
+  const el=document.getElementById('competitorResult');
+  el.innerHTML='<div class="spinner" style="width:24px;height:24px;border-width:2px"></div>';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:500,
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        messages:[{role:'user',content:'Search for the YouTube channel "'+name+'" and find what types of videos perform best for them. What topics, formats, and title styles get the most views? Return ONLY JSON: {"channelName":"name","topFormats":["format1","format2","format3"],"titleStyle":"describe their title style in one sentence","topTopics":["topic1","topic2","topic3"],"takeaway":"one sentence tip for a kids channel to learn from them"}. No markdown.'}]
+      })
+    });
+    const d=await r.json();
+    const text=d.content.map(function(b){ return b.type==='text'?b.text:''; }).join('');
+    const clean=text.replace(/```json|```/g,'').trim();
+    let res; try{ res=JSON.parse(clean); }catch(e){ const m=clean.match(/\{[\s\S]*\}/); res=m?JSON.parse(m[0]):null; }
+    if(!res){ el.innerHTML='<p style="font-size:13px;color:var(--gray-500)">Could not find that channel. Try a different name.</p>'; return; }
+    el.innerHTML='<div style="margin-top:12px">'+
+      '<div class="trend-item"><span class="trend-num">💡</span><div><strong>Title style:</strong> <span style="font-size:12px;color:var(--gray-700)">'+esc(res.titleStyle)+'</span></div></div>'+
+      '<div class="trend-item"><span class="trend-num">🔥</span><div><strong>Top topics:</strong> <span style="font-size:12px;color:var(--gray-700)">'+esc((res.topTopics||[]).join(', '))+'</span></div></div>'+
+      '<div class="trend-item"><span class="trend-num">🎯</span><div><strong>What you can steal:</strong> <span style="font-size:12px;color:var(--gray-700)">'+esc(res.takeaway)+'</span></div></div>'+
+    '</div>';
+  }catch(e){ el.innerHTML='<p style="font-size:13px;color:var(--gray-500)">Could not analyze right now. Try again!</p>'; }
+}
+
+async function loadVideoIdeas(){
+  document.getElementById('videoIdeas').innerHTML='<div class="spinner" style="width:24px;height:24px;border-width:2px"></div>';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:600,
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        messages:[{role:'user',content:'Based on current trends in kids YouTube in 2025, suggest 6 specific video ideas for a children\'s educational YouTube channel. Make them specific, actionable, and trending. Return ONLY JSON array: [{"title":"specific video title","why":"why this would perform well right now in one sentence"}]. No markdown.'}]
+      })
+    });
+    const d=await r.json();
+    const text=d.content.map(function(b){ return b.type==='text'?b.text:''; }).join('');
+    const clean=text.replace(/```json|```/g,'').trim();
+    let items; try{ items=JSON.parse(clean); }catch(e){ const m=clean.match(/\[[\s\S]*\]/); items=m?JSON.parse(m[0]):[]; }
+    document.getElementById('videoIdeas').innerHTML=items.map(function(item,i){
+      return '<div class="trend-item"><span class="trend-num">'+(i+1)+'</span><div><strong>'+esc(item.title)+'</strong><br><span style="color:var(--gray-500);font-size:12px">'+esc(item.why)+'</span></div></div>';
+    }).join('');
+  }catch(e){ document.getElementById('videoIdeas').innerHTML='<p style="font-size:13px;color:var(--gray-500)">Could not load ideas right now. Try again!</p>'; }
+}
+
+// ============================================================
+// NEW VIDEO MODE
+// ============================================================
+function generateNewVideoMeta(){
+  const topic=document.getElementById('newVideoTopic').value.trim();
+  const age=document.getElementById('newVideoAge').value;
+  if(!topic){ alert('Please describe what your video is about first!'); return; }
+  const btn=document.getElementById('newVideoBtn');
+  btn.disabled=true; btn.textContent='✨ Generating...';
+  const ageLabel={'babies':'babies 0-2','toddlers':'toddlers 2-4','preschool':'preschoolers 3-5','early-kids':'kids 5-7','all-kids':'all kids 0-8'}[age];
+  const title=generateSuggestedTitle(topic);
+  const desc=generateSuggestedDesc(topic,'');
+  const tags=generateSuggestedTags(topic,[]);
+  const thumbP=generateThumbPrompt(topic);
+  document.getElementById('newTitle').value=title;
+  document.getElementById('newTitleCount').textContent=title.length+'/70 characters';
+  document.getElementById('newDesc').value=desc;
+  document.getElementById('newTags').value=tags.join(', ');
+  document.getElementById('newCategory').value='Education (recommended for kids learning content)';
+  document.getElementById('newThumbPrompt').textContent=thumbP;
+  document.getElementById('newVideoResult').style.display='block';
+  btn.disabled=false; btn.textContent='✨ Generate Metadata';
+  document.getElementById('newVideoResult').scrollIntoView({behavior:'smooth'});
+}
+
+function saveDraft(){
+  if(drafts.length>=10){ alert('You have 10 drafts saved — the max! Delete one before saving a new one.'); return; }
+  const draft={
+    id:Date.now(), date:new Date().toISOString(),
+    title:document.getElementById('newTitle').value,
+    desc:document.getElementById('newDesc').value,
+    tags:document.getElementById('newTags').value,
+    thumbPrompt:document.getElementById('newThumbPrompt').textContent
+  };
+  drafts.unshift(draft);
+  localStorage.setItem('ytDrafts', JSON.stringify(drafts));
+  renderDrafts();
+  alert('Draft saved! You have '+(10-drafts.length)+' draft slots remaining.');
+}
+
+function deleteDraft(id){
+  drafts=drafts.filter(function(d){ return d.id!==id; });
+  localStorage.setItem('ytDrafts', JSON.stringify(drafts));
+  renderDrafts();
+}
+
+function renderDrafts(){
+  document.getElementById('draftCount').textContent=drafts.length+' / 10 drafts used';
+  if(!drafts.length){ document.getElementById('draftsList').innerHTML='<p style="font-size:13px;color:var(--gray-500)">No drafts saved yet.</p>'; return; }
+  document.getElementById('draftsList').innerHTML=drafts.map(function(d){
+    return '<div class="draft-item">' +
+      '<div style="flex:1"><div class="draft-title">'+esc(d.title)+'</div><div class="draft-date">Saved '+new Date(d.date).toLocaleDateString()+'</div></div>' +
+      '<button class="copy-btn" onclick="loadDraft('+d.id+')">Load</button>' +
+      '<button class="copy-btn" onclick="deleteDraft('+d.id+')" style="color:var(--red);border-color:var(--red)">Delete</button>' +
+    '</div>';
+  }).join('');
+}
+
+function loadDraft(id){
+  const d=drafts.find(function(dr){ return dr.id===id; });
+  if(!d) return;
+  document.getElementById('newTitle').value=d.title;
+  document.getElementById('newDesc').value=d.desc;
+  document.getElementById('newTags').value=d.tags;
+  document.getElementById('newThumbPrompt').textContent=d.thumbPrompt;
+  document.getElementById('newVideoResult').style.display='block';
+}
+
+function copyNewAll(){
+  const all='TITLE:\n'+document.getElementById('newTitle').value+'\n\nDESCRIPTION:\n'+document.getElementById('newDesc').value+'\n\nTAGS:\n'+document.getElementById('newTags').value+'\n\nTHUMBNAIL PROMPT:\n'+document.getElementById('newThumbPrompt').textContent;
+  navigator.clipboard.writeText(all).then(function(){ alert('Everything copied to clipboard!'); });
+}
+
+// ============================================================
+// HISTORY
+// ============================================================
+function renderHistory(){
+  const el=document.getElementById('historyList');
+  if(!pushHistory.length){ el.innerHTML='<div style="background:white;border-radius:var(--r-lg);padding:48px;text-align:center;color:var(--gray-500);box-shadow:var(--shadow)"><p style="font-size:15px">No pushes yet — your history will appear here after your first push.</p></div>'; return; }
+  el.innerHTML=pushHistory.map(function(h,i){
+    return '<div class="history-entry">' +
+      '<div class="history-summary" onclick="toggleHistory('+i+')">' +
+        '<div><div style="font-size:13px;font-weight:700">'+esc(h.newTitle)+'</div><div style="font-size:11px;color:var(--gray-400);margin-top:2px">'+new Date(h.date).toLocaleString()+' · <a href="https://youtube.com/watch?v='+h.videoId+'" target="_blank" style="color:var(--blue)">View on YouTube</a></div></div>' +
+        '<span style="color:'+gradeColor(h.oldGrade||'F')+';font-weight:900;font-size:16px;font-family:Nunito,sans-serif">'+h.oldGrade+'</span>' +
+        '<span style="font-size:14px;color:var(--gray-400)">→</span>' +
+        '<span style="color:'+gradeColor(h.newGrade||'A')+';font-weight:900;font-size:16px;font-family:Nunito,sans-serif">'+h.newGrade+'</span>' +
+      '</div>' +
+      '<div class="history-detail" id="hd-'+i+'">' +
+        '<div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:var(--gray-500);margin-bottom:8px">Score: '+h.oldScore+' → '+h.newScore+'</div>' +
+        '<div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:var(--gray-500);margin-bottom:6px">Title</div>' +
+        '<div class="h-ba"><div class="h-before"><div class="h-label">Before</div><div class="h-val">'+esc(h.oldTitle)+'</div></div><div class="h-after"><div class="h-label">After ✨</div><div class="h-val">'+esc(h.newTitle)+'</div></div></div>' +
+        '<div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:var(--gray-500);margin-bottom:6px">Description</div>' +
+        '<div class="h-ba"><div class="h-before"><div class="h-label">Before</div><div class="h-val">'+esc((h.oldDesc||'').substring(0,150))+'…</div></div><div class="h-after"><div class="h-label">After ✨</div><div class="h-val">'+esc((h.newDesc||'').substring(0,150))+'…</div></div></div>' +
+        '<div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:var(--gray-500);margin-bottom:6px">Tags</div>' +
+        '<div class="h-ba"><div class="h-before"><div class="h-label">Before</div><div class="h-val">'+esc((h.oldTags||[]).join(', ').substring(0,120))+'</div></div><div class="h-after"><div class="h-label">After ✨</div><div class="h-val">'+esc((h.newTags||[]).join(', ').substring(0,120))+'</div></div></div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function toggleHistory(i){ const el=document.getElementById('hd-'+i); if(el) el.classList.toggle('open'); }
+
+function exportCSV(){
+  if(!pushHistory.length){ alert('No history to export yet.'); return; }
+  const rows=[['Date','Video ID','Old Title','New Title','Old Grade','New Grade','Old Score','New Score'],...pushHistory.map(function(h){ return [h.date,h.videoId,h.oldTitle,h.newTitle,h.oldGrade,h.newGrade,h.oldScore,h.newScore]; })];
+  const csv=rows.map(function(r){ return r.map(function(c){ return '"'+(c||'').toString().replace(/"/g,'""')+'"'; }).join(','); }).join('\n');
+  const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv); a.download='youtube-push-history.csv'; a.click();
+}
+
+
+// ============================================================
+// STRATEGY TAB
+// ============================================================
+function initStrategy(){
   if(!allVideos.length){
-
-    document.getElementById('videoList')
-    .innerHTML =
-      '<div>No videos found.</div>';
-
-    return;
+    document.getElementById('strategyContent').innerHTML='<div style="background:white;border-radius:var(--r-lg);padding:48px;text-align:center;box-shadow:var(--shadow)"><p style="font-size:15px;color:var(--gray-500)">Sync your videos first, then come back here for your strategy report!</p><button class="btn btn-red btn-sm" style="margin-top:16px" onclick="showTab(\'tabVideos\')">Go sync videos first</button></div>';
   }
-
-  document.getElementById('videoList')
-  .innerHTML =
-    allVideos.map(video=>`
-
-      <div
-        class="video"
-        onclick="openPreview('${video.id}')"
-      >
-
-        <img
-          class="thumb"
-          src="${video.thumb}"
-        />
-
-        <div>
-
-          <div
-            style="font-weight:700;margin-bottom:4px;"
-          >
-            ${escapeHtml(video.title)}
-          </div>
-
-          <div class="small">
-            SEO Score:
-            ${video.score}
-          </div>
-
-        </div>
-
-        <div class="grade ${video.grade}">
-          ${video.grade}
-        </div>
-
-      </div>
-
-    `).join('');
 }
 
-function openPreview(videoId){
+async function generateStrategy(){
+  const el = document.getElementById('strategyContent');
+  el.innerHTML='<div style="background:white;border-radius:var(--r-lg);padding:48px;text-align:center;box-shadow:var(--shadow)"><div class="spinner"></div><p style="margin-top:12px;font-size:14px;color:var(--gray-500)">Analyzing your entire channel… this takes about 15 seconds</p></div>';
 
-  const video =
-    allVideos.find(
-      v=>v.id===videoId
-    );
+  // Build channel summary from cached data
+  const total = allVideos.length;
+  const grades = {A:0,B:0,C:0,D:0,F:0};
+  allVideos.forEach(function(v){ grades[v.grade]=(grades[v.grade]||0)+1; });
+  const avgScore = total>0 ? Math.round(allVideos.reduce(function(a,v){ return a+v.overall; },0)/total) : 0;
+  const worstVideos = [...allVideos].sort(function(a,b){ return a.overall-b.overall; }).slice(0,5).map(function(v){ return v.title; });
+  const bestVideos = [...allVideos].sort(function(a,b){ return b.overall-a.overall; }).slice(0,3).map(function(v){ return v.title; });
+  const lowTags = allVideos.filter(function(v){ return v.tagsScore<50; }).length;
+  const lowDesc = allVideos.filter(function(v){ return v.descScore<50; }).length;
+  const lowThumb = allVideos.filter(function(v){ return v.thumbScore<50; }).length;
+  const lowTitle = allVideos.filter(function(v){ return v.titleScore<50; }).length;
 
-  if(!video) return;
+  const prompt = 'You are a YouTube growth strategist specializing in kids educational content. Analyze this channel data and give a specific, actionable strategy report. CHANNEL DATA: Total videos: '+total+'. Grade breakdown: A:'+grades.A+', B:'+grades.B+', C:'+grades.C+', D:'+grades.D+', F:'+grades.F+'. Average SEO score: '+avgScore+'/100. Videos with weak tags: '+lowTags+'. Videos with weak descriptions: '+lowDesc+'. Videos with weak thumbnails: '+lowThumb+'. Videos with weak titles: '+lowTitle+'. 5 worst performing videos: '+worstVideos.join(', ')+'. 3 best performing videos: '+bestVideos.join(', ')+'. Return ONLY valid JSON (no markdown): {"overallHealth":"one sentence channel health summary","urgentFixes":[{"action":"specific action","impact":"why this matters","effort":"Easy/Medium/Hard"}],"videoPriority":[{"title":"video title from worst list","whyFirst":"why tackle this one first"}],"newVideoIdeas":[{"title":"specific video title idea","why":"why this would perform well for kids youtube right now"}],"biggestWin":"the single most impactful thing they can do this week"}';
 
-  currentVideo = video;
-
-  document.getElementById(
-    'previewTitle'
-  ).innerText =
-    video.title;
-
-  document.getElementById(
-    'previewContent'
-  ).innerHTML = `
-
-    <h3>Current Title</h3>
-
-    <textarea
-      id="editTitle"
-      rows="2"
-    >${video.title}</textarea>
-
-    <h3>Description</h3>
-
-    <textarea
-      id="editDescription"
-      rows="8"
-    >${video.description}</textarea>
-
-    <h3>Tags</h3>
-
-    <textarea
-      id="editTags"
-      rows="3"
-    >${video.tags.join(', ')}</textarea>
-
-  `;
-
-  document.getElementById(
-    'previewModal'
-  ).style.display =
-    'flex';
+  try{
+    const r = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompt}]})
+    });
+    const d = await r.json();
+    const text = d.content.map(function(b){ return b.type==='text'?b.text:''; }).join('');
+    const clean = text.replace(/```json|```/g,'').trim();
+    let res; try{ res=JSON.parse(clean); }catch(e){ const m=clean.match(/\{[\s\S]*\}/); res=m?JSON.parse(m[0]):null; }
+    if(!res) throw new Error('Could not parse strategy');
+    renderStrategy(res, grades, avgScore, total);
+  }catch(e){
+    el.innerHTML='<div class="alert alert-danger">Could not generate strategy right now: '+e.message+'. Try again in a moment.</div><button class="btn btn-primary" onclick="generateStrategy()" style="margin-top:12px">Try Again</button>';
+  }
 }
 
-function closePreview(){
+function renderStrategy(res, grades, avgScore, total){
+  const el = document.getElementById('strategyContent');
+  el.innerHTML =
+    // Health header
+    '<div style="background:white;border-radius:var(--r-lg);padding:24px;box-shadow:var(--shadow);margin-bottom:16px">'+
+      '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">'+
+        '<div style="text-align:center;min-width:80px"><div style="font-size:48px;font-weight:900;font-family:Nunito,sans-serif;color:'+barColor(avgScore)+'">'+avgScore+'</div><div style="font-size:12px;color:var(--gray-500);font-weight:600">Channel Score</div></div>'+
+        '<div style="flex:1"><h3 style="font-size:18px;font-weight:900;margin-bottom:4px">Channel Health Report</h3><p style="font-size:14px;color:var(--gray-500);line-height:1.6">'+esc(res.overallHealth)+'</p></div>'+
+      '</div>'+
+      '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:16px">'+
+        ['A','B','C','D','F'].map(function(g){ return '<div style="text-align:center;background:var(--gray-50);border-radius:8px;padding:8px"><div style="font-size:22px;font-weight:900;font-family:Nunito,sans-serif;color:'+gradeColor(g)+'">'+grades[g]+'</div><div style="font-size:11px;color:var(--gray-500)">Grade '+g+'</div></div>'; }).join('')+
+      '</div>'+
+    '</div>'+
 
-  document.getElementById(
-    'previewModal'
-  ).style.display =
-    'none';
+    // Biggest win
+    '<div style="background:linear-gradient(135deg,#FFF7ED,#FEF3C7);border:2px solid #FCD34D;border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow);margin-bottom:16px">'+
+      '<div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#B45309;margin-bottom:6px;font-family:Nunito,sans-serif">⚡ BIGGEST WIN THIS WEEK</div>'+
+      '<p style="font-size:15px;font-weight:700;color:#92400E;line-height:1.6">'+esc(res.biggestWin)+'</p>'+
+    '</div>'+
+
+    // Urgent fixes
+    '<div style="background:white;border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow);margin-bottom:16px">'+
+      '<h3 style="font-size:16px;font-weight:900;margin-bottom:14px">🔥 Top 3 Things to Fix Right Now</h3>'+
+      (res.urgentFixes||[]).map(function(f,i){
+        const effortColor={'Easy':'#059669','Medium':'#D97706','Hard':'#DC2626'}[f.effort]||'#6B7280';
+        return '<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--gray-100)">'+
+          '<span style="font-size:22px;font-weight:900;color:var(--blue);font-family:Nunito,sans-serif;min-width:28px">'+(i+1)+'</span>'+
+          '<div style="flex:1"><div style="font-size:14px;font-weight:700;margin-bottom:3px">'+esc(f.action)+'</div>'+
+          '<div style="font-size:12px;color:var(--gray-500);margin-bottom:4px">'+esc(f.impact)+'</div>'+
+          '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:'+effortColor+'20;color:'+effortColor+'">'+f.effort+' effort</span></div>'+
+        '</div>';
+      }).join('')+
+    '</div>'+
+
+    // Video priority
+    '<div style="background:white;border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow);margin-bottom:16px">'+
+      '<h3 style="font-size:16px;font-weight:900;margin-bottom:14px">🎯 Videos to Prioritize First</h3>'+
+      (res.videoPriority||[]).map(function(v){
+        return '<div style="padding:10px 12px;background:var(--red-l);border-radius:var(--r-sm);margin-bottom:8px;border-left:3px solid var(--red)">'+
+          '<div style="font-size:13px;font-weight:700;margin-bottom:3px">'+esc(v.title)+'</div>'+
+          '<div style="font-size:12px;color:var(--gray-500)">'+esc(v.whyFirst)+'</div>'+
+        '</div>';
+      }).join('')+
+    '</div>'+
+
+    // New video ideas
+    '<div style="background:white;border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow);margin-bottom:16px">'+
+      '<h3 style="font-size:16px;font-weight:900;margin-bottom:14px">✨ New Video Ideas to Create</h3>'+
+      (res.newVideoIdeas||[]).map(function(v,i){
+        return '<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-100)">'+
+          '<span style="font-size:18px;font-weight:900;color:var(--purple);font-family:Nunito,sans-serif;min-width:24px">'+(i+1)+'</span>'+
+          '<div><div style="font-size:13px;font-weight:700;margin-bottom:2px">'+esc(v.title)+'</div>'+
+          '<div style="font-size:12px;color:var(--gray-500)">'+esc(v.why)+'</div></div>'+
+        '</div>';
+      }).join('')+
+    '</div>'+
+
+    '<button class="btn btn-ghost btn-sm" onclick="generateStrategy()" style="margin-top:4px">🔄 Regenerate Report</button>';
 }
 
-function escapeHtml(text){
+// ============================================================
+// COPY HELPERS
+// ============================================================
+function copyField(id){ const el=document.getElementById(id); if(!el) return; navigator.clipboard.writeText(el.value).then(function(){ flashCopy(id); }); }
+function copyEl(id){ const el=document.getElementById(id); if(!el) return; navigator.clipboard.writeText(el.textContent).then(function(){ flashCopy(id); }); }
+function flashCopy(id){ const el=document.getElementById(id); if(!el) return; const orig=el.style.background; el.style.background='#DCFCE7'; setTimeout(function(){ el.style.background=orig; },800); }
 
-  return text
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
+// Close modals on background click
+document.getElementById('quotaModal').addEventListener('click',function(e){ if(e.target===this) closeModal(); });
+document.getElementById('syncModal').addEventListener('click',function(e){ if(e.target===this) closeSyncModal(); });
+
+// Expose all functions globally
+window.saveAndConnect = saveAndConnect;
+window.handleAuthClick = handleAuthClick;
+window.showTab = showTab;
+window.confirmSync = confirmSync;
+window.closeSyncModal = closeSyncModal;
+window.doSync = doSync;
+window.dailyRefresh = dailyRefresh;
+window.sortAndRender = sortAndRender;
+window.setSortAndRender = setSortAndRender;
+window.toggleDetail = toggleDetail;
+window.initiatePush = initiatePush;
+window.closeModal = closeModal;
+window.proceedPush = proceedPush;
+window.loadTrending = loadTrending;
+window.analyzeCompetitor = analyzeCompetitor;
+window.loadVideoIdeas = loadVideoIdeas;
+window.generateNewVideoMeta = generateNewVideoMeta;
+window.saveDraft = saveDraft;
+window.deleteDraft = deleteDraft;
+window.loadDraft = loadDraft;
+window.copyNewAll = copyNewAll;
+window.copyField = copyField;
+window.copyEl = copyEl;
+window.exportCSV = exportCSV;
+window.generateStrategy = generateStrategy;
+window.toggleHistory = toggleHistory;
+window.togglePlaylistChip = togglePlaylistChip;
+window.initPlaylistClicks = initPlaylistClicks;
+
+} catch(e) {
+  console.error('Studio script error:', e);
+  document.body.innerHTML = '<div style="font-family:sans-serif;padding:40px;max-width:500px;margin:0 auto"><h2 style="color:#DC2626">App Error</h2><p style="color:#6B7280;margin:12px 0">Something went wrong loading the app. Please try:</p><ol style="color:#374151;line-height:2"><li>Hard refresh: Ctrl+Shift+R (Windows) or Cmd+Shift+R (Mac)</li><li>Clear your browser cache</li><li>Try a different browser</li></ol><p style="color:#DC2626;margin-top:16px;font-size:13px">Error: '+e.message+'</p></div>';
 }
-
-window.addEventListener('load',()=>{
-
-  console.log(
-    'YouTube SEO Studio loaded successfully'
-  );
-
-  initiateOAuth();
-});
-
 </script>
 </body>
 </html>
