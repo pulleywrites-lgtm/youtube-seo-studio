@@ -492,6 +492,8 @@ textarea{resize:vertical}
 </div>
 
 <script>
+// Wrap in try-catch so syntax errors are visible
+try {
 // ============================================================
 // STATE
 // ============================================================
@@ -1430,6 +1432,41 @@ function flashCopy(id){ const el=document.getElementById(id); if(!el) return; co
 // Close modals on background click
 document.getElementById('quotaModal').addEventListener('click',function(e){ if(e.target===this) closeModal(); });
 document.getElementById('syncModal').addEventListener('click',function(e){ if(e.target===this) closeSyncModal(); });
+
+// Expose all functions globally
+window.saveAndConnect = saveAndConnect;
+window.handleAuthClick = handleAuthClick;
+window.showTab = showTab;
+window.confirmSync = confirmSync;
+window.closeSyncModal = closeSyncModal;
+window.doSync = doSync;
+window.dailyRefresh = dailyRefresh;
+window.sortAndRender = sortAndRender;
+window.setSortAndRender = setSortAndRender;
+window.toggleDetail = toggleDetail;
+window.initiatePush = initiatePush;
+window.closeModal = closeModal;
+window.proceedPush = proceedPush;
+window.loadTrending = loadTrending;
+window.analyzeCompetitor = analyzeCompetitor;
+window.loadVideoIdeas = loadVideoIdeas;
+window.generateNewVideoMeta = generateNewVideoMeta;
+window.saveDraft = saveDraft;
+window.deleteDraft = deleteDraft;
+window.loadDraft = loadDraft;
+window.copyNewAll = copyNewAll;
+window.copyField = copyField;
+window.copyEl = copyEl;
+window.exportCSV = exportCSV;
+window.generateStrategy = generateStrategy;
+window.toggleHistory = toggleHistory;
+window.togglePlaylistChip = togglePlaylistChip;
+window.initPlaylistClicks = initPlaylistClicks;
+
+} catch(e) {
+  console.error('Studio script error:', e);
+  document.body.innerHTML = '<div style="font-family:sans-serif;padding:40px;max-width:500px;margin:0 auto"><h2 style="color:#DC2626">App Error</h2><p style="color:#6B7280;margin:12px 0">Something went wrong loading the app. Please try:</p><ol style="color:#374151;line-height:2"><li>Hard refresh: Ctrl+Shift+R (Windows) or Cmd+Shift+R (Mac)</li><li>Clear your browser cache</li><li>Try a different browser</li></ol><p style="color:#DC2626;margin-top:16px;font-size:13px">Error: '+e.message+'</p></div>';
+}
 </script>
 </body>
 </html>
