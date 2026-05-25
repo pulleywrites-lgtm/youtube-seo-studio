@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>YouTube SEO Studio — Quota Smart (Revised)</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
-/* Visuals adapted from your original so UI looks familiar */
+/* Simplified/adapted styles from your original for parity */
 :root{
   --red:#FF0000;--red-l:#FFF0F0;
   --blue:#4361EE;--blue-l:#EEF1FF;
@@ -39,10 +39,10 @@ h1,h2,h3,h4,h5{font-family:'Nunito',sans-serif}
 .field{margin-bottom:12px}
 input,textarea,select{width:100%;padding:10px;border:1.5px solid var(--gray-200);border-radius:var(--r-sm);font-size:14px}
 .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;border:none;cursor:pointer;font-weight:800}
-.btn-red{background:var(--red);color:#fff}.btn-ghost{background:var(--gray-100)}
+.btn-red{background:var(--red);color:#fff}.btn-green{background:var(--green);color:#fff}.btn-ghost{background:var(--gray-100)}
 .small{font-size:13px;color:var(--gray-500)}
 .quota-bar{height:10px;background:var(--gray-100);border-radius:999px;overflow:hidden}
-.quota-fill{height:100%;width:0%;transition:width .4s}
+.quota-fill{height:100%;width:0%;transition:width .4s;background:linear-gradient(90deg,var(--green),var(--blue))}
 .table-wrap{margin-top:12px;background:white;border-radius:12px;padding:12px;box-shadow:var(--shadow)}
 .table-head{display:flex;gap:8px;padding:8px 4px;color:#6B7280;font-weight:700}
 .video-row{display:flex;align-items:center;gap:12px;padding:10px;border-bottom:1px solid var(--gray-100);cursor:pointer}
@@ -54,6 +54,7 @@ input,textarea,select{width:100%;padding:10px;border:1.5px solid var(--gray-200)
 .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.35);z-index:999}
 .modal .card{max-width:520px;width:100%}
 .copy-btn{padding:6px 10px;border-radius:8px;border:1px solid var(--gray-200);background:white;cursor:pointer}
+.score-badge{display:inline-block;padding:6px 10px;border-radius:8px;background:#F3F4F6;font-weight:700}
 </style>
 </head>
 <body>
@@ -75,7 +76,7 @@ input,textarea,select{width:100%;padding:10px;border:1.5px solid var(--gray-200)
     <p class="small">Paste your OAuth Client ID and API Key. They are saved only in your browser (localStorage).</p>
     <div class="field"><label>OAuth Client ID</label><input id="clientIdInput" placeholder="xxxxx.apps.googleusercontent.com" /></div>
     <div class="field"><label>API Key</label><input id="apiKeyInput" placeholder="AIza..." /></div>
-    <div style="display:flex;gap:8px">
+    <div style="display:flex;gap:8px;margin-top:8px">
       <button class="btn btn-red" id="connectBtn">Connect</button>
       <button class="btn btn-ghost" id="clearCredsBtn">Clear saved creds</button>
     </div>
@@ -87,7 +88,7 @@ input,textarea,select{width:100%;padding:10px;border:1.5px solid var(--gray-200)
     <div class="card" style="display:flex;align-items:center;gap:12px">
       <div style="flex:1">
         <div class="small">Daily Quota</div>
-        <div class="quota-bar" style="margin:8px 0"><div id="quotaFill" class="quota-fill" style="background:linear-gradient(90deg,var(--green),var(--blue));width:0%"></div></div>
+        <div class="quota-bar" style="margin:8px 0"><div id="quotaFill" class="quota-fill" style="width:0%"></div></div>
         <div class="small" id="quotaText">0 / 10,000 units used · Resets midnight PT</div>
       </div>
       <div><button class="btn btn-ghost" id="btnDisconnect">Disconnect</button></div>
@@ -142,7 +143,7 @@ input,textarea,select{width:100%;padding:10px;border:1.5px solid var(--gray-200)
         <h3>Plan a New Video</h3>
         <div class="field"><label>Topic</label><input id="newVideoTopic" /></div>
         <div class="field"><label>Age</label><select id="newVideoAge"><option value="toddlers">Toddlers</option><option value="preschool">Preschool</option><option value="babies">Babies</option></select></div>
-        <div style="display:flex;gap:8px"><button class="btn btn-primary" id="generateNewBtn">Generate Metadata</button><button class="btn btn-ghost" id="clearNewBtn">Clear</button></div>
+        <div style="display:flex;gap:8px"><button class="btn btn-green" id="generateNewBtn">Generate Metadata</button><button class="btn btn-ghost" id="clearNewBtn">Clear</button></div>
         <div id="newVideoResult" style="margin-top:12px"></div>
       </div>
 
@@ -160,7 +161,7 @@ input,textarea,select{width:100%;padding:10px;border:1.5px solid var(--gray-200)
   </div>
 </div>
 
-<!-- QUOTA MODAL -->
+<!-- Quota Modal -->
 <div id="quotaModal" style="display:none" class="modal">
   <div class="card">
     <h3 id="quotaModalTitle">Confirm action (uses quota)</h3>
@@ -173,10 +174,10 @@ input,textarea,select{width:100%;padding:10px;border:1.5px solid var(--gray-200)
 </div>
 
 <script>
-/* =================== State & config =================== */
+/* ===== State & config ===== */
 const DAILY_QUOTA = 10000;
 const SAFE_THRESHOLD = 200;
-let CLIENT_ID = ''; // no hardcoded keys
+let CLIENT_ID = '';
 let API_KEY = '';
 let accessToken = null;
 let allVideos = [];
@@ -184,51 +185,43 @@ let pushHistory = JSON.parse(localStorage.getItem('ytHistory')||'[]');
 let playlists = [];
 let pendingAction = null;
 
-/* ========== Utility ========== */
+/* ===== Quota helpers ===== */
 function todayKey(){ return (new Date()).toISOString().slice(0,10); }
 function getQuotaUsed(){ return parseInt(localStorage.getItem('quota_'+todayKey())||'0',10); }
 function addQuota(n){ const k='quota_'+todayKey(); const v=getQuotaUsed()+n; localStorage.setItem(k,String(v)); updateQuotaUI(); }
 function updateQuotaUI(){ const used=getQuotaUsed(); const pct=Math.min((used/DAILY_QUOTA)*100,100); document.getElementById('quotaFill').style.width=pct+'%'; document.getElementById('quotaText').textContent = used.toLocaleString()+' / '+DAILY_QUOTA.toLocaleString()+' units used'; document.getElementById('syncInfo').textContent = localStorage.getItem('ytLastSync') ? ('Last sync: '+new Date(parseInt(localStorage.getItem('ytLastSync'))).toLocaleDateString()) : 'Not synced yet'; }
 
-/* ========== Init UI wiring ========== */
+/* ===== Init UI wiring ===== */
 window.addEventListener('DOMContentLoaded', ()=> {
-  // Prefill saved creds (if any)
-  document.getElementById('clientIdInput').value = localStorage.getItem('ytClientId') || '';
-  document.getElementById('apiKeyInput').value = localStorage.getItem('ytApiKey') || '';
+  document.getElementById('clientIdInput').value = localStorage.getItem('ytClientId')||'';
+  document.getElementById('apiKeyInput').value = localStorage.getItem('ytApiKey')||'';
   updateQuotaUI();
 
-  // Connect/disconnect
   document.getElementById('connectBtn').addEventListener('click', saveAndConnect);
   document.getElementById('clearCredsBtn').addEventListener('click', ()=>{ localStorage.removeItem('ytClientId'); localStorage.removeItem('ytApiKey'); alert('Cleared saved credentials'); });
   document.getElementById('btnDisconnect').addEventListener('click', ()=>{ accessToken=null; setAuthUI(false); alert('Disconnected'); });
 
-  // Nav
-  document.querySelectorAll('.nav').forEach(b=>b.addEventListener('click', e=>{ const tab = e.currentTarget.dataset.tab; showTab(tab); }));
+  document.querySelectorAll('.nav').forEach(b=>b.addEventListener('click', e=>{ const tab=e.currentTarget.dataset.tab; showTab(tab); }));
   showTab('videos');
 
-  // Buttons
   document.getElementById('syncBtn').addEventListener('click', confirmSync);
   document.getElementById('refreshViewBtn').addEventListener('click', ()=>{ if(allVideos.length){ scoreAllLocal(); renderTable(allVideos); alert('View refreshed — no quota used'); } else alert('No cached videos'); });
   document.getElementById('sortSel').addEventListener('change', sortAndRender);
   document.getElementById('refreshTrendingBtn').addEventListener('click', refreshTrending);
   document.getElementById('trendingMode').addEventListener('change', ()=>{ document.getElementById('trendingModeNote').textContent = document.getElementById('trendingMode').value==='api' ? 'API mode — will cost quota (confirm first)' : 'Local (free) trending'; });
 
-  // New video
   document.getElementById('generateNewBtn').addEventListener('click', generateNewVideoMeta);
   document.getElementById('clearNewBtn').addEventListener('click', ()=>{ document.getElementById('newVideoTopic').value=''; document.getElementById('newVideoResult').innerHTML=''; });
 
-  // History
   document.getElementById('exportCsvBtn').addEventListener('click', exportCSV);
 
-  // Quota modal
   document.getElementById('quotaCancel').addEventListener('click', ()=>{ pendingAction=null; document.getElementById('quotaModal').style.display='none'; });
   document.getElementById('quotaConfirm').addEventListener('click', ()=>{ if(!pendingAction) return; const a=pendingAction; pendingAction=null; document.getElementById('quotaModal').style.display='none'; if(a.type==='sync') doSyncConfirmed(); if(a.type==='trending') fetchTrendingAPI(); if(a.type==='push') proceedPushConfirmed(a.videoId); });
 
-  // Load cached videos if any
   try{ const c=localStorage.getItem('ytVideoCache'); if(c){ allVideos=JSON.parse(c); renderTable(allVideos); updateStats(); } }catch(e){}
 });
 
-/* ========== Simple helpers UI ========= */
+/* ===== UI helpers ===== */
 function showTab(key){
   document.getElementById('tab-videos').style.display = key==='videos' ? 'block' : 'none';
   document.getElementById('tab-strategy').style.display = key==='strategy' ? 'block' : 'none';
@@ -236,8 +229,9 @@ function showTab(key){
   document.getElementById('tab-newvideo').style.display = key==='newvideo' ? 'block' : 'none';
   document.getElementById('tab-history').style.display = key==='history' ? 'block' : 'none';
 }
+function setAuthUI(on){ document.getElementById('authDot').className = 'dot ' + (on ? 'dot-green' : 'dot-red'); document.getElementById('authLabel').textContent = on ? 'Connected ✓' : 'Connect'; document.getElementById('screenConnect').style.display = on ? 'none' : 'block'; document.getElementById('screenMain').style.display = on ? 'block' : 'none'; }
 
-/* ========== Auth ========= */
+/* ===== Auth ===== */
 const SCOPES = 'https://www.googleapis.com/auth/youtube.force-ssl';
 function saveAndConnect(){
   const cid = document.getElementById('clientIdInput').value.trim();
@@ -249,16 +243,10 @@ function saveAndConnect(){
   const client = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: (resp)=>{ if(resp.error){ alert('Auth failed: '+resp.error); return; } accessToken = resp.access_token; setAuthUI(true); loadPlaylistsBackground(); alert('Connected — click Sync to load videos'); }});
   client.requestAccessToken();
 }
-function setAuthUI(on){
-  document.getElementById('authDot').className = 'dot ' + (on ? 'dot-green' : 'dot-red');
-  document.getElementById('authLabel').textContent = on ? 'Connected ✓' : 'Connect';
-  document.getElementById('screenConnect').style.display = on ? 'none' : 'block';
-  document.getElementById('screenMain').style.display = on ? 'block' : 'none';
-}
 
-/* ========== Sync (quota-aware) ========= */
+/* ===== Sync (quota-aware) ===== */
 function confirmSync(){
-  const estimatedCost = 50; // safe displayed estimate
+  const estimatedCost = 50;
   const used = getQuotaUsed(); const after = Math.max(0, DAILY_QUOTA - used - estimatedCost);
   const msg = `Sync will use approx ${estimatedCost} units. Used today: ${used}. After: ${after} units remaining. Proceed?`;
   pendingAction = {type:'sync', cost:estimatedCost};
@@ -268,5 +256,10 @@ function confirmSync(){
 async function doSyncConfirmed(){
   if(!accessToken){ alert('Please connect first'); return; }
   try{
-    // channels -> uploads playlist -> playlistItems -> videos (efficient)
-    const chanR = await fetch(`https://www.googleapis.com/youtube
+    const chanR = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=contentDetails&mine=true&key=${API_KEY}`, {headers:{Authorization:'Bearer '+accessToken}});
+    const chanD = await chanR.json(); if(chanD.error) throw new Error(chanD.error.message||'Channel lookup failed');
+    addQuota(1);
+    const uploads = chanD.items[0].contentDetails.relatedPlaylists.uploads;
+    let pageToken=''; let videoIds=[];
+    do{
+      const r = await fetch(`https://www.googleapis.com/youtube/v3
