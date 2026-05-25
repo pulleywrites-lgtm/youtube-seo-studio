@@ -346,7 +346,7 @@ function saveAndConnect() {
 }
 
 function initiateOAuth() {
-  const params = new URLSearchParams({ client_id: savedClientId, redirect_uri: window.location.origin, response_type: 'token', scope: SCOPES, prompt: 'consent' });
+  const params = new URLSearchParams({ client_id: savedClientId, redirect_uri: "https://pulleywrites-lgtm.github.io/youtube-seo-studio", response_type: 'token', scope: SCOPES, prompt: 'consent' });
   const popup = window.open('https://accounts.google.com/o/oauth2/v2/auth?' + params, 'ytauth', 'width=520,height=640,left=200,top=80');
   const timer = setInterval(() => {
     try {
