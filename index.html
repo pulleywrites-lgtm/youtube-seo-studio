@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>YouTube SEO Studio</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
 <style>
   :root {
@@ -346,21 +347,23 @@ function saveAndConnect() {
 }
 
 function initiateOAuth() {
-  const params = new URLSearchParams({ client_id: savedClientId, redirect_uri: "https://pulleywrites-lgtm.github.io/youtube-seo-studio", response_type: 'token', scope: SCOPES, prompt: 'consent' });
-  const popup = window.open('https://accounts.google.com/o/oauth2/v2/auth?' + params, 'ytauth', 'width=520,height=640,left=200,top=80');
-  const timer = setInterval(() => {
-    try {
-      if (!popup || popup.closed) { clearInterval(timer); return; }
-      const url = popup.location.href;
-      if (url.includes('access_token')) {
-        clearInterval(timer); popup.close();
-        const hash = new URLSearchParams(url.split('#')[1]);
-        accessToken = hash.get('access_token');
-        if (accessToken) { setAuthStatus(true); showScreen('screenDash'); }
+  if (!window.google || !window.google.accounts) {
+    showErr('connectErr', 'Google sign-in is still loading. Please wait a moment and try again.');
+    return;
+  }
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: savedClientId,
+    scope: SCOPES,
+    callback: (response) => {
+      if (response.error) {
+        showErr('connectErr', 'Connection failed: ' + response.error);
+        return;
       }
-    } catch(e) {}
-  }, 600);
-  setTimeout(() => { clearInterval(timer); if (!accessToken) showErr('connectErr', 'Connection timed out or was cancelled. Please try again.'); }, 180000);
+      accessToken = response.access_token;
+      if (accessToken) { setAuthStatus(true); showScreen('screenDash'); }
+    }
+  });
+  client.requestAccessToken();
 }
 
 function showErr(id, msg) {
