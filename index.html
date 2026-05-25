@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>YouTube SEO Studio</title>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://accounts.google.com/gsi/client"></script>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -534,7 +534,11 @@ function saveAndConnect(){
 }
 
 function initiateOAuth(){
-  if(!window.google||!window.google.accounts){ showConnectMsg('Google is still loading. Wait a moment and try again.','warn'); return; }
+  if(!window.google||!window.google.accounts||!window.google.accounts.oauth2){
+    showConnectMsg('Google sign-in is loading... trying again in 2 seconds.','warn');
+    setTimeout(initiateOAuth, 2000);
+    return;
+  }
   const client = google.accounts.oauth2.initTokenClient({
     client_id: savedClientId(),
     scope: SCOPES,
