@@ -326,7 +326,14 @@ let currentVideoData = null;
 
 // PRE-FILL
 if (savedClientId) document.getElementById('clientIdInput').value = savedClientId;
-if (savedApiKey) document.getElementById('apiKeyInput').value = savedApiKey;
+if (savedApiKey) document.getElementById('apiKeyInput').value = savedApiKey;// cache keys + dynamic API getter
+const cacheKey = 'yt_uploads_cache_v1';
+const cacheTimeKey = 'yt_uploads_cache_time_v1';
+function getApiKey() {
+  const k = (document.getElementById('apiKeyInput')?.value || '').trim() || localStorage.getItem('ytApiKey') || '';
+  if (k && k !== savedApiKey) { savedApiKey = k; localStorage.setItem('ytApiKey', k); }
+  return k;
+}
 
 function showTab(id) {
   ['tabVideos','tabHistory'].forEach(t => document.getElementById(t).style.display = t===id ? 'block' : 'none');
@@ -463,8 +470,7 @@ async function loadAllVideos() {
     let allItems = [];
     let pageToken = '';
     do {
-      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&forMine=true&type=video&maxResults=50&order=date${pageToken ? '&pageToken='+pageToken : ''}&key=${savedApiKey}`;
-      const r = await fetch(url, { headers: { Authorization: 'Bearer ' + accessToken } });
+https://www.googleapis.com/youtube/v3/search?part=snippet&forMine=true&type=video&maxResults=50&order=date${pageToken ? '&pageToken='+pageToken : ''}&key=${getApiKey()}      const r = await fetch(url, { headers: { Authorization: 'Bearer ' + accessToken } });
       const d = await r.json();
       if (d.error) throw new Error(d.error.message);
       allItems = allItems.concat(d.items || []);
@@ -482,8 +488,7 @@ async function loadAllVideos() {
     let details = [];
     for (let i = 0; i < ids.length; i += 50) {
       const chunk = ids.slice(i, i+50).join(',');
-      const r2 = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${chunk}&key=${savedApiKey}`, { headers: { Authorization: 'Bearer ' + accessToken } });
-      const d2 = await r2.json();
+https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${chunk}&key=${getApiKey()}      const d2 = await r2.json();
       details = details.concat(d2.items || []);
     }
 
@@ -563,8 +568,7 @@ async function openPreview(videoId) {
   if (!video) return;
   currentVideoData = video;
   if (!window._playlists) {
-    fetch('https://www.googleapis.com/youtube/v3/playlists?part=snippet&mine=true&maxResults=50&key='+savedApiKey, {headers:{Authorization:'Bearer '+accessToken}})
-    .then(function(r){return r.json();})
+'https://www.googleapis.com/youtube/v3/playlists?part=snippet&mine=true&maxResults=50&key='+getApiKey()    .then(function(r){return r.json();})
     .then(function(pd){ window._playlists = (pd.items||[]).map(function(p){return{id:p.id,title:p.snippet.title};}); })
     .catch(function(){ window._playlists=[]; });
   }
@@ -782,7 +786,7 @@ async function pushToYouTube(videoId, newGrade) {
   if (pushBtn) { pushBtn.disabled = true; pushBtn.textContent = '⏳ Pushing…'; }
   try {
     const categoryId = document.getElementById('editCategory') ? document.getElementById('editCategory').value : '22';
-    const r = await fetch('https://www.googleapis.com/youtube/v3/videos?part=snippet&key='+savedApiKey, {
+    const r = await fetch('https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&key='+savedApiKey, {
       method: 'PUT',
       headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: videoId, snippet: { title: title, description: desc, tags: tags, categoryId: categoryId } })
