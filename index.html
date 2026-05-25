@@ -1328,64 +1328,108 @@ function initStrategy(){
   }
 }
 
-async function generateStrategy(){
-  const el = document.getElementById('strategyContent');
-  el.innerHTML='<div style="background:white;border-radius:var(--r-lg);padding:48px;text-align:center;box-shadow:var(--shadow)"><div class="spinner"></div><p style="margin-top:12px;font-size:14px;color:var(--gray-500)">Analyzing your entire channel… this takes about 15 seconds</p></div>';
+// ============================================================
+// STRATEGY TAB (LOCAL ONLY, NO EXTERNAL API)
+// ============================================================
+function initStrategy(){
+  if(!allVideos.length){
+    document.getElementById('strategyContent').innerHTML =
+      '<div style="background:white;border-radius:var(--r-lg);padding:48px;text-align:center;box-shadow:var(--shadow)">'+
+        '<p style="font-size:15px;color:var(--gray-500)">Sync your videos first, then come back here for your strategy report!</p>'+
+        '<button class="btn btn-red btn-sm" style="margin-top:16px" onclick="showTab(\\'tabVideos\\')">Go sync videos first</button>'+
+      '</div>';
+  }
+}
 
-  // Build channel summary from cached data
+function generateStrategy(){
+  const el = document.getElementById('strategyContent');
+
+  if(!allVideos.length){
+    initStrategy();
+    return;
+  }
+
+  // Show "loading" state briefly
+  el.innerHTML =
+    '<div style="background:white;border-radius:var(--r-lg);padding:48px;text-align:center;box-shadow:var(--shadow)">'+
+      '<div class="spinner"></div>'+
+      '<p style="margin-top:12px;font-size:14px;color:var(--gray-500)">Analyzing your channel…</p>'+
+    '</div>';
+
+  setTimeout(function(){ renderLocalStrategy(); }, 500);
+}
+
+function renderLocalStrategy(){
+  const el = document.getElementById('strategyContent');
+
   const total = allVideos.length;
   const grades = {A:0,B:0,C:0,D:0,F:0};
-  allVideos.forEach(function(v){ grades[v.grade]=(grades[v.grade]||0)+1; });
-  const avgScore = total>0 ? Math.round(allVideos.reduce(function(a,v){ return a+v.overall; },0)/total) : 0;
-  const worstVideos = [...allVideos].sort(function(a,b){ return a.overall-b.overall; }).slice(0,5).map(function(v){ return v.title; });
-  const bestVideos = [...allVideos].sort(function(a,b){ return b.overall-a.overall; }).slice(0,3).map(function(v){ return v.title; });
+  allVideos.forEach(function(v){ grades[v.grade] = (grades[v.grade]||0)+1; });
+
+  const avgScore = total>0
+    ? Math.round(allVideos.reduce(function(a,v){ return a+v.overall; },0)/total)
+    : 0;
+
+  const worst = [...allVideos].sort(function(a,b){ return a.overall-b.overall; }).slice(0,5);
   const lowTags = allVideos.filter(function(v){ return v.tagsScore<50; }).length;
   const lowDesc = allVideos.filter(function(v){ return v.descScore<50; }).length;
   const lowThumb = allVideos.filter(function(v){ return v.thumbScore<50; }).length;
   const lowTitle = allVideos.filter(function(v){ return v.titleScore<50; }).length;
 
-  const prompt = 'You are a YouTube growth strategist specializing in kids educational content. Analyze this channel data and give a specific, actionable strategy report. CHANNEL DATA: Total videos: '+total+'. Grade breakdown: A:'+grades.A+', B:'+grades.B+', C:'+grades.C+', D:'+grades.D+', F:'+grades.F+'. Average SEO score: '+avgScore+'/100. Videos with weak tags: '+lowTags+'. Videos with weak descriptions: '+lowDesc+'. Videos with weak thumbnails: '+lowThumb+'. Videos with weak titles: '+lowTitle+'. 5 worst performing videos: '+worstVideos.join(', ')+'. 3 best performing videos: '+bestVideos.join(', ')+'. Return ONLY valid JSON (no markdown): {"overallHealth":"one sentence channel health summary","urgentFixes":[{"action":"specific action","impact":"why this matters","effort":"Easy/Medium/Hard"}],"videoPriority":[{"title":"video title from worst list","whyFirst":"why tackle this one first"}],"newVideoIdeas":[{"title":"specific video title idea","why":"why this would perform well for kids youtube right now"}],"biggestWin":"the single most impactful thing they can do this week"}';
+  let overallHealth;
+  if(avgScore>=80) overallHealth = 'Your channel is in strong shape — focus on polishing weaker videos and posting consistently.';
+  else if(avgScore>=60) overallHealth = 'Solid foundation, but many videos need SEO improvements in titles, tags and thumbnails.';
+  else overallHealth = 'Big opportunity: many videos have weak metadata. Fixing titles, tags, descriptions and thumbnails will make a huge difference.';
 
-  try{
-    const r = await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompt}]})
-    });
-    const d = await r.json();
-    const text = d.content.map(function(b){ return b.type==='text'?b.text:''; }).join('');
-    const clean = text.replace(/```json|```/g,'').trim();
-    let res; try{ res=JSON.parse(clean); }catch(e){ const m=clean.match(/\{[\s\S]*\}/); res=m?JSON.parse(m[0]):null; }
-    if(!res) throw new Error('Could not parse strategy');
-    renderStrategy(res, grades, avgScore, total);
-  }catch(e){
-    el.innerHTML='<div class="alert alert-danger">Could not generate strategy right now: '+e.message+'. Try again in a moment.</div><button class="btn btn-primary" onclick="generateStrategy()" style="margin-top:12px">Try Again</button>';
-  }
-}
+  const urgentFixes = [];
+  if(lowTitle>0) urgentFixes.push({action:'Rewrite weak titles on '+lowTitle+' videos',impact:'Titles drive clicks — better hooks and kids keywords = higher CTR',effort:'Easy'});
+  if(lowTags>0) urgentFixes.push({action:'Fix tags on '+lowTags+' videos',impact:'Good tags help YouTube understand and recommend your content',effort:'Easy'});
+  if(lowDesc>0) urgentFixes.push({action:'Expand descriptions on '+lowDesc+' videos',impact:'Stronger descriptions help with search and suggested ranking',effort:'Medium'});
+  if(lowThumb>0) urgentFixes.push({action:'Create custom thumbnails for '+lowThumb+' videos',impact:'Eye-catching thumbnails are critical for kids content CTR',effort:'Medium'});
+  if(!urgentFixes.length) urgentFixes.push({action:'Focus on posting 1–2 new videos per week',impact:'Consistency helps YouTube trust and recommend your channel',effort:'Medium'});
 
-function renderStrategy(res, grades, avgScore, total){
-  const el = document.getElementById('strategyContent');
+  let biggestWin;
+  if(lowTitle>5) biggestWin = 'Rewrite your weak titles first — short, punchy, kid-focused titles with emojis can double your click-through rate.';
+  else if(lowThumb>3) biggestWin = 'Upgrade thumbnails on your lowest-scoring videos — bright colors and big, readable text will lift performance fast.';
+  else if(lowTags>5) biggestWin = 'Replace generic one-word tags with descriptive phrases (e.g. "toddler learning video") to help YouTube recommend your videos.';
+  else biggestWin = 'Your base is good — your biggest win now is consistency. Post on a regular schedule and pair each upload with Shorts to drive traffic.';
+
+  const newVideoIdeas = [
+    {title:'Count to 10 with Farm Animals 🐮 | Toddler Learning Song',why:'Combines counting + animals, two of the strongest evergreen kids categories.'},
+    {title:'ABC Adventure in the Jungle 🌴 | Alphabet Song for Kids',why:'ABC + adventure theme matches what top kids channels use to hold attention.'},
+    {title:'Learn Colors with Magic Paint ✨ | Mixing Colors for Toddlers',why:'Color-mixing videos perform very well with parents searching for basic learning.'},
+    {title:'Feelings & Emotions Song 😊😢😡 | Social Skills for Kids',why:'Social-emotional learning content is exploding in popularity with parents.'},
+    {title:'Bedtime Story & Lullaby 🌙 | Calm Down Routine for Kids',why:'Bedtime routine videos have strong repeat watch and keep kids on your channel.'}
+  ];
+
   el.innerHTML =
     // Health header
     '<div style="background:white;border-radius:var(--r-lg);padding:24px;box-shadow:var(--shadow);margin-bottom:16px">'+
       '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">'+
-        '<div style="text-align:center;min-width:80px"><div style="font-size:48px;font-weight:900;font-family:Nunito,sans-serif;color:'+barColor(avgScore)+'">'+avgScore+'</div><div style="font-size:12px;color:var(--gray-500);font-weight:600">Channel Score</div></div>'+
-        '<div style="flex:1"><h3 style="font-size:18px;font-weight:900;margin-bottom:4px">Channel Health Report</h3><p style="font-size:14px;color:var(--gray-500);line-height:1.6">'+esc(res.overallHealth)+'</p></div>'+
+        '<div style="text-align:center;min-width:80px">'+
+          '<div style="font-size:48px;font-weight:900;font-family:Nunito,sans-serif;color:'+barColor(avgScore)+'">'+avgScore+'</div>'+
+          '<div style="font-size:12px;color:var(--gray-500);font-weight:600">Channel Score</div>'+
+        '</div>'+
+        '<div style="flex:1">'+
+          '<h3 style="font-size:18px;font-weight:900;margin-bottom:4px">Channel Health Report</h3>'+
+          '<p style="font-size:14px;color:var(--gray-500);line-height:1.6">'+esc(overallHealth)+'</p>'+
+        '</div>'+
       '</div>'+
       '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:16px">'+
-        ['A','B','C','D','F'].map(function(g){ return '<div style="text-align:center;background:var(--gray-50);border-radius:8px;padding:8px"><div style="font-size:22px;font-weight:900;font-family:Nunito,sans-serif;color:'+gradeColor(g)+'">'+grades[g]+'</div><div style="font-size:11px;color:var(--gray-500)">Grade '+g+'</div></div>'; }).join('')+
+        ['A','B','C','D','F'].map(function(g){ return '<div style="text-align:center;background:var(--gray-50);border-radius:8px;padding:8px"><div style="font-size:22px;font-weight:900;font-family:Nunito,sans-serif;color:'+gradeColor(g)+'">'+(grades[g]||0)+'</div><div style="font-size:11px;color:var(--gray-500)">Grade '+g+'</div></div>'; }).join('')+
       '</div>'+
     '</div>'+
 
     // Biggest win
     '<div style="background:linear-gradient(135deg,#FFF7ED,#FEF3C7);border:2px solid #FCD34D;border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow);margin-bottom:16px">'+
       '<div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#B45309;margin-bottom:6px;font-family:Nunito,sans-serif">⚡ BIGGEST WIN THIS WEEK</div>'+
-      '<p style="font-size:15px;font-weight:700;color:#92400E;line-height:1.6">'+esc(res.biggestWin)+'</p>'+
+      '<p style="font-size:15px;font-weight:700;color:#92400E;line-height:1.6">'+esc(biggestWin)+'</p>'+
     '</div>'+
 
     // Urgent fixes
     '<div style="background:white;border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow);margin-bottom:16px">'+
-      '<h3 style="font-size:16px;font-weight:900;margin-bottom:14px">🔥 Top 3 Things to Fix Right Now</h3>'+
-      (res.urgentFixes||[]).map(function(f,i){
+      '<h3 style="font-size:16px;font-weight:900;margin-bottom:14px">🔥 Top Things to Fix Right Now</h3>'+
+      urgentFixes.map(function(f,i){
         const effortColor={'Easy':'#059669','Medium':'#D97706','Hard':'#DC2626'}[f.effort]||'#6B7280';
         return '<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--gray-100)">'+
           '<span style="font-size:22px;font-weight:900;color:var(--blue);font-family:Nunito,sans-serif;min-width:28px">'+(i+1)+'</span>'+
@@ -1396,21 +1440,21 @@ function renderStrategy(res, grades, avgScore, total){
       }).join('')+
     '</div>'+
 
-    // Videos to prioritize
-html += '<div class="strategy-card"><h3>🎯 Videos to Update First</h3>';
-worst.forEach(function(v){
-  html += '<div class="priority-video" onclick="showTab(\'tabVideos\'); setTimeout(function(){ toggleDetail(\''+v.id+'\'); }, 100)">' +
-            '<div style="font-size:13px;font-weight:700;margin-bottom:3px;color:var(--blue);text-decoration:underline">'+esc(v.title)+'</div>' +
-            '<div style="font-size:12px;color:var(--gray-500)">Score: '+v.overall+'/100 · Grade '+v.grade+' — '+(v.titleScore<50?'Weak title. ':v.descScore<50?'Weak description. ':v.tagsScore<50?'Weak tags. ':'Needs overall improvement.')+'</div>' +
-          '</div>';
-});
-html += '</div>';
-
-
-    // New video ideas
+    // Videos to update first (clickable)
     '<div style="background:white;border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow);margin-bottom:16px">'+
-      '<h3 style="font-size:16px;font-weight:900;margin-bottom:14px">✨ New Video Ideas to Create</h3>'+
-      (res.newVideoIdeas||[]).map(function(v,i){
+      '<h3 style="font-size:16px;font-weight:900;margin-bottom:14px">🎯 Videos to Update First</h3>'+
+      worst.map(function(v){
+        return '<div class="priority-video" onclick="showTab(\\'tabVideos\\'); setTimeout(function(){ toggleDetail(\\''+v.id+'\\'); }, 100)">'+
+          '<div style="font-size:13px;font-weight:700;margin-bottom:3px;color:var(--blue);text-decoration:underline">'+esc(v.title)+'</div>'+
+          '<div style="font-size:12px;color:var(--gray-500)">Score: '+v.overall+'/100 · Grade '+v.grade+' — '+(v.titleScore<50?'Weak title. ':v.descScore<50?'Weak description. ':v.tagsScore<50?'Weak tags. ':'Needs overall improvement.')+'</div>'+
+        '</div>';
+      }).join('')+
+    '</div>'+
+
+    // New video ideas (static but still helpful)
+    '<div style="background:white;border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow);margin-bottom:16px">'+
+      '<h3 style="font-size:16px;font-weight:900;margin-bottom:14px">✨ New Video Ideas to Try</h3>'+
+      newVideoIdeas.map(function(v,i){
         return '<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-100)">'+
           '<span style="font-size:18px;font-weight:900;color:var(--purple);font-family:Nunito,sans-serif;min-width:24px">'+(i+1)+'</span>'+
           '<div><div style="font-size:13px;font-weight:700;margin-bottom:2px">'+esc(v.title)+'</div>'+
@@ -1419,8 +1463,8 @@ html += '</div>';
       }).join('')+
     '</div>'+
 
-    '<button class="btn btn-ghost btn-sm" onclick="generateStrategy()" style="margin-top:4px">🔄 Regenerate Report</button>';
-}
+    '<button class="btn btn-ghost btn-sm" onclick="generateStrategy()" style="margin-top:4px">
+
 
 // ============================================================
 // COPY HELPERS
