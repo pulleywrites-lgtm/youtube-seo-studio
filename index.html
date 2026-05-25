@@ -897,7 +897,7 @@ async function loadPlaylists(videoId){
   window['_selectedPlaylists_'+videoId] = new Set(autoSelected);
   container.innerHTML = window._playlists.map(function(p){
     const sel = autoSelected.has(p.id);
-    return '<span class="playlist-chip '+(sel?'selected':'')+'" onclick="togglePlaylistChip(''+videoId+'',''+p.id+'',this)">'+esc(p.title)+'</span>';
+    const chipHtml = window._playlists.map(function(p){ const sel=autoSelected.has(p.id); return '<span class="playlist-chip'+(sel?' selected':'')+'" data-vid="'+videoId+'" data-pid="'+p.id+'">'+esc(p.title)+'</span>'; }).join('');
   }).join('');
 }
 
@@ -906,6 +906,12 @@ function togglePlaylistChip(videoId, playlistId, el){
   if(!window[key]) window[key] = new Set();
   if(window[key].has(playlistId)){ window[key].delete(playlistId); el.classList.remove('selected'); }
   else{ window[key].add(playlistId); el.classList.add('selected'); }
+}
+
+function initPlaylistClicks(container, videoId){
+  container.querySelectorAll('.playlist-chip').forEach(function(chip){
+    chip.onclick = function(){ togglePlaylistChip(videoId, chip.dataset.pid, chip); };
+  });
 }
 
 function buildDetailPanel(v){
@@ -1316,7 +1322,7 @@ function exportCSV(){
 // ============================================================
 function initStrategy(){
   if(!allVideos.length){
-    document.getElementById('strategyContent').innerHTML='<div style="background:white;border-radius:var(--r-lg);padding:48px;text-align:center;box-shadow:var(--shadow)"><p style="font-size:15px;color:var(--gray-500)">Sync your videos first, then come back here for your strategy report!</p><button class="btn btn-red btn-sm" style="margin-top:16px" onclick="showTab('tabVideos')">← Go sync videos</button></div>';
+    document.getElementById('strategyContent').innerHTML='<div style="background:white;border-radius:var(--r-lg);padding:48px;text-align:center;box-shadow:var(--shadow)"><p style="font-size:15px;color:var(--gray-500)">Sync your videos first, then come back here for your strategy report!</p><button class="btn btn-red btn-sm" style="margin-top:16px" onclick="showTab(\'tabVideos\')">Go sync videos first</button></div>';
   }
 }
 
@@ -1336,20 +1342,7 @@ async function generateStrategy(){
   const lowThumb = allVideos.filter(function(v){ return v.thumbScore<50; }).length;
   const lowTitle = allVideos.filter(function(v){ return v.titleScore<50; }).length;
 
-  const prompt = 'You are a YouTube growth strategist specializing in kids educational content. Analyze this channel data and give a specific, actionable strategy report.
-
-CHANNEL DATA:
-- Total videos: '+total+'
-- Grade breakdown: A:'+grades.A+', B:'+grades.B+', C:'+grades.C+', D:'+grades.D+', F:'+grades.F+'
-- Average SEO score: '+avgScore+'/100
-- Videos with weak tags (<50): '+lowTags+'
-- Videos with weak descriptions (<50): '+lowDesc+'
-- Videos with weak thumbnails (<50): '+lowThumb+'
-- Videos with weak titles (<50): '+lowTitle+'
-- 5 worst performing videos: '+worstVideos.join(', ')+'
-- 3 best performing videos: '+bestVideos.join(', ')+'
-
-Return ONLY valid JSON (no markdown): {"overallHealth":"one sentence channel health summary","urgentFixes":[{"action":"specific action","impact":"why this matters","effort":"Easy/Medium/Hard"}],"videoPriority":[{"title":"video title from worst list","whyFirst":"why tackle this one first"}],"newVideoIdeas":[{"title":"specific video title idea","why":"why this would perform well for kids youtube right now"}],"biggestWin":"the single most impactful thing they can do this week"}';
+  const prompt = 'You are a YouTube growth strategist specializing in kids educational content. Analyze this channel data and give a specific, actionable strategy report. CHANNEL DATA: Total videos: '+total+'. Grade breakdown: A:'+grades.A+', B:'+grades.B+', C:'+grades.C+', D:'+grades.D+', F:'+grades.F+'. Average SEO score: '+avgScore+'/100. Videos with weak tags: '+lowTags+'. Videos with weak descriptions: '+lowDesc+'. Videos with weak thumbnails: '+lowThumb+'. Videos with weak titles: '+lowTitle+'. 5 worst performing videos: '+worstVideos.join(', ')+'. 3 best performing videos: '+bestVideos.join(', ')+'. Return ONLY valid JSON (no markdown): {"overallHealth":"one sentence channel health summary","urgentFixes":[{"action":"specific action","impact":"why this matters","effort":"Easy/Medium/Hard"}],"videoPriority":[{"title":"video title from worst list","whyFirst":"why tackle this one first"}],"newVideoIdeas":[{"title":"specific video title idea","why":"why this would perform well for kids youtube right now"}],"biggestWin":"the single most impactful thing they can do this week"}';
 
   try{
     const r = await fetch('https://api.anthropic.com/v1/messages',{
