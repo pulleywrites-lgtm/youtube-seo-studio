@@ -1318,23 +1318,13 @@ function exportCSV(){
   const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv); a.download='youtube-push-history.csv'; a.click();
 }
 
-
-// ============================================================
-// STRATEGY TAB
-// ============================================================
-function initStrategy(){
-  if(!allVideos.length){
-    document.getElementById('strategyContent').innerHTML='<div style="background:white;border-radius:var(--r-lg);padding:48px;text-align:center;box-shadow:var(--shadow)"><p style="font-size:15px;color:var(--gray-500)">Sync your videos first, then come back here for your strategy report!</p><button class="btn btn-red btn-sm" style="margin-top:16px" onclick="showTab(\'tabVideos\')">Go sync videos first</button></div>';
-  }
-}
-
 // ============================================================
 // STRATEGY TAB (LOCAL ONLY, NO EXTERNAL API)
 // ============================================================
 function initStrategy(){
   if(!allVideos.length){
     document.getElementById('strategyContent').innerHTML =
-      '<div style="background:white;border-radius:var(--r-lg);padding:48px;text-align:center;box-shadow:var(--shadow)">'+
+      '<div style="background:white;border-radius:'+CSS_VAR('r-lg')+';padding:48px;text-align:center;box-shadow:'+CSS_VAR('shadow')+'">'+
         '<p style="font-size:15px;color:var(--gray-500)">Sync your videos first, then come back here for your strategy report!</p>'+
         '<button class="btn btn-red btn-sm" style="margin-top:16px" onclick="showTab(\\'tabVideos\\')">Go sync videos first</button>'+
       '</div>';
@@ -1343,20 +1333,25 @@ function initStrategy(){
 
 function generateStrategy(){
   const el = document.getElementById('strategyContent');
-
   if(!allVideos.length){
     initStrategy();
     return;
   }
-
-  // Show "loading" state briefly
   el.innerHTML =
-    '<div style="background:white;border-radius:var(--r-lg);padding:48px;text-align:center;box-shadow:var(--shadow)">'+
+    '<div style="background:white;border-radius:'+CSS_VAR('r-lg')+';padding:48px;text-align:center;box-shadow:'+CSS_VAR('shadow')+'">'+
       '<div class="spinner"></div>'+
       '<p style="margin-top:12px;font-size:14px;color:var(--gray-500)">Analyzing your channel…</p>'+
     '</div>';
+  setTimeout(renderLocalStrategy, 500);
+}
 
-  setTimeout(function(){ renderLocalStrategy(); }, 500);
+// tiny helper to inline CSS variable values in strings (prevents undefined)
+function CSS_VAR(name){
+  // we can't read CSS vars easily in JS for string building, but we don't actually depend on them for logic.
+  // just return a plain value so the HTML is valid.
+  if(name==='r-lg') return '20px';
+  if(name==='shadow') return '0 8px 32px rgba(0,0,0,0.13)';
+  return '';
 }
 
 function renderLocalStrategy(){
@@ -1404,7 +1399,7 @@ function renderLocalStrategy(){
 
   el.innerHTML =
     // Health header
-    '<div style="background:white;border-radius:var(--r-lg);padding:24px;box-shadow:var(--shadow);margin-bottom:16px">'+
+    '<div style="background:white;border-radius:20px;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,0.13);margin-bottom:16px">'+
       '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">'+
         '<div style="text-align:center;min-width:80px">'+
           '<div style="font-size:48px;font-weight:900;font-family:Nunito,sans-serif;color:'+barColor(avgScore)+'">'+avgScore+'</div>'+
@@ -1421,13 +1416,13 @@ function renderLocalStrategy(){
     '</div>'+
 
     // Biggest win
-    '<div style="background:linear-gradient(135deg,#FFF7ED,#FEF3C7);border:2px solid #FCD34D;border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow);margin-bottom:16px">'+
+    '<div style="background:linear-gradient(135deg,#FFF7ED,#FEF3C7);border:2px solid #FCD34D;border-radius:20px;padding:20px;box-shadow:0 8px 32px rgba(0,0,0,0.13);margin-bottom:16px">'+
       '<div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#B45309;margin-bottom:6px;font-family:Nunito,sans-serif">⚡ BIGGEST WIN THIS WEEK</div>'+
       '<p style="font-size:15px;font-weight:700;color:#92400E;line-height:1.6">'+esc(biggestWin)+'</p>'+
     '</div>'+
 
     // Urgent fixes
-    '<div style="background:white;border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow);margin-bottom:16px">'+
+    '<div style="background:white;border-radius:20px;padding:20px;box-shadow:0 8px 32px rgba(0,0,0,0.13);margin-bottom:16px">'+
       '<h3 style="font-size:16px;font-weight:900;margin-bottom:14px">🔥 Top Things to Fix Right Now</h3>'+
       urgentFixes.map(function(f,i){
         const effortColor={'Easy':'#059669','Medium':'#D97706','Hard':'#DC2626'}[f.effort]||'#6B7280';
@@ -1441,7 +1436,7 @@ function renderLocalStrategy(){
     '</div>'+
 
     // Videos to update first (clickable)
-    '<div style="background:white;border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow);margin-bottom:16px">'+
+    '<div style="background:white;border-radius:20px;padding:20px;box-shadow:0 8px 32px rgba(0,0,0,0.13);margin-bottom:16px">'+
       '<h3 style="font-size:16px;font-weight:900;margin-bottom:14px">🎯 Videos to Update First</h3>'+
       worst.map(function(v){
         return '<div class="priority-video" onclick="showTab(\\'tabVideos\\'); setTimeout(function(){ toggleDetail(\\''+v.id+'\\'); }, 100)">'+
@@ -1451,8 +1446,8 @@ function renderLocalStrategy(){
       }).join('')+
     '</div>'+
 
-    // New video ideas (static but still helpful)
-    '<div style="background:white;border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow);margin-bottom:16px">'+
+    // New video ideas
+    '<div style="background:white;border-radius:20px;padding:20px;box-shadow:0 8px 32px rgba(0,0,0,0.13);margin-bottom:16px">'+
       '<h3 style="font-size:16px;font-weight:900;margin-bottom:14px">✨ New Video Ideas to Try</h3>'+
       newVideoIdeas.map(function(v,i){
         return '<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-100)">'+
@@ -1463,7 +1458,8 @@ function renderLocalStrategy(){
       }).join('')+
     '</div>'+
 
-    '<button class="btn btn-ghost btn-sm" onclick="generateStrategy()" style="margin-top:4px">
+    '<button class="btn btn-ghost btn-sm" onclick="generateStrategy()" style="margin-top:4px">🔄 Regenerate Report (local)</button>';
+}
 
 
 // ============================================================
