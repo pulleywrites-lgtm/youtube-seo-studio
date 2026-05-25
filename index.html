@@ -1,200 +1,66 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-<title>YouTube SEO Studio</title>
-
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="https://apis.google.com/js/api.js"></script>
-
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
-
-<style>
-
-body{
-  margin:0;
-  padding:30px;
-  background:#f5f7ff;
-  font-family:'DM Sans',sans-serif;
-  color:#111827;
-}
-
-.container{max-width:1200px;margin:0 auto;}
-
-.card{
-  background:white;
-  border-radius:18px;
-  padding:24px;
-  box-shadow:0 4px 18px rgba(0,0,0,.08);
-  margin-bottom:20px;
-}
-
-h1,h2,h3{font-family:'Nunito',sans-serif;}
-
-input,textarea,select{
-  width:100%;
-  padding:12px;
-  border-radius:12px;
-  border:1px solid #d1d5db;
-  margin-top:6px;
-  margin-bottom:16px;
-  font-family:'DM Sans',sans-serif;
-}
-
-button{
-  border:none;
-  border-radius:12px;
-  padding:12px 18px;
-  cursor:pointer;
-  font-weight:700;
-  font-family:'Nunito',sans-serif;
-}
-
-.red{background:#ff0000;color:white;}
-.blue{background:#2563eb;color:white;}
-.green{background:#059669;color:white;}
-
-.small{font-size:13px;color:#6b7280;}
-
-.video{
-  display:grid;
-  grid-template-columns:120px 1fr 80px;
-  gap:16px;
-  align-items:center;
-  padding:14px;
-  border-bottom:1px solid #eee;
-  cursor:pointer;
-}
-
-.video:hover{background:#f3f6ff;}
-
-.thumb{width:120px;border-radius:12px;}
-
-.grade{
-  width:54px;height:54px;border-radius:14px;
-  display:flex;align-items:center;justify-content:center;
-  color:white;font-weight:800;font-size:22px;
-}
-
-.A{background:#059669;}
-.B{background:#2563eb;}
-.C{background:#d97706;}
-.D{background:#ea580c;}
-.F{background:#dc2626;}
-
-.tag{
-  display:inline-block;
-  background:#eef2ff;
-  color:#3730a3;
-  padding:6px 10px;
-  border-radius:999px;
-  margin:4px;
-  font-size:12px;
-}
-
-#previewModal{
-  position:fixed;inset:0;
-  background:rgba(0,0,0,.6);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-  z-index:999;
-}
-
-#previewCard{
-  background:white;
-  border-radius:20px;
-  padding:24px;
-  width:100%;
-  max-width:900px;
-  max-height:90vh;
-  overflow:auto;
-}
-
-.error{background:#fee2e2;color:#991b1b;padding:12px;border-radius:12px;margin-top:14px;}
-.success{background:#dcfce7;color:#166534;padding:12px;border-radius:12px;margin-top:14px;}
-
-</style>
-</head>
-
-<body>
-
-<div class="container">
-
-<div class="card">
-<h1>YouTube SEO Studio</h1>
-<div class="small">Children's Content SEO Optimizer</div>
-
-<label>OAuth Client ID</label>
-<input id="clientIdInput" type="text" placeholder="xxxxx.apps.googleusercontent.com"/>
-
-<button class="red" onclick="saveAndConnect()">
-Connect To YouTube
-</button>
-
-<div id="statusBox"></div>
-</div>
-
-<div class="card">
-
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-<h2>Your Videos</h2>
-<button class="blue" onclick="loadAllVideos()">Refresh Videos</button>
-</div>
-
-<div id="videoList">
-<div class="small">Connect your YouTube account first.</div>
-</div>
-
-</div>
-
-</div>
-
-<div id="previewModal">
-<div id="previewCard">
-
-<div style="display:flex;justify-content:space-between;align-items:center;">
-<h2 id="previewTitle">Preview</h2>
-<button onclick="closePreview()">Close</button>
-</div>
-
-<div id="previewContent"></div>
-
-</div>
-</div>
-
-<script>
-
 const SCOPES = 'https://www.googleapis.com/auth/youtube.force-ssl';
 
 let accessToken = null;
 let allVideos = [];
 let currentVideo = null;
 
-function showError(msg){
+const STORAGE_KEY = "yt_cached_videos";
+const LAST_SYNC_KEY = "yt_last_full_sync";
+
+// ---------------- UI HELPERS ----------------
+
+function showError(message){
   document.getElementById('statusBox').innerHTML =
-    `<div class="error">${msg}</div>`;
+    `<div class="error">${message}</div>`;
 }
 
-function showSuccess(msg){
+function showSuccess(message){
   document.getElementById('statusBox').innerHTML =
-    `<div class="success">${msg}</div>`;
+    `<div class="success">${message}</div>`;
 }
+
+function getApiKey(){
+  return localStorage.getItem('ytApiKey') || '';
+}
+
+// ---------------- STORAGE ----------------
+
+function saveCache(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(allVideos));
+}
+
+function loadCache(){
+  const data = localStorage.getItem(STORAGE_KEY);
+  if(data){
+    allVideos = JSON.parse(data);
+    renderVideos();
+    return true;
+  }
+  return false;
+}
+
+function getLastSync(){
+  return localStorage.getItem(LAST_SYNC_KEY);
+}
+
+function setLastSync(){
+  localStorage.setItem(LAST_SYNC_KEY, Date.now().toString());
+}
+
+// ---------------- AUTH ----------------
 
 function saveAndConnect(){
+  const clientId = document.getElementById('clientIdInput').value.trim();
+  const apiKey = document.getElementById('apiKeyInput').value.trim();
 
-  const clientId =
-    document.getElementById('clientIdInput').value.trim();
-
-  if(!clientId){
-    showError("Enter Client ID");
+  if(!clientId || !apiKey){
+    showError('Please enter both credentials.');
     return;
   }
 
   localStorage.setItem('ytClientId', clientId);
+  localStorage.setItem('ytApiKey', apiKey);
+
   initiateOAuth();
 }
 
@@ -205,185 +71,198 @@ function initiateOAuth(){
   const client = google.accounts.oauth2.initTokenClient({
     client_id: clientId,
     scope: SCOPES,
-    callback: (res)=>{
 
-      if(res.error){
-        showError(res.error);
+    callback: async (response) => {
+      if(response.error){
+        showError(response.error);
         return;
       }
 
-      accessToken = res.access_token;
-      showSuccess("Connected!");
-      loadAllVideos();
+      accessToken = response.access_token;
+      showSuccess('Connected successfully!');
+
+      // Try cache first
+      const hasCache = loadCache();
+
+      if(!hasCache){
+        await fullMonthlySync();
+      } else {
+        showSuccess("Loaded cached videos (no API calls used)");
+      }
     }
   });
 
   client.requestAccessToken();
 }
 
-async function loadAllVideos(){
+// ---------------- FULL MONTHLY SYNC ----------------
 
-  if(!accessToken){
-    showError("Not connected");
+async function fullMonthlySync(){
+
+  const last = getLastSync();
+  const now = Date.now();
+
+  if(last && (now - parseInt(last)) < 30 * 24 * 60 * 60 * 1000){
+    showSuccess("Monthly sync not needed yet. Using cached data.");
     return;
   }
 
-  document.getElementById('videoList').innerHTML =
-    "Loading...";
+  showSuccess("Running FULL channel sync (monthly heavy call)...");
+
+  const apiKey = getApiKey();
 
   try{
 
-    const channelRes = await fetch(
-      "https://www.googleapis.com/youtube/v3/channels?part=contentDetails&mine=true",
-      { headers:{ Authorization:"Bearer "+accessToken } }
+    const channelResponse = await fetch(
+      `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&mine=true&key=${apiKey}`,
+      { headers: { Authorization: 'Bearer ' + accessToken } }
     );
 
-    const channelData = await channelRes.json();
+    const channelData = await channelResponse.json();
 
-    const uploads =
-      channelData.items[0]
-      .contentDetails
-      .relatedPlaylists
-      .uploads;
+    const uploadsPlaylistId =
+      channelData.items[0].contentDetails.relatedPlaylists.uploads;
 
+    let pageToken = '';
     let videoIds = [];
-    let pageToken = "";
 
+    // STEP 1: GET ALL VIDEO IDS
     do{
 
       const res = await fetch(
-        `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploads}&maxResults=50&pageToken=${pageToken}`,
-        { headers:{ Authorization:"Bearer "+accessToken } }
+        `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadsPlaylistId}&maxResults=50&pageToken=${pageToken}&key=${apiKey}`,
+        { headers: { Authorization: 'Bearer ' + accessToken } }
       );
 
       const data = await res.json();
 
-      videoIds.push(
-        ...(data.items||[])
-        .map(i=>i.snippet.resourceId.videoId)
-      );
+      const ids = (data.items || [])
+        .map(i => i.snippet.resourceId.videoId);
 
-      pageToken = data.nextPageToken || "";
+      videoIds.push(...ids);
+
+      pageToken = data.nextPageToken || '';
 
     }while(pageToken);
 
-    let videos = [];
+    // STEP 2: FETCH VIDEO DETAILS (EXPENSIVE - ONLY ONCE/MONTH)
+
+    let details = [];
 
     for(let i=0;i<videoIds.length;i+=50){
 
-      const chunk = videoIds.slice(i,i+50).join(",");
+      const chunk = videoIds.slice(i,i+50).join(',');
 
       const res = await fetch(
-        `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${chunk}`,
-        { headers:{ Authorization:"Bearer "+accessToken } }
+        `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${chunk}&key=${apiKey}`,
+        { headers: { Authorization: 'Bearer ' + accessToken } }
       );
 
       const data = await res.json();
-
-      videos.push(...(data.items||[]));
+      details.push(...(data.items || []));
     }
 
-    allVideos = videos.map(v=>({
+    allVideos = details.map(video => {
+      const s = video.snippet || {};
 
-      id:v.id,
-      title:v.snippet.title,
-      description:v.snippet.description,
-      tags:v.snippet.tags||[],
-      thumb:v.snippet.thumbnails?.medium?.url||"",
-      score:50,
-      grade:"B"
+      return {
+        id: video.id,
+        title: s.title || '',
+        description: s.description || '',
+        tags: s.tags || [],
+        thumb: s.thumbnails?.medium?.url || '',
+        score: scoreTitle(s.title || ''),
+        grade: getGrade(scoreTitle(s.title || '')),
+        lastUpdated: Date.now()
+      };
+    });
 
-    }));
+    saveCache();
+    setLastSync();
 
     renderVideos();
+    showSuccess("Monthly sync complete + cached locally");
 
-  }catch(e){
-    showError(e.message);
+  } catch(err){
+    showError(err.message);
   }
 }
 
-function renderVideos(){
+// ---------------- DAILY LIGHT REFRESH ----------------
 
-  document.getElementById('videoList').innerHTML =
-    allVideos.map(v=>`
+function dailyRefresh(){
 
-      <div class="video" onclick="openPreview('${v.id}')">
-
-        <img class="thumb" src="${v.thumb}"/>
-
-        <div>
-          <div style="font-weight:700">${v.title}</div>
-        </div>
-
-        <div class="grade B">B</div>
-
-      </div>
-
-    `).join("");
-
-}
-
-function openPreview(id){
-
-  currentVideo = allVideos.find(v=>v.id===id);
-
-  document.getElementById("previewModal").style.display="flex";
-
-  document.getElementById("previewContent").innerHTML=`
-
-    <h3>Title</h3>
-    <textarea id="t">${currentVideo.title}</textarea>
-
-    <h3>Description</h3>
-    <textarea id="d" rows="6">${currentVideo.description}</textarea>
-
-    <button class="green" onclick="saveUpdate()">Save</button>
-
-  `;
-
-}
-
-async function saveUpdate(){
-
-  const title = document.getElementById("t").value;
-  const description = document.getElementById("d").value;
-
-  const res = await fetch(
-    "https://www.googleapis.com/youtube/v3/videos?part=snippet",
-    {
-      method:"PUT",
-      headers:{
-        Authorization:"Bearer "+accessToken,
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        id:currentVideo.id,
-        snippet:{
-          title,
-          description
-        }
-      })
-    }
-  );
-
-  const data = await res.json();
-
-  if(data.error){
-    alert(data.error.message);
+  if(!allVideos.length){
+    showError("No cached videos yet. Run full sync first.");
     return;
   }
 
-  showSuccess("Updated!");
-  closePreview();
-  loadAllVideos();
+  // only re-score locally (FREE)
+  allVideos = allVideos.map(v => {
+    const score = scoreTitle(v.title);
 
+    return {
+      ...v,
+      score,
+      grade: getGrade(score)
+    };
+  });
+
+  saveCache();
+  renderVideos();
+
+  showSuccess("Daily refresh complete (no API calls used)");
 }
 
-function closePreview(){
-  document.getElementById("previewModal").style.display="none";
+// ---------------- SCORING ----------------
+
+function scoreTitle(title){
+  let score = 40;
+
+  if(title.length >= 30 && title.length <= 60){
+    score += 20;
+  }
+
+  const words = ['kids','learn','fun','toddlers','abc','numbers','colors'];
+
+  words.forEach(w=>{
+    if(title.toLowerCase().includes(w)) score += 5;
+  });
+
+  return Math.min(score,100);
 }
 
-</script>
+function getGrade(score){
+  if(score >= 85) return 'A';
+  if(score >= 70) return 'B';
+  if(score >= 55) return 'C';
+  if(score >= 40) return 'D';
+  return 'F';
+}
 
-</body>
-</html>
+// ---------------- UI ----------------
+
+function renderVideos(){
+
+  if(!allVideos.length){
+    document.getElementById('videoList').innerHTML =
+      `<div class="small">No cached videos. Run sync.</div>`;
+    return;
+  }
+
+  document.getElementById('videoList').innerHTML =
+    allVideos.map(v => `
+      <div class="video" onclick="openPreview('${v.id}')">
+        <img class="thumb" src="${v.thumb}" />
+        <div>
+          <div style="font-weight:700">${v.title}</div>
+          <div class="small">Score: ${v.score}</div>
+        </div>
+        <div class="grade ${v.grade}">${v.grade}</div>
+      </div>
+    `).join('');
+}
+
+// ---------------- BUTTONS (ADD THESE TO HTML LATER) ----------------
+window.loadAllVideos = fullMonthlySync;
+window.dailyRefresh = dailyRefresh;
