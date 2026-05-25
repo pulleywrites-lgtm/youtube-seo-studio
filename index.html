@@ -1324,8 +1324,8 @@ function exportCSV(){
 function initStrategy(){
   if(!allVideos.length){
     document.getElementById('strategyContent').innerHTML =
-      '<div style="background:white;border-radius:'+CSS_VAR('r-lg')+';padding:48px;text-align:center;box-shadow:'+CSS_VAR('shadow')+'">'+
-        '<p style="font-size:15px;color:var(--gray-500)">Sync your videos first, then come back here for your strategy report!</p>'+
+      '<div style="background:white;border-radius:20px;padding:48px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.13)">'+
+        '<p style="font-size:15px;color:var(--gray-500)">Sync your videos first, then come back here for your strategy report.</p>'+
         '<button class="btn btn-red btn-sm" style="margin-top:16px" onclick="showTab(\\'tabVideos\\')">Go sync videos first</button>'+
       '</div>';
   }
@@ -1333,25 +1333,20 @@ function initStrategy(){
 
 function generateStrategy(){
   const el = document.getElementById('strategyContent');
+
   if(!allVideos.length){
     initStrategy();
     return;
   }
+
+  // Loading state
   el.innerHTML =
-    '<div style="background:white;border-radius:'+CSS_VAR('r-lg')+';padding:48px;text-align:center;box-shadow:'+CSS_VAR('shadow')+'">'+
+    '<div style="background:white;border-radius:20px;padding:48px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.13)">'+
       '<div class="spinner"></div>'+
       '<p style="margin-top:12px;font-size:14px;color:var(--gray-500)">Analyzing your channel…</p>'+
     '</div>';
-  setTimeout(renderLocalStrategy, 500);
-}
 
-// tiny helper to inline CSS variable values in strings (prevents undefined)
-function CSS_VAR(name){
-  // we can't read CSS vars easily in JS for string building, but we don't actually depend on them for logic.
-  // just return a plain value so the HTML is valid.
-  if(name==='r-lg') return '20px';
-  if(name==='shadow') return '0 8px 32px rgba(0,0,0,0.13)';
-  return '';
+  setTimeout(renderLocalStrategy, 500);
 }
 
 function renderLocalStrategy(){
@@ -1372,9 +1367,13 @@ function renderLocalStrategy(){
   const lowTitle = allVideos.filter(function(v){ return v.titleScore<50; }).length;
 
   let overallHealth;
-  if(avgScore>=80) overallHealth = 'Your channel is in strong shape — focus on polishing weaker videos and posting consistently.';
-  else if(avgScore>=60) overallHealth = 'Solid foundation, but many videos need SEO improvements in titles, tags and thumbnails.';
-  else overallHealth = 'Big opportunity: many videos have weak metadata. Fixing titles, tags, descriptions and thumbnails will make a huge difference.';
+  if(avgScore>=80){
+    overallHealth = 'Your channel is in strong shape — focus on polishing weaker videos and posting consistently.';
+  } else if(avgScore>=60){
+    overallHealth = 'Solid foundation, but many videos need SEO improvements in titles, tags and thumbnails.';
+  } else {
+    overallHealth = 'Big opportunity: many videos have weak metadata. Fixing titles, tags, descriptions and thumbnails will make a huge difference.';
+  }
 
   const urgentFixes = [];
   if(lowTitle>0) urgentFixes.push({action:'Rewrite weak titles on '+lowTitle+' videos',impact:'Titles drive clicks — better hooks and kids keywords = higher CTR',effort:'Easy'});
@@ -1384,10 +1383,15 @@ function renderLocalStrategy(){
   if(!urgentFixes.length) urgentFixes.push({action:'Focus on posting 1–2 new videos per week',impact:'Consistency helps YouTube trust and recommend your channel',effort:'Medium'});
 
   let biggestWin;
-  if(lowTitle>5) biggestWin = 'Rewrite your weak titles first — short, punchy, kid-focused titles with emojis can double your click-through rate.';
-  else if(lowThumb>3) biggestWin = 'Upgrade thumbnails on your lowest-scoring videos — bright colors and big, readable text will lift performance fast.';
-  else if(lowTags>5) biggestWin = 'Replace generic one-word tags with descriptive phrases (e.g. "toddler learning video") to help YouTube recommend your videos.';
-  else biggestWin = 'Your base is good — your biggest win now is consistency. Post on a regular schedule and pair each upload with Shorts to drive traffic.';
+  if(lowTitle>5){
+    biggestWin = 'Rewrite your weak titles first — short, punchy, kid-focused titles with emojis can double your click-through rate.';
+  } else if(lowThumb>3){
+    biggestWin = 'Upgrade thumbnails on your lowest-scoring videos — bright colors and big, readable text will lift performance fast.';
+  } else if(lowTags>5){
+    biggestWin = 'Replace generic one-word tags with descriptive phrases (e.g. "toddler learning video") to help YouTube recommend your videos.';
+  } else {
+    biggestWin = 'Your base is good — your biggest win now is consistency. Post on a regular schedule and pair each upload with Shorts to drive traffic.';
+  }
 
   const newVideoIdeas = [
     {title:'Count to 10 with Farm Animals 🐮 | Toddler Learning Song',why:'Combines counting + animals, two of the strongest evergreen kids categories.'},
@@ -1460,6 +1464,7 @@ function renderLocalStrategy(){
 
     '<button class="btn btn-ghost btn-sm" onclick="generateStrategy()" style="margin-top:4px">🔄 Regenerate Report (local)</button>';
 }
+
 
 
 // ============================================================
