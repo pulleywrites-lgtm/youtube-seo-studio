@@ -551,7 +551,7 @@ function scoreDesc(d){
   if(d.toLowerCase().indexOf("subscribe")>-1)s+=15;if(d.indexOf("#")>-1)s+=10;
   if(d.toLowerCase().indexOf("like")>-1||d.toLowerCase().indexOf("comment")>-1)s+=10;
   if(d.toLowerCase().indexOf("learn")>-1||d.toLowerCase().indexOf("watch")>-1)s+=10;
-  if(d.indexOf("\n")>-1)s+=5;
+  if(d.split("\n").length>1)s+=5;
   return Math.min(Math.max(s,0),100);
 }
 function scoreTags(tags){
@@ -604,130 +604,197 @@ function howToGetA(v){
 
 var STOP=new Set(["for","the","a","an","and","or","but","in","on","at","to","of","is","it","with","this","that","are","was","be","by","as","up","do","so","we","they","what","when","how","why","who","not","all","can","will","from","about","than","then","like","have","has","get","go","too","also","more","some","any","out","off","see","been","their","its","me","my","our","your","his","her","us","them"]);
 
-function generateSuggestedTitle(title){
+function analyzeVideoTopic(title,desc){
+  var t=(title||"").toLowerCase(),d=(desc||"").toLowerCase(),combined=t+" "+d;
+  var topics={
+    breathing:/breath|breathe|breathing|calm|relax|mindful|meditation|yoga|inhale|exhale|belly breath/.test(combined),
+    affirmations:/affirmation|positive thinking|self.esteem|confidence|believe|i am|mantra|self.love/.test(combined),
+    emotions:/emotion|feeling|happy|sad|angry|scared|anxious|anxiety|frustrat|worry|mad|upset|mood/.test(combined),
+    socialSkills:/friend|share|kind|bully|cooperat|teamwork|manner|respect|empath|community/.test(combined),
+    counting:/count|number|math|add|subtract|how many/.test(combined)&&!/abc|alphabet/.test(combined),
+    colors:/color|colour|red|blue|green|yellow|purple|orange|pink|rainbow/.test(combined),
+    alphabet:/abc|alphabet|letter|phonics|read|spell/.test(combined),
+    shapes:/shape|circle|square|triangle|rectangle|oval|diamond/.test(combined),
+    animals:/animal|dog|cat|bird|lion|tiger|elephant|bear|farm|zoo|jungle|ocean|fish|dinosaur/.test(combined),
+    bodyParts:/body part|head|shoulder|knee|toe|eye|ear|nose|mouth|hand|foot/.test(combined),
+    food:/food|fruit|vegetable|eat|healthy|snack|lunch|breakfast/.test(combined),
+    music:/song|music|sing|dance|rhythm|beat|melody|nursery/.test(combined),
+    sentences:/sentence|grammar|ela|sequenc|write|writing|read|reading|phonics|language arts/.test(combined),
+    science:/science|experiment|nature|plant|grow|weather|solar|planet|space|earth/.test(combined),
+    movement:/exercise|move|jump|run|stretch|active|physical|dance|gross motor/.test(combined),
+    halloween:/halloween|pumpkin|ghost|witch|bat|costume|trick|treat|spooky/.test(combined),
+    christmas:/christmas|santa|reindeer|elf|holiday|xmas/.test(combined),
+    easter:/easter|bunny|egg hunt/.test(combined),
+    thanksgiving:/thanksgiving|turkey|gratitude|thankful/.test(combined),
+    paris:/paris|france|french|eiffel/.test(combined),
+    italy:/italy|italian|rome|pizza|pasta/.test(combined),
+    bedtime:/bedtime|sleep|lullaby|night|dream|rest|nap/.test(combined),
+    hygiene:/wash|clean|teeth|brush|bath|hygiene|potty|toilet/.test(combined),
+    community:/helper|police|doctor|firefighter|teacher|nurse|community/.test(combined),
+    seasons:/spring|summer|fall|autumn|winter|season/.test(combined)
+  };
+  var primary=Object.keys(topics).find(function(k){return topics[k];})||"general";
+  var ageGroup=/toddler|babies|baby|infant/.test(combined)?"toddlers":/preschool|pre-k/.test(combined)?"preschool":/elementary|grade|school age/.test(combined)?"early-kids":"all-kids";
+  var theme=topics.paris?"paris":topics.italy?"italy":topics.halloween?"halloween":topics.christmas?"christmas":null;
+  return {topics:topics,primary:primary,ageGroup:ageGroup,theme:theme,titleLow:t,descLow:d};
+}
+
+function generateSuggestedTitle(title,description){
   if(!title)return "";
   var t=title.trim().replace(/^"+|"+$/g,"").trim();
-  var tL=t.toLowerCase();
-  var isCount=/count|number|\d/.test(tL);
-  var isColor=/color|colour/.test(tL);
-  var isAlpha=/abc|alphabet|letter/.test(tL);
-  var isShape=/shape/.test(tL);
-  var isSong=/song|music|sing/.test(tL);
-  var isSentence=/sentence|sequenc|grammar|ela|english|writing|reading|phonics/.test(tL);
-  var isEmotion=/emotion|feeling|affirmation|confidence|self.esteem|happy|sad/.test(tL);
-  var isAnimal=/animal|dog|cat|bird|zoo|farm|lion|tiger/.test(tL);
-  var isHalloween=/halloween/.test(tL);
-  var isChristmas=/christmas/.test(tL);
-  var isParis=/paris|french/.test(tL);
-  var isItaly=/italy|italian/.test(tL);
-  var emoji=isHalloween?"🎃":isChristmas?"🎄":isCount?"🔢":isColor?"🌈":isAlpha?"🔤":isShape?"⭐":isSong?"🎵":isSentence?"✏️":isEmotion?"🌟":isAnimal?"🦁":"✨";
-  var age=tL.indexOf("preschool")>-1?"Preschoolers":tL.indexOf("toddler")>-1?"Toddlers":tL.indexOf("baby")>-1||tL.indexOf("babies")>-1?"Babies":"Kids";
+  var info=analyzeVideoTopic(t,description||"");
+  var p=info.primary;
+  var age=info.ageGroup==="preschool"?"Preschoolers":info.ageGroup==="toddlers"?"Toddlers":info.ageGroup==="babies"?"Babies":"Kids";
   var suggested="";
-  if(isEmotion&&(tL.indexOf("affirmation")>-1||tL.indexOf("confidence")>-1))suggested="I Am Amazing! "+emoji+" Positive Affirmations for "+age;
-  else if(isCount&&isHalloween)suggested="Count with Halloween! "+emoji+" Fun Numbers for "+age;
-  else if(isCount)suggested="Learn to Count! "+emoji+" Fun Numbers Song for "+age;
-  else if(isColor)suggested="Learn Colors! "+emoji+" Rainbow Song for "+age;
-  else if(isAlpha)suggested="Sing the ABCs! "+emoji+" Alphabet Song for "+age;
-  else if(isSentence&&isParis)suggested="Build Sentences! "+emoji+" Paris Adventure ELA for "+age;
-  else if(isSentence&&isItaly)suggested="Build Sentences! "+emoji+" Italian Adventure ELA for "+age;
-  else if(isSentence)suggested="Build Sentences! "+emoji+" Fun ELA Learning for "+age;
-  else if(isEmotion)suggested="Feelings Song! "+emoji+" Emotions for "+age;
-  else if(isSong)suggested="Sing Along! "+emoji+" Fun Kids Song for "+age;
-  else if(isAnimal)suggested="Meet the Animals! "+emoji+" Learn and Play for "+age;
-  else if(isParis)suggested="Paris Adventure! "+emoji+" Fun Learning for "+age;
-  else if(isItaly)suggested="Italian Adventure! "+emoji+" Fun Learning for "+age;
-  else{var words=t.replace(/[!"?]/g,"").split(" ").filter(function(w){return w.length>3&&!STOP.has(w.toLowerCase());});var topic=words.slice(0,3).join(" ")||t.split(" ").slice(0,3).join(" ");suggested="Learn "+topic+"! "+emoji+" Fun for "+age;}
+  if(p==="breathing")suggested="Breathe & Relax! Fun Calm Down Exercises for "+age;
+  else if(p==="affirmations")suggested="I Am Amazing! Positive Affirmations for "+age;
+  else if(p==="emotions")suggested="All About Feelings! Emotions Song for "+age;
+  else if(p==="socialSkills")suggested="Being a Good Friend! Social Skills for "+age;
+  else if(p==="counting"&&info.topics.halloween)suggested="Count with Halloween! Fun Numbers for "+age;
+  else if(p==="counting")suggested="Learn to Count! Fun Numbers Song for "+age;
+  else if(p==="colors")suggested="Learn Colors! Rainbow Song for "+age;
+  else if(p==="alphabet")suggested="Sing the ABCs! Alphabet Song for "+age;
+  else if(p==="shapes")suggested="Learn Shapes! Fun Shapes Song for "+age;
+  else if(p==="animals")suggested="Meet the Animals! Learn and Play for "+age;
+  else if(p==="bodyParts")suggested="Head Shoulders Knees and Toes! Body Parts for "+age;
+  else if(p==="food")suggested="Yummy Healthy Food! Learning for "+age;
+  else if(p==="music")suggested="Sing Along! Fun Kids Song for "+age;
+  else if(p==="sentences"&&info.topics.paris)suggested="Build Sentences! Paris Adventure ELA for "+age;
+  else if(p==="sentences"&&info.topics.italy)suggested="Build Sentences! Italian Adventure ELA for "+age;
+  else if(p==="sentences")suggested="Build Sentences! Fun ELA Learning for "+age;
+  else if(p==="science")suggested="Lets Do Science! Fun Experiments for "+age;
+  else if(p==="movement")suggested="Move and Groove! Fun Exercise for "+age;
+  else if(p==="halloween")suggested="Happy Halloween! Spooky Fun for "+age;
+  else if(p==="christmas")suggested="Merry Christmas! Holiday Fun for "+age;
+  else if(p==="bedtime")suggested="Time to Sleep! Bedtime Songs for "+age;
+  else if(p==="hygiene")suggested="Stay Clean and Healthy! Good Habits for "+age;
+  else if(p==="community")suggested="Community Helpers! Learning for "+age;
+  else if(p==="seasons")suggested="Learn the Seasons! Nature for "+age;
+  else{var words=t.replace(/[!?|:]/g,"").split(" ").filter(function(w){return w.length>3&&!STOP.has(w.toLowerCase());});var core=words.slice(0,3).join(" ")||t.split(" ").slice(0,3).join(" ");suggested="Learn About "+core+"! Fun for "+age;}
   if(suggested.length>60)suggested=suggested.replace("Preschoolers","Kids").replace(" and Toddlers","");
   if(suggested.length>60)suggested=suggested.substring(0,60);
   return suggested;
 }
 
-function buildStrongKidsTitle(topic,ageGroup){
-  var t=topic.trim(),tL=t.toLowerCase();
-  var ageLabels={babies:"Babies",toddlers:"Toddlers",preschool:"Preschoolers","early-kids":"Kids","all-kids":"Kids and Toddlers"};
-  var age=ageLabels[ageGroup]||"Kids";
-  var isCount=/count|number|\d/.test(tL),isColor=/color|colour/.test(tL),isAlpha=/abc|alphabet|letter/.test(tL),isShape=/shape/.test(tL);
-  var isSong=/song|music|sing/.test(tL),isSentence=/sentence|sequenc|grammar|ela|english|phonics/.test(tL);
-  var isEmotion=/emotion|feeling|affirmation|confidence/.test(tL),isAnimal=/animal|dog|cat|bird|zoo|farm/.test(tL);
-  var isHalloween=/halloween/.test(tL),isParis=/paris|french/.test(tL),isItaly=/italy|italian/.test(tL);
-  var emoji=isHalloween?"🎃":isCount?"🔢":isColor?"🌈":isAlpha?"🔤":isShape?"⭐":isSong?"🎵":isSentence?"✏️":isEmotion?"🌟":isAnimal?"🦁":"✨";
-  var title="";
-  if(isEmotion&&(tL.indexOf("affirmation")>-1||tL.indexOf("confidence")>-1))title="I Am Amazing! "+emoji+" Positive Affirmations for "+age;
-  else if(isCount&&isHalloween)title="Count with Halloween! "+emoji+" Fun Numbers for "+age;
-  else if(isCount)title="Learn to Count! "+emoji+" Fun Numbers for "+age;
-  else if(isColor)title="Learn Colors! "+emoji+" Rainbow Song for "+age;
-  else if(isAlpha)title="Sing the ABCs! "+emoji+" Alphabet Song for "+age;
-  else if(isSentence&&isParis)title="Build Sentences! "+emoji+" Paris Adventure ELA for "+age;
-  else if(isSentence&&isItaly)title="Build Sentences! "+emoji+" Italian Adventure ELA for "+age;
-  else if(isSentence)title="Build Sentences! "+emoji+" Fun ELA for "+age;
-  else if(isEmotion)title="Feelings Song! "+emoji+" Emotions for "+age;
-  else if(isSong)title="Sing Along! "+emoji+" Fun Kids Song for "+age;
-  else if(isAnimal)title="Meet the Animals! "+emoji+" Learn for "+age;
-  else if(isParis)title="Paris Adventure! "+emoji+" Fun Learning for "+age;
-  else if(isItaly)title="Italian Adventure! "+emoji+" Fun Learning for "+age;
-  else{var words=t.split(" ").filter(function(w){return w.length>3&&!STOP.has(w.toLowerCase());});var topic2=words.slice(0,3).join(" ")||t.split(" ").slice(0,3).join(" ");title="Learn "+topic2+"! "+emoji+" Fun for "+age;}
-  if(title.length>60)title=title.replace("Preschoolers","Kids").replace(" and Toddlers","");
-  if(title.length>60)title=title.substring(0,60);
-  return title;
-}
-
-function buildStrongDescription(topic,title,ageGroup){
-  var ageMap={babies:"babies (0-2)",toddlers:"toddlers (2-4)",preschool:"preschoolers (3-5)","early-kids":"kids (5-7)","all-kids":"kids and toddlers (0-8)"};
-  var age=ageMap[ageGroup]||"kids";
-  var tClean=topic.replace(/[^\w\s,!?.\'\-]/g,"").trim();
-  var desc="Welcome! Your little ones are going to LOVE learning about "+tClean+" in this super fun and engaging way! Designed specifically for "+age+".";
-  desc+="\n\nWhat your child will discover:\n- Key concepts about "+tClean+" made simple and fun\n- Colorful visuals and engaging characters\n- Repetition and rhythm that helps concepts stick\n- Age-appropriate pacing for little learners";
-  desc+="\n\nSUBSCRIBE for new kids learning videos every week!\nIf your little one enjoyed this, please LIKE the video!\nCOMMENT below -- what did your child think?\nSAVE this video to rewatch -- repetition is key!";
-  desc+="\n\n#KidsLearning #ChildrensYouTube #ToddlerLearning #FamilyFriendly #EducationalKidsVideo #EarlyChildhood #PreschoolLearning #KidsEducation";
+function generateSuggestedDesc(title,existingDesc){
+  var info=analyzeVideoTopic(title||"",existingDesc||"");
+  var p=info.primary;
+  var hooks={
+    breathing:"Does your little one struggle to calm down? These fun deep breathing exercises help kids manage big feelings, reduce anxiety, and find their calm in just minutes!",
+    affirmations:"Help your child build unshakeable confidence with these powerful positive affirmations! Say them together every day and watch your little one bloom.",
+    emotions:"Helping kids understand and express their feelings is one of the greatest gifts you can give them. This fun video makes learning about emotions easy and joyful!",
+    socialSkills:"Learning to be a good friend, share, and show kindness -- skills that last a lifetime! This fun video makes social skills easy and memorable for little ones.",
+    counting:"Counting is one of the first and most important math skills! This fun colorful video makes numbers exciting and easy to remember for little learners.",
+    colors:"Learning colors is one of the first big milestones -- and this video makes it SO much fun! Bright, bold, and full of energy your kids will love.",
+    alphabet:"The ABCs are the foundation of reading! This fun video makes learning the alphabet exciting and something your child will want to watch again and again.",
+    shapes:"Shapes are everywhere! This video helps little ones recognize and name shapes through songs, colors, and adorable characters.",
+    animals:"Kids LOVE animals -- and this video turns that love into learning! Discover amazing animals, their sounds, and fun facts in the most engaging way.",
+    sentences:"Building strong language skills early sets kids up for reading success! This engaging video makes sentence structure fun and accessible for young learners.",
+    movement:"Get those little bodies moving! This fun exercise video helps kids develop coordination, burn energy, and build healthy habits while having a blast!",
+    bedtime:"A calming bedtime routine makes all the difference for little ones. Let this soothing video help your child wind down, relax, and drift off to dreamland.",
+    science:"Little scientists in the making! This fun video sparks curiosity and introduces key science concepts in a totally age-appropriate and exciting way.",
+    halloween:"Halloween learning is HERE! This fun spooky-friendly video combines holiday excitement with key learning concepts your little ones will LOVE.",
+    community:"Our community helpers are everyday heroes! This fun video introduces kids to the important people who keep our communities safe and running.",
+    hygiene:"Good hygiene habits start early! This fun video makes washing hands, brushing teeth, and staying clean something kids actually WANT to do.",
+    general:"Get ready for some serious fun learning! This video is packed with colorful characters, catchy moments, and key concepts your little one will love."
+  };
+  var learningPoints={
+    breathing:"- How to take calming deep belly breaths\n- Simple calm-down techniques they can use anywhere\n- How breathing helps manage big feelings and anxiety",
+    affirmations:"- Powerful I AM affirmations to build confidence\n- How to talk to themselves with kindness\n- Daily positive thinking habits that build resilience",
+    emotions:"- How to name and identify different feelings\n- That ALL emotions are valid and okay\n- Healthy ways to express and manage their emotions",
+    socialSkills:"- How to be a kind and thoughtful friend\n- The importance of sharing, taking turns, and listening\n- Simple ways to navigate social situations",
+    counting:"- How to count with confidence\n- Number recognition and sequencing\n- Fun ways to see numbers in everyday life",
+    colors:"- Color names and recognition\n- How to spot colors in the world around them\n- Color mixing basics in a fun visual way",
+    alphabet:"- Letter names and their sounds\n- The order of the alphabet\n- Early phonics foundations for reading success",
+    shapes:"- Shape names and recognition\n- How to spot shapes in everyday objects\n- Basic geometry concepts made simple",
+    animals:"- Animal names, sounds, and habitats\n- Fun facts about amazing creatures\n- Respect and love for the animal world",
+    sentences:"- How sentences are structured\n- Key ELA concepts in a fun engaging way\n- Building blocks of strong communication skills",
+    movement:"- Fun exercises to keep little bodies healthy\n- Coordination and gross motor skill development\n- The joy of moving and staying active",
+    bedtime:"- Calming techniques for bedtime\n- How to wind down and prepare for sleep\n- Soothing songs for a peaceful night",
+    general:"- Key concepts made simple and fun\n- Colorful visuals designed for little eyes\n- Memorable lessons through repetition"
+  };
+  var hashtagSets={
+    breathing:"#KidsBreathing #CalmKids #MindfulnessForKids #KidsYoga #DeepBreathingKids #KidsMeditation #CalmDownKids #AnxietyKids #SELKids #KidsWellness",
+    affirmations:"#KidsAffirmations #PositiveKids #ChildConfidence #KidsSelfEsteem #PositiveThinkingKids #KidsMindset #IAmAmazing #KidsMotivation #SELKids #KidsWellness",
+    emotions:"#EmotionsForKids #FeelingsForKids #SELKids #KidsEmotions #EmotionalLearning #KindnessForKids #SocialSkillsKids #PreschoolEmotions #FeelingsVideo #KidsWellness",
+    socialSkills:"#SocialSkillsKids #KindnessKids #FriendshipKids #SELKids #KidsManners #EmpathyKids #BeingAGoodFriend #SocialDevelopment #PreschoolSocial #KidsCharacter",
+    counting:"#CountingForKids #NumbersForKids #MathForKids #KidsMath #CountingSong #NumberLearning #PreschoolMath #ToddlerLearning #KidsNumbers #EarlyMath",
+    colors:"#LearnColors #ColorsForKids #ColorSong #ToddlerColors #RainbowKids #KidsColors #ColorsForToddlers #ColorLearning #PreschoolColors #ColorVideo",
+    alphabet:"#ABCSong #AlphabetForKids #PhonicsForKids #LetterLearning #KidsABC #AlphabetSong #LearnABC #PreschoolReading #KidsLiteracy #ABCKids",
+    sentences:"#ELAForKids #SentenceBuilding #KidsELA #LanguageArtsKids #ReadingKids #GrammarForKids #KidsLiteracy #PreschoolELA #LiteracyKids #KidsReading",
+    science:"#ScienceForKids #KidsScienceVideo #STEMKids #NatureKids #KidsExperiment #EarlyScience #PreschoolScience #KidsStem #FunScienceKids #LittleScientists",
+    movement:"#ExerciseForKids #KidsMovement #GrossMotorKids #ActiveKids #KidsWorkout #MovementSong #BrainBreakKids #KidsPhysical #DanceToddlers #FunExerciseKids",
+    halloween:"#HalloweenForKids #HalloweenLearning #HalloweenCounting #KidsHalloween #HalloweenSong #HalloweenEducational #SpookyKidsLearning #HalloweenPreschool #KidsHalloweenSong #OctoberKids",
+    bedtime:"#BedtimeSongsKids #LullabyBabies #KidsBedtime #SleepSongsChildren #CalmingKids #KidsGoodnightVideo #BedtimeRoutineKids #RelaxKids #SleepyToddlers #KidsBedtimeRoutine",
+    general:"#KidsLearning #ChildrensYouTube #ToddlerLearning #FamilyFriendly #EducationalKidsVideo #EarlyChildhood #PreschoolLearning #KidsEducation"
+  };
+  var hook=hooks[p]||hooks.general;
+  var points=learningPoints[p]||learningPoints.general;
+  var hashtags=hashtagSets[p]||hashtagSets.general;
+  var desc=hook+"\n\nWhat your child will learn:\n"+points+"\n\nSUBSCRIBE and ring the bell so you never miss a new video -- we post weekly!\nLIKE this video if your little one enjoyed it!\nCOMMENT below and tell us what your child thought -- we LOVE hearing from families!\nSAVE this video to your playlist for easy rewatching!\n\n"+hashtags;
   return desc;
 }
 
-function buildStrongTags(topic,title){
-  var tL=topic.toLowerCase();
-  var base=["kids learning videos","educational videos for kids","toddler learning","children youtube","preschool learning","kids educational content","learning for toddlers","fun kids videos","early childhood education","family friendly youtube","kids youtube channel","toddler educational videos","learning videos for kids","kids songs and learning","children educational channel"];
-  var specific=[];
-  if(tL.indexOf("count")>-1||tL.indexOf("number")>-1)specific=["learn to count","counting for kids","numbers for toddlers","counting song kids","math for preschoolers","number learning video","count with me kids"];
-  else if(tL.indexOf("color")>-1)specific=["learn colors kids","colors for toddlers","color learning video","rainbow colors kids","color song toddlers"];
-  else if(tL.indexOf("abc")>-1||tL.indexOf("alphabet")>-1)specific=["abc song kids","alphabet for toddlers","learn alphabet children","phonics for kids","letter learning video"];
-  else if(tL.indexOf("halloween")>-1)specific=["halloween for kids","halloween learning video","halloween counting","kids halloween","halloween toddlers","spooky kids learning"];
-  else if(tL.indexOf("affirmation")>-1||tL.indexOf("confidence")>-1)specific=["positive affirmations kids","self esteem for children","confidence for kids","kids affirmations","self love for children"];
-  else if(tL.indexOf("sentence")>-1||tL.indexOf("ela")>-1||tL.indexOf("sequenc")>-1)specific=["sentence building kids","ela for kids","english learning children","grammar for kids","language arts toddlers","reading skills kids"];
-  else if(tL.indexOf("paris")>-1||tL.indexOf("french")>-1)specific=["travel learning kids","paris for kids","world culture kids","adventure learning children","multicultural education kids"];
-  else if(tL.indexOf("italy")>-1||tL.indexOf("italian")>-1)specific=["italy for kids","italian culture children","travel learning kids","world culture kids","adventure learning children"];
-  else if(tL.indexOf("emotion")>-1||tL.indexOf("feeling")>-1)specific=["emotions for kids","feelings song children","social emotional learning","kindergarten emotions","feelings for toddlers"];
-  else{var words=topic.toLowerCase().replace(/[^a-z0-9 ]/g,"").split(" ").filter(function(w){return w.length>3&&!STOP.has(w);});words.forEach(function(w){specific.push(w+" for kids");specific.push(w+" for toddlers");});}
-  var all=specific.concat(base),clean=[],seen={};
-  all.forEach(function(t){var tc=t.trim().toLowerCase().replace(/#/g,"");if(!seen[tc]&&tc.split(" ").length>1&&tc.length>4&&tc.length<50){seen[tc]=true;clean.push(tc);}});
-  return clean.slice(0,15);
+function generateSuggestedTags(title,existingTags,existingDesc){
+  var info=analyzeVideoTopic(title||"",existingDesc||"");
+  var p=info.primary;
+  var tagSets={
+    breathing:["deep breathing for kids","calm down exercises children","mindfulness for kids","kids yoga breathing","breathing exercises toddlers","how to calm down kids","kids anxiety relief","belly breathing children","calm kids video","relaxation techniques kids","kids mindfulness video","social emotional learning","deep breaths kids","calm down corner kids","kids wellness video"],
+    affirmations:["positive affirmations for kids","kids self esteem video","confidence for children","i am affirmations kids","kids positive thinking","self love for children","affirmations for toddlers","kids empowerment video","positive mindset kids","children affirmations","kids motivation video","i am amazing kids","self worth children","daily affirmations kids","kids confidence building"],
+    emotions:["emotions for kids","feelings for kids","social emotional learning","kids emotions video","all about feelings","emotions song children","kids feelings song","preschool emotions","identifying emotions kids","feelings for toddlers","emotional learning kids","kids mental health","big feelings kids","emotions kindergarten","feelings activities kids"],
+    socialSkills:["social skills for kids","how to make friends kids","kindness for children","sharing for toddlers","being a good friend kids","empathy for children","social skills video kids","friendship song kids","manners for kids","kids social emotional","getting along kids","preschool social skills","cooperative play kids","social development kids","classroom social skills"],
+    counting:["counting for kids","learn to count","numbers for toddlers","counting song for kids","number learning video","kids counting video","1 to 10 for kids","number recognition toddlers","math for preschoolers","counting with kids","numbers song kids","count with me kids","learning numbers video","toddler counting video","preschool numbers"],
+    colors:["learn colors for kids","colors for toddlers","color learning video","rainbow colors kids","color song for toddlers","what color is it kids","learning colors video","kids color song","colors for babies","preschool colors","colors in english kids","teach colors toddlers","color recognition kids","fun colors video","colors and shapes kids"],
+    alphabet:["abc song for kids","alphabet for toddlers","learn alphabet video","phonics for kids","letter learning kids","abc learning video","alphabet song children","abcs for toddlers","letter recognition kids","phonics song kids","learn letters kids","abc video toddlers","preschool alphabet","kids literacy video","early reading kids"],
+    sentences:["sentence building for kids","ela for kids video","language arts for children","reading skills kids","sentence sequencing kids","grammar for children","kids literacy video","english learning children","early literacy kids","sentence structure kids","ela preschool","reading readiness kids","language development kids","kids english learning","writing skills kids"],
+    science:["science for kids","kids science video","simple science experiments","nature for kids","stem for toddlers","kids science channel","science song kids","early science learning","preschool science","kids nature video","science activities kids","learning science kids","kids stem video","easy science kids","fun science kids"],
+    movement:["exercise for kids","kids movement video","gross motor skills kids","active kids video","kids workout","movement song kids","brain break kids","kids physical activity","dance for toddlers","kids yoga video","movement activities kids","get moving kids","fun exercise kids","kids fitness video","movement break kids"],
+    halloween:["halloween for kids","halloween learning video","halloween counting kids","kids halloween video","halloween songs kids","halloween educational","spooky kids learning","halloween preschool","kids halloween song","halloween activities kids","halloween alphabet","halloween colors kids","october kids video","halloween fun kids","halloween education"],
+    bedtime:["bedtime songs for kids","lullaby for babies","kids bedtime video","sleep songs children","calming songs kids","kids goodnight video","bedtime routine kids","relax kids video","sleepy song toddlers","kids bedtime routine","goodnight song kids","toddler bedtime video","sleep music children","kids lullaby video","calm bedtime kids"],
+    general:["kids learning videos","educational videos for kids","toddler learning","children youtube","preschool learning","kids educational content","learning for toddlers","fun kids videos","early childhood education","family friendly youtube","kids youtube channel","toddler educational videos","learning videos for kids","kids songs and learning","children educational channel"]
+  };
+  return (tagSets[p]||tagSets.general).slice(0,15);
 }
 
-function buildThumbPrompt(topic,title,ageGroup){
-  var tL=topic.toLowerCase();
-  var isHalloween=tL.indexOf("halloween")>-1,isParis=tL.indexOf("paris")>-1||tL.indexOf("french")>-1,isItaly=tL.indexOf("italy")>-1||tL.indexOf("italian")>-1;
-  var setting=isHalloween?"with spooky-cute Halloween decorations, orange bats, smiling jack-o-lanterns, friendly ghosts":isParis?"with the Eiffel Tower visible, Parisian colors, berets and baguettes":isItaly?"with iconic Italian elements, Colosseum, pizza, Italian flags":"with bright cheerful colorful backgrounds";
-  var prompt="Create a STUNNING YouTube thumbnail for a childrens educational video.";
-  prompt+=" VIDEO: "+title+" TOPIC: "+topic;
-  prompt+=" REQUIREMENTS: Size 1280x720px 16:9. Style: Bright bold modern cartoon -- Cocomelon quality.";
-  prompt+=" Scene: Super cute wide-eyed happy cartoon child or friendly character "+setting+".";
-  prompt+=" Colors: MAXIMUM saturation -- bright red yellow blue green. NO muted tones.";
-  prompt+=" Text overlay: LARGE bold bubble font saying "+title.substring(0,20)+" -- readable at tiny mobile size.";
-  prompt+=" Background: Clean uncluttered -- bright solid color or simple scene.";
-  prompt+=" Facial expression: Huge smile, sparkling eyes, pure excitement.";
-  prompt+=" The thumbnail must STOP a parent from scrolling on their phone.";
-  prompt+=" MOOD: Pure joy, safe, educational, exciting.";
-  return prompt;
+function generateExistingThumbPrompt(title,description){
+  var info=analyzeVideoTopic(title||"",description||"");
+  var p=info.primary;
+  var scenes={
+    breathing:"taking a deep belly breath with eyes closed and a peaceful smile, surrounded by soft glowing light and gentle floating bubbles, one hand on belly",
+    affirmations:"arms raised in a confident superhero pose, beaming with joy, surrounded by golden stars and sparkles, radiating pure positivity",
+    emotions:"showing a big joyful expression front and center, with colorful emotion bubbles floating around, bright and inviting",
+    socialSkills:"smiling and waving hello, surrounded by heart shapes and friendship symbols, warm and welcoming energy",
+    counting:"pointing excitedly at large colorful floating numbers 1-10, eyes wide with excitement and discovery",
+    colors:"surrounded by an explosion of rainbow colors, holding a colorful paintbrush or rainbow wand, pure delight on their face",
+    alphabet:"holding a giant colorful letter, surrounded by floating ABC letters in bright primary colors, huge smile",
+    shapes:"surrounded by giant colorful geometric shapes -- stars, circles, triangles -- looking amazed and excited",
+    animals:"playing with or hugging a cute friendly cartoon animal character, both characters looking thrilled",
+    sentences:"holding a pencil with a speech bubble showing words and letters, surrounded by books and colorful letters",
+    movement:"mid-jump with arms raised high, energetic and joyful, showing pure movement and excitement",
+    halloween:"in a cute non-scary Halloween costume, smiling jack-o-lantern nearby, bats and stars in the background",
+    christmas:"surrounded by Christmas lights and ornaments, wearing a santa hat, pure holiday joy",
+    bedtime:"in cozy pajamas with a content sleepy smile, crescent moon and stars surrounding them, soft warm lighting",
+    science:"with wide excited eyes looking at a colorful science experiment, wearing a mini lab coat, surrounded by bubbles and chemistry symbols",
+    general:"looking directly at camera with a huge excited smile, arms outstretched wide, radiating pure joy and curiosity"
+  };
+  var scene=scenes[p]||scenes.general;
+  return "Create a STUNNING YouTube thumbnail for a childrens educational video.\n\nVIDEO TITLE: "+title+"\n\nMAIN CHARACTER: A beautiful Black or Latino child "+scene+". High quality modern cartoon style -- premium animation quality.\n\nIf the scene has multiple characters: add one more diverse child of a different ethnicity as a secondary supporting character.\n\nDESIGN REQUIREMENTS:\n- Size: 1280x720px, 16:9\n- Colors: MAXIMUM saturation -- bright bold primary colors, nothing muted or pastel\n- Text overlay: LARGE bold bubble font with 3-4 key words from the title -- must be readable on a tiny phone screen\n- Background: Clean, bright, uncluttered -- one bold color or simple themed background\n- The thumbnail must make a parent STOP scrolling immediately\n- Facial expression: Pure joy, wide eyes, huge smile -- irresistible to both parents and children\n- NO dark colors, no scary elements, no visual clutter\n\nMOOD: Safe, joyful, educational, exciting -- parents must instantly trust this is quality premium kids content";
 }
 
-function getCategoryForTopic(topic){
-  var t=topic.toLowerCase();
-  if(t.indexOf("song")>-1||t.indexOf("music")>-1||t.indexOf("sing")>-1)return {id:"10",name:"Music"};
-  if(t.indexOf("game")>-1)return {id:"20",name:"Gaming"};
-  return {id:"27",name:"Education"};
+function buildStrongKidsTitle(topic,ageGroup){
+  var suggested=generateSuggestedTitle(topic,"");
+  var ageLabels={babies:"Babies",toddlers:"Toddlers",preschool:"Preschoolers","early-kids":"Kids","all-kids":"Kids and Toddlers"};
+  var age=ageLabels[ageGroup]||"Kids";
+  suggested=suggested.replace(/for Kids$/,"for "+age).replace(/for Toddlers$/,"for "+age).replace(/for Preschoolers$/,"for "+age).replace(/for Babies$/,"for "+age);
+  if(suggested.length>60)suggested=suggested.replace("Preschoolers","Kids").replace(" and Toddlers","");
+  if(suggested.length>60)suggested=suggested.substring(0,60);
+  return suggested;
 }
 
-function generateSuggestedDesc(title){return buildStrongDescription(title,title,"all-kids");}
-function generateSuggestedTags(title,existing){return buildStrongTags(title,title);}
-function generateExistingThumbPrompt(title){return buildThumbPrompt(title,title,"all-kids");}
+function buildStrongDescription(topic,title,ageGroup){return generateSuggestedDesc(title||topic,"");}
+function buildStrongTags(topic,title){return generateSuggestedTags(title||topic,[],topic);}
+function buildThumbPrompt(topic,title,ageGroup){return generateExistingThumbPrompt(title||topic,topic);}
+function getCategoryForTopic(topic){var info=analyzeVideoTopic(topic,"");if(info.topics.music||info.topics.bedtime)return {id:"10",name:"Music"};return {id:"27",name:"Education"};}
 
 function updateStats(){
   document.getElementById("statTotal").textContent=allVideos.length;
@@ -751,23 +818,39 @@ function sortAndRender(){
   renderTable(sorted);
 }
 function renderTable(videos){
-  if(!videos.length){document.getElementById("videoTableBody").innerHTML="<div class=\'empty-state\'><h3>No videos</h3><p>Sync your channel first!</p></div>";return;}
-  var html="";
+  if(!videos.length){document.getElementById("videoTableBody").innerHTML="<div class='empty-state'><h3>No videos</h3><p>Sync your channel first!</p></div>";return;}
+  var tbody=document.getElementById("videoTableBody");
+  tbody.innerHTML="";
   videos.forEach(function(v){
     var pub=v.publishedAt?new Date(v.publishedAt).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):"--";
-    var privBadge=v.privacy&&v.privacy!=="public"?"<span style=\'font-size:10px;background:var(--gray-200);color:var(--gray-500);padding:1px 6px;border-radius:999px;margin-left:6px\'>"+v.privacy+"</span>":"";
-    html+="<div class=\'video-row\' id=\'row-"+v.id+"\' data-id=\'"+v.id+"\'>"; 
-    html+="<div class=\'td\'><img class=\'thumb\' src=\'"+v.thumbUrl+"\' alt=\'\' /></div>";
-    html+="<div class=\'td\'><div class=\'vid-title-text\'>"+esc(v.title)+privBadge+"</div><div class=\'vid-date\'>"+pub+"</div></div>";
-    html+="<div class=\'td\' id=\'grade-cell-"+v.id+"\'>"+v.grade+"</div>";
-    html+="<div class=\'td\'>"+bar(v.overall)+"</div>";
-    html+="<div class=\'td\' style=\'font-size:11px;color:var(--gray-400)\'>"+pub+"</div>";
-    html+="</div><div class=\'detail-panel\' id=\'detail-"+v.id+"\' ></div>";
+    // Row
+    var row=document.createElement("div");
+    row.className="video-row";row.id="row-"+v.id;row.dataset.id=v.id;
+    // Thumb
+    var td1=document.createElement("div");td1.className="td";
+    var img=document.createElement("img");img.className="thumb";img.src=v.thumbUrl;img.alt="";
+    td1.appendChild(img);row.appendChild(td1);
+    // Title
+    var td2=document.createElement("div");td2.className="td";
+    var privBadge="";
+    if(v.privacy&&v.privacy!=="public"){privBadge="<span style='font-size:10px;background:var(--gray-200);color:var(--gray-500);padding:1px 6px;border-radius:999px;margin-left:6px'>"+v.privacy+"</span>";}
+    td2.innerHTML="<div class='vid-title-text'>"+esc(v.title)+privBadge+"</div><div class='vid-date'>"+pub+"</div>";
+    row.appendChild(td2);
+    // Grade
+    var td3=document.createElement("div");td3.className="td";td3.id="grade-cell-"+v.id;
+    td3.innerHTML="<span class='grade-badge grade-"+v.grade+"'>"+v.grade+"</span>";
+    row.appendChild(td3);
+    // Score
+    var td4=document.createElement("div");td4.className="td";td4.innerHTML=bar(v.overall);row.appendChild(td4);
+    // Date
+    var td5=document.createElement("div");td5.className="td";td5.style.cssText="font-size:11px;color:var(--gray-400)";td5.textContent=pub;row.appendChild(td5);
+    // Detail panel
+    var detail=document.createElement("div");detail.className="detail-panel";detail.id="detail-"+v.id;
+    row.addEventListener("click",function(){toggleDetail(v.id);});
+    tbody.appendChild(row);
+    tbody.appendChild(detail);
   });
-  document.getElementById("videoTableBody").innerHTML=html;
-  document.querySelectorAll(".video-row").forEach(function(row){row.addEventListener("click",function(){toggleDetail(row.dataset.id);});});
 }
-
 function bar(s){return "<div class='bar-wrap'><div class='bar-bg'><div class='bar-fill' style='width:"+s+"%;background:"+barColor(s)+"'></div></div><span class='bar-num'>"+s+"</span></div>";}
 function esc(t){return String(t||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 
