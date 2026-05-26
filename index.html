@@ -197,9 +197,9 @@ textarea{resize:vertical}
 <div class="connect-wrap"><div class="connect-card">
 <div class="connect-icon"><svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.05a8.16 8.16 0 004.77 1.52V7.12a4.85 4.85 0 01-1-.43z"/></svg></div>
 <h2>Welcome to Your Studio!</h2>
-<p>Enter your credentials below. You only need to do this once.</p>
-<div class="field"><label>OAuth Client ID</label><input type="text" id="clientIdInput" placeholder="xxxxx.apps.googleusercontent.com"/></div>
-<div class="field"><label>API Key</label><input type="password" id="apiKeyInput" placeholder="AIza..."/></div>
+<p>Click below to connect your YouTube channel and get started!</p>
+<input type="text" id="clientIdInput" style="display:none"/>
+<input type="password" id="apiKeyInput" style="display:none"/>
 <button class="btn btn-red btn-full" id="connectBtn" style="margin-top:8px">Connect to YouTube</button>
 <div id="connectMsg" style="margin-top:12px"></div>
 </div></div>
@@ -238,6 +238,7 @@ textarea{resize:vertical}
 </select></div>
 <button class="btn btn-ghost btn-sm" id="refreshBtn">Refresh View (Free)</button>
 <button class="btn btn-red btn-sm" id="syncBtn">Sync from YouTube</button>
+<button class="btn btn-primary btn-sm" id="bulkUpdateBtn" style="background:var(--purple)">⚡ Bulk Update All Videos</button>
 </div>
 <div id="syncAlert" style="margin-bottom:12px"></div>
 <div class="table-wrap">
@@ -362,6 +363,43 @@ textarea{resize:vertical}
 </div>
 </div>
 </div>
+<div class="modal-overlay" id="bulkModal">
+<div class="modal" style="max-width:600px">
+<div class="modal-icon modal-warn-icon">&#9889;</div>
+<h3>Bulk Update All Videos</h3>
+<p>Select which fields to update across ALL your public videos at once.</p>
+<div style="margin-bottom:16px">
+<div style="font-size:12px;font-weight:700;color:var(--gray-700);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Update these fields:</div>
+<label style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--gray-50);border-radius:8px;margin-bottom:6px;cursor:pointer"><input type="checkbox" id="bulkChkTitle" checked style="width:16px;height:16px"/><div><div style="font-size:13px;font-weight:700">Titles</div><div style="font-size:11px;color:var(--gray-500)">Rewrite all titles with optimized kids YouTube SEO</div></div></label>
+<label style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--gray-50);border-radius:8px;margin-bottom:6px;cursor:pointer"><input type="checkbox" id="bulkChkDesc" checked style="width:16px;height:16px"/><div><div style="font-size:13px;font-weight:700">Descriptions</div><div style="font-size:11px;color:var(--gray-500)">Update all descriptions with searchable first lines and CTAs</div></div></label>
+<label style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--gray-50);border-radius:8px;margin-bottom:6px;cursor:pointer"><input type="checkbox" id="bulkChkTags" checked style="width:16px;height:16px"/><div><div style="font-size:13px;font-weight:700">Tags</div><div style="font-size:11px;color:var(--gray-500)">Replace all tags with topic-specific optimized sets</div></div></label>
+</div>
+<div id="bulkQuotaEstimate" style="margin-bottom:16px"></div>
+<p style="font-size:12px;color:var(--orange);font-weight:600;margin-bottom:16px;text-align:center">This will update ALL your public videos! You can undo individual changes from your History tab.</p>
+<div class="modal-actions">
+<button class="btn btn-primary" id="bulkProceedBtn" style="background:var(--purple)">⚡ Start Bulk Update</button>
+<button class="btn btn-ghost" id="bulkCancelBtn">Cancel</button>
+</div>
+</div>
+</div>
+
+<div class="modal-overlay" id="bulkProgressModal">
+<div class="modal" style="max-width:520px">
+<h3 style="text-align:center;margin-bottom:16px">⚡ Bulk Update in Progress</h3>
+<div style="margin-bottom:12px">
+<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+<span id="bulkProgressLabel">Starting...</span>
+<span id="bulkProgressCount">0 / 0</span>
+</div>
+<div style="background:var(--gray-100);border-radius:999px;height:12px;overflow:hidden">
+<div id="bulkProgressBar" style="height:100%;background:var(--purple);border-radius:999px;transition:width 0.3s;width:0%"></div>
+</div>
+</div>
+<div id="bulkProgressLog" style="background:var(--gray-50);border-radius:var(--r-sm);padding:12px;height:150px;overflow-y:auto;font-size:12px;font-family:monospace;color:var(--gray-700)"></div>
+<button class="btn btn-ghost btn-sm" id="bulkDoneBtn" style="margin-top:16px;display:none">Done!</button>
+</div>
+</div>
+
 <div class="modal-overlay" id="syncModal">
 <div class="modal">
 <div class="modal-icon modal-warn-icon">&#128225;</div>
@@ -422,6 +460,11 @@ window.addEventListener("DOMContentLoaded",function(){
   document.getElementById("loadIdeasBtn").addEventListener("click",loadVideoIdeas);
   document.getElementById("loadTipsBtn").addEventListener("click",loadSeoTips);
   document.getElementById("rotateTipsBtn").addEventListener("click",loadSeoTips);
+  document.getElementById("bulkUpdateBtn").addEventListener("click",openBulkModal);
+  document.getElementById("bulkCancelBtn").addEventListener("click",function(){document.getElementById("bulkModal").classList.remove("open");});
+  document.getElementById("bulkProceedBtn").addEventListener("click",startBulkUpdate);
+  document.getElementById("bulkDoneBtn").addEventListener("click",function(){document.getElementById("bulkProgressModal").classList.remove("open");});
+  document.getElementById("bulkModal").addEventListener("click",function(e){if(e.target===this)this.classList.remove("open");});
   document.getElementById("newVideoBtn").addEventListener("click",generateNewVideoMeta);
   document.getElementById("saveDraftBtn").addEventListener("click",saveDraft);
   document.getElementById("copyNewAllBtn").addEventListener("click",copyNewAll);
@@ -694,7 +737,7 @@ function analyzeVideoTopic(title,desc){
     alphabet:/abc|alphabet|letter|phonics|read|spell/.test(combined),
     shapes:/shape|circle|square|triangle|rectangle|oval|diamond/.test(combined),
     animals:/animal|dog|cat|bird|lion|tiger|elephant|bear|farm|zoo|jungle|ocean|fish|dinosaur/.test(combined),
-    bodyParts:/body part|head|shoulder|knee|toe|eye|ear|nose|mouth|hand|foot/.test(combined),
+    bodyParts:/body part|head shoulders|shoulder|knee|toes song|\btoe\b|\beye\b|\bear\b|nose and mouth|\bmouth\b|\bhand\b|\bfoot\b|feet song/.test(combined),
     food:/food|fruit|vegetable|eat|healthy|snack|lunch|breakfast/.test(combined),
     music:/song|music|sing|dance|rhythm|beat|melody|nursery/.test(combined),
     sentences:/sentence|grammar|ela|sequenc|write|writing|read|reading|phonics|language arts/.test(combined),
@@ -1264,6 +1307,88 @@ function renderHistory(){
   el.innerHTML=html;
   document.querySelectorAll(".history-summary").forEach(function(s){s.addEventListener("click",function(){document.getElementById("hd-"+s.dataset.hi).classList.toggle("open");});});
 }
+function openBulkModal(){
+  if(!allVideos.length){showSyncAlert("Sync your videos first before bulk updating.","warn");return;}
+  var publicVids=allVideos.filter(function(v){return v.privacy==="public"||!v.privacy;});
+  var titleChecked=document.getElementById("bulkChkTitle")&&document.getElementById("bulkChkTitle").checked;
+  var descChecked=document.getElementById("bulkChkDesc")&&document.getElementById("bulkChkDesc").checked;
+  var tagsChecked=document.getElementById("bulkChkTags")&&document.getElementById("bulkChkTags").checked;
+  var fields=(titleChecked?1:0)+(descChecked?1:0)+(tagsChecked?1:0);
+  var cost=publicVids.length*50;
+  var used=getQuotaUsed();
+  var remaining=10000-used;
+  var el=document.getElementById("bulkQuotaEstimate");
+  el.innerHTML="<div class='info-row'><span>Public videos to update</span><span>"+publicVids.length+" videos</span></div>"+
+    "<div class='info-row'><span>Estimated quota cost</span><span style='color:var(--orange)'>~"+cost+" units</span></div>"+
+    "<div class='info-row'><span>Your quota remaining today</span><span style='color:"+(remaining>cost?"var(--green)":"var(--red)")+"'>"+remaining.toLocaleString()+" units</span></div>"+
+    (remaining<cost?"<div class='alert alert-danger'>You may run out of quota before all videos are updated! Consider doing this in batches.</div>":"<div class='alert alert-success'>You have enough quota for this bulk update!</div>");
+  document.getElementById("bulkModal").classList.add("open");
+}
+
+async function startBulkUpdate(){
+  if(!accessToken){alert("Please connect to YouTube first.");return;}
+  var doTitle=document.getElementById("bulkChkTitle").checked;
+  var doDesc=document.getElementById("bulkChkDesc").checked;
+  var doTags=document.getElementById("bulkChkTags").checked;
+  if(!doTitle&&!doDesc&&!doTags){alert("Please select at least one field to update.");return;}
+  var publicVids=allVideos.filter(function(v){return v.privacy==="public"||!v.privacy;});
+  document.getElementById("bulkModal").classList.remove("open");
+  document.getElementById("bulkProgressModal").classList.add("open");
+  var log=document.getElementById("bulkProgressLog");
+  var bar=document.getElementById("bulkProgressBar");
+  var label=document.getElementById("bulkProgressLabel");
+  var countEl=document.getElementById("bulkProgressCount");
+  var doneBtn=document.getElementById("bulkDoneBtn");
+  var total=publicVids.length;
+  var done=0,errors=0;
+  log.innerHTML="Starting bulk update of "+total+" videos...<br>";
+  for(var i=0;i<publicVids.length;i++){
+    var v=publicVids[i];
+    label.textContent="Updating: "+v.title.substring(0,40)+"...";
+    countEl.textContent=(i+1)+" / "+total;
+    bar.style.width=Math.round(((i+1)/total)*100)+"%";
+    try{
+      var newTitle=doTitle?generateSuggestedTitle(v.title,v.description):v.title;
+      var newDesc=doDesc?generateSuggestedDesc(v.title,v.description):v.description;
+      var newTagsArr=doTags?generateSuggestedTags(v.title,[],v.description):v.tags;
+      var r=await fetch("https://www.googleapis.com/youtube/v3/videos?part=snippet&key="+savedApiKey(),{
+        method:"PUT",
+        headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"},
+        body:JSON.stringify({id:v.id,snippet:{title:newTitle,description:newDesc,tags:newTagsArr,categoryId:v.categoryId||"27"}})
+      });
+      var d=await r.json();
+      if(d.error)throw new Error(d.error.message);
+      addQuota(50);
+      // Update local data
+      var ts=scoreTitle(newTitle),ds=scoreDesc(newDesc),tagsS=scoreTags(newTagsArr),ls=scoreLengthForKids(v.durationSecs||0);
+      var newOverall=Math.round((ts*0.35)+(ds*0.25)+(tagsS*0.25)+(ls*0.15));
+      var newGrade=scoreToGrade(newOverall);
+      var idx2=allVideos.findIndex(function(x){return x.id===v.id;});
+      if(idx2>=0){
+        allVideos[idx2].title=newTitle;allVideos[idx2].description=newDesc;allVideos[idx2].tags=newTagsArr;
+        allVideos[idx2].titleScore=ts;allVideos[idx2].descScore=ds;allVideos[idx2].tagsScore=tagsS;
+        allVideos[idx2].overall=newOverall;allVideos[idx2].grade=newGrade;
+      }
+      pushHistory.unshift({date:new Date().toISOString(),videoId:v.id,oldTitle:v.title,newTitle:newTitle,oldDesc:(v.description||"").substring(0,300),newDesc:newDesc.substring(0,300),oldTags:v.tags||[],newTags:newTagsArr,oldGrade:v.grade,newGrade:newGrade,oldScore:v.overall,newScore:newOverall,bulkUpdate:true});
+      done++;
+      log.innerHTML+="<span style='color:#059669'>✓</span> "+esc(v.title.substring(0,45))+" → Grade "+v.grade+" to "+newGrade+"<br>";
+    }catch(e){
+      errors++;
+      log.innerHTML+="<span style='color:var(--red)'>✗</span> "+esc(v.title.substring(0,40))+" -- "+esc(e.message)+"<br>";
+    }
+    log.scrollTop=log.scrollHeight;
+    // Small delay to avoid rate limiting
+    await new Promise(function(res){setTimeout(res,300);});
+  }
+  localStorage.setItem("ytVideoCache",JSON.stringify(allVideos));
+  localStorage.setItem("ytHistory_v2",JSON.stringify(pushHistory));
+  label.textContent="Bulk update complete!";
+  bar.style.background="var(--green)";
+  log.innerHTML+="<br><strong>Done! "+done+" updated, "+errors+" errors.</strong>";
+  doneBtn.style.display="inline-flex";
+  pushCount+=done;updateStats();sortAndRender();
+}
+
 function exportCSV(){if(!pushHistory.length){alert("No history to export yet.");return;}var rows=[["Date","Video ID","Old Title","New Title","Old Grade","New Grade","Old Score","New Score"]];pushHistory.forEach(function(h){rows.push([h.date,h.videoId,h.oldTitle,h.newTitle,h.oldGrade,h.newGrade,h.oldScore,h.newScore]);});var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c||"").replace(/"/g,'""')+'"';}).join(",");}).join("\n");var a=document.createElement("a");a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);a.download="youtube-push-history.csv";a.click();}
 function copyField(id){var el=document.getElementById(id);if(!el)return;navigator.clipboard.writeText(el.value).then(function(){el.style.background="#DCFCE7";setTimeout(function(){el.style.background="";},800);});}
 function copyEl(id){var el=document.getElementById(id);if(!el)return;navigator.clipboard.writeText(el.textContent).then(function(){el.style.background="#DCFCE7";setTimeout(function(){el.style.background="";},800);});}
