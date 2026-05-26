@@ -381,6 +381,7 @@ textarea{resize:vertical}
 var SCOPES="https://www.googleapis.com/auth/youtube.force-ssl";
 var CLIENT_ID="35258696737-jf4dg4hjaksc42o0nmm7npm28npjkehj.apps.googleusercontent.com";
 var API_KEY_DEFAULT="AIzaSyAuCjH_oNav9ij4axUXMBrP2Vvgtz44H1I";
+// Credentials pre-baked -- sister just clicks Connect, no typing needed
 var accessToken=null,allVideos=[],pushCount=0,pendingModalAction=null,pushHistory=[],drafts=[],playlists=[],trendIdx=0;
 function savedApiKey(){return localStorage.getItem("ytApiKey")||API_KEY_DEFAULT;}
 function savedClientId(){return localStorage.getItem("ytClientId")||CLIENT_ID;}
@@ -437,6 +438,17 @@ window.addEventListener("DOMContentLoaded",function(){
   document.getElementById("quotaModal").addEventListener("click",function(e){if(e.target===this){this.classList.remove("open");pendingModalAction=null;}});
   document.getElementById("syncModal").addEventListener("click",function(e){if(e.target===this)this.classList.remove("open");});
   rotateTrends();
+  // Auto-fill and attempt silent connect if credentials already saved
+  if(localStorage.getItem("ytClientId")&&localStorage.getItem("ytApiKey")){
+    document.getElementById("clientIdInput").value=localStorage.getItem("ytClientId");
+    document.getElementById("apiKeyInput").value=localStorage.getItem("ytApiKey");
+  } else {
+    // Pre-fill with baked-in credentials so sister never has to type anything
+    document.getElementById("clientIdInput").value=CLIENT_ID;
+    document.getElementById("apiKeyInput").value=API_KEY_DEFAULT;
+    localStorage.setItem("ytClientId",CLIENT_ID);
+    localStorage.setItem("ytApiKey",API_KEY_DEFAULT);
+  }
 });
 
 function saveAndConnect(){
@@ -519,15 +531,18 @@ async function doSync(){
     var details=[];
     for(var i=0;i<videoIds.length;i+=50){
       var chunk=videoIds.slice(i,i+50).join(",");
-      var r2=await fetch("https://www.googleapis.com/youtube/v3/videos?part=snippet,status&id="+chunk+"&key="+savedApiKey(),{headers:{Authorization:"Bearer "+accessToken}});
+      var r2=await fetch("https://www.googleapis.com/youtube/v3/videos?part=snippet,status,contentDetails&id="+chunk+"&key="+savedApiKey(),{headers:{Authorization:"Bearer "+accessToken}});
       var d2=await r2.json();if(d2.error)throw new Error(d2.error.message);addQuota(1);
       details=details.concat(d2.items||[]);
     }
     allVideos=details.map(function(v){
       var s=v.snippet||{},tags=s.tags||[],privacy=(v.status&&v.status.privacyStatus)||"public";
+      var dur=(v.contentDetails&&v.contentDetails.duration)||"";
+      var durationSecs=parseDuration(dur);
       var ts=scoreTitle(s.title||""),ds=scoreDesc(s.description||""),tagsS=scoreTags(tags);
-      var overall=Math.round((ts*0.4)+(ds*0.3)+(tagsS*0.3));
-      return {id:v.id,title:s.title||"",description:s.description||"",tags:tags,thumbUrl:s.thumbnails&&s.thumbnails.medium?s.thumbnails.medium.url:"",publishedAt:s.publishedAt||"",categoryId:s.categoryId||"27",privacy:privacy,titleScore:ts,descScore:ds,tagsScore:tagsS,overall:overall,grade:scoreToGrade(overall)};
+      var ls=scoreLengthForKids(durationSecs);
+      var overall=Math.round((ts*0.35)+(ds*0.25)+(tagsS*0.25)+(ls*0.15));
+      return {id:v.id,title:s.title||"",description:s.description||"",tags:tags,thumbUrl:s.thumbnails&&s.thumbnails.medium?s.thumbnails.medium.url:"",publishedAt:s.publishedAt||"",categoryId:s.categoryId||"27",privacy:privacy,titleScore:ts,descScore:ds,tagsScore:tagsS,lengthScore:ls,durationSecs:durationSecs,overall:overall,grade:scoreToGrade(overall)};
     });
     localStorage.setItem("ytVideoCache",JSON.stringify(allVideos));localStorage.setItem("ytLastSync",Date.now().toString());
     updateSyncInfo();updateStats();sortAndRender();
@@ -539,29 +554,32 @@ async function doSync(){
 }
 function dailyRefresh(){
   if(!allVideos.length){showSyncAlert("No videos cached yet. Click Sync from YouTube first.","warn");return;}
-  allVideos=allVideos.map(function(v){var ts=scoreTitle(v.title),ds=scoreDesc(v.description),tagsS=scoreTags(v.tags),overall=Math.round((ts*0.4)+(ds*0.3)+(tagsS*0.3));return Object.assign({},v,{titleScore:ts,descScore:ds,tagsScore:tagsS,overall:overall,grade:scoreToGrade(overall)});});
+  allVideos=allVideos.map(function(v){var ts=scoreTitle(v.title),ds=scoreDesc(v.description),tagsS=scoreTags(v.tags),ls=scoreLengthForKids(v.durationSecs||0),overall=Math.round((ts*0.35)+(ds*0.25)+(tagsS*0.25)+(ls*0.15));return Object.assign({},v,{titleScore:ts,descScore:ds,tagsScore:tagsS,lengthScore:ls,overall:overall,grade:scoreToGrade(overall)});});
   localStorage.setItem("ytVideoCache",JSON.stringify(allVideos));updateStats();sortAndRender();
   showSyncAlert("View refreshed -- scores updated. No quota used!","success");
 }
 function showSyncAlert(msg,type){document.getElementById("syncAlert").innerHTML="<div class='alert alert-"+type+"'>"+msg+"</div>";}
 
 function scoreTitle(t){
-  if(!t)return 0;var s=20;
-  if(t.length>=40&&t.length<=60)s+=25;else if(t.length>=30&&t.length<40)s+=15;else if(t.length>60&&t.length<=70)s+=8;else if(t.length>0)s+=3;
-  var pw=["kids","children","toddler","toddlers","baby","babies","preschool","learn","learning","fun","easy","how to","counting","colors","shapes","abc","alphabet","numbers","songs","nursery"];
-  pw.forEach(function(w){if(t.toLowerCase().indexOf(w)>-1)s+=4;});
+  if(!t)return 0;var s=15;
+  if(t.length>=40&&t.length<=60)s+=20;else if(t.length>=30&&t.length<40)s+=12;else if(t.length>60&&t.length<=70)s+=6;else if(t.length>0)s+=2;
+  var pw=["kids","children","toddler","toddlers","baby","babies","preschool","learn","learning","fun","easy","how to","counting","colors","shapes","abc","alphabet","numbers","songs","nursery","little learners"];
+  pw.forEach(function(w){if(t.toLowerCase().indexOf(w)>-1)s+=3;});
+  if(scoreChannelKeywords(t)===100)s+=15; else s-=10;
   if(/[?!]/.test(t))s+=5;if(/\d/.test(t))s+=5;
   if(t===t.toUpperCase()&&t.length>5)s-=10;
   if(t.charAt(0)==='"'||t.charAt(t.length-1)==='"')s-=15;
   return Math.min(Math.max(s,0),100);
 }
 function scoreDesc(d){
-  if(!d)return 0;var s=10;
+  if(!d)return 0;var s=5;
   if(d.length>100)s+=10;if(d.length>300)s+=15;if(d.length>500)s+=15;
   if(d.toLowerCase().indexOf("subscribe")>-1)s+=15;if(d.indexOf("#")>-1)s+=10;
   if(d.toLowerCase().indexOf("like")>-1||d.toLowerCase().indexOf("comment")>-1)s+=10;
   if(d.toLowerCase().indexOf("learn")>-1||d.toLowerCase().indexOf("watch")>-1)s+=10;
   if(d.split("\n").length>1)s+=5;
+  var fls=scoreDescFirstLine(d);
+  if(fls>=100)s+=20;else if(fls>=75)s+=10;else if(fls<30)s-=10;
   return Math.min(Math.max(s,0),100);
 }
 function scoreTags(tags){
@@ -571,6 +589,40 @@ function scoreTags(tags){
   if(good.length>=5)s+=20;if(good.length>=10)s+=15;
   return Math.min(Math.max(s,0),100);
 }
+function parseDuration(iso){
+  if(!iso)return 0;
+  var m=iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if(!m)return 0;
+  return (parseInt(m[1]||0)*3600)+(parseInt(m[2]||0)*60)+parseInt(m[3]||0);
+}
+
+function scoreLengthForKids(secs){
+  if(!secs)return 50;
+  var mins=secs/60;
+  if(mins>=4&&mins<=8)return 100;
+  if(mins>=3&&mins<4)return 85;
+  if(mins>=8&&mins<=12)return 75;
+  if(mins>=2&&mins<3)return 60;
+  if(mins>12&&mins<=20)return 50;
+  if(mins<2)return 30;
+  return 25;
+}
+
+function scoreChannelKeywords(title){
+  var t=(title||"").toLowerCase();
+  var kw=["kids","children","toddler","toddlers","baby","babies","preschool","little learners","for kids","for toddlers","for children","for babies","for preschoolers"];
+  return kw.some(function(w){return t.indexOf(w)>-1;})?100:0;
+}
+
+function scoreDescFirstLine(desc){
+  if(!desc)return 0;
+  var fl=desc.split("\n")[0].substring(0,200).toLowerCase();
+  var kw=["kids","children","toddler","learn","educational","fun","preschool","babies","little learners","for kids","for toddlers"];
+  var hasKw=kw.some(function(w){return fl.indexOf(w)>-1;});
+  if(hasKw)return 100;
+  return 20;
+}
+
 function scoreToGrade(s){if(s>=85)return "A";if(s>=70)return "B";if(s>=55)return "C";if(s>=40)return "D";return "F";}
 function gradeColor(g){return {A:"#15803D",B:"#2563EB",C:"#B45309",D:"#C2410C",F:"#DC2626"}[g]||"#6B7280";}
 function barColor(s){if(s>=85)return "#06D6A0";if(s>=70)return "#4361EE";if(s>=55)return "#FFD166";if(s>=40)return "#FF8C42";return "#ef4444";}
@@ -597,6 +649,17 @@ function getDescTip(s,desc){
   if(desc&&desc.toLowerCase().indexOf("like")===-1)tips.push("Ask viewers to Like and Comment");
   return tips.length?"Warning: "+tips.join(" and "):"Needs improvement";
 }
+function getLengthTip(s,secs){
+  if(s>=85)return "Perfect length for kids YouTube!";
+  var mins=secs?Math.round(secs/60):0;
+  if(!secs)return "Length unknown -- add contentDetails to sync";
+  if(mins<2)return "Too short ("+mins+"min) -- aim for 4-8 minutes for best watch time";
+  if(mins>=2&&mins<4)return "A bit short ("+mins+"min) -- 4-8 minutes is the sweet spot for kids YouTube";
+  if(mins>12&&mins<=20)return "Getting long ("+mins+"min) -- kids engagement drops after 8-10 minutes";
+  if(mins>20)return "Too long ("+mins+"min) -- consider splitting into a series";
+  return "Good length range!";
+}
+
 function getTagsTip(s,tags){
   if(s>=85)return "Great tags!";
   var tips=[];
@@ -607,8 +670,13 @@ function getTagsTip(s,tags){
 function howToGetA(v){
   var items=[];
   if(v.titleScore<85){var tt=getTitleTip(v.titleScore,v.title).replace("Warning: ","").trim();if(tt)items.push("Title: "+tt);}
+  if(scoreChannelKeywords(v.title)===0)items.push("Channel Keywords: Add a kids keyword like Kids, Toddlers, or Preschool to your title -- this is how parents search and it directly affects your algorithm reach");
   if(v.descScore<85){var dt=getDescTip(v.descScore,v.description).replace("Warning: ","").trim();if(dt)items.push("Description: "+dt);}
+  var fls=scoreDescFirstLine(v.description);
+  if(fls<50)items.push("Description first line: Lead with a searchable keyword, not an emoji or story -- YouTube shows only the first 150 chars in search results");
   if(v.tagsScore<85){var tgt=getTagsTip(v.tagsScore,v.tags).replace("Warning: ","").trim();if(tgt)items.push("Tags: "+tgt);}
+  var ls=v.lengthScore||scoreLengthForKids(v.durationSecs||0);
+  if(ls<60&&v.durationSecs)items.push("Video Length: "+getLengthTip(ls,v.durationSecs));
   return items;
 }
 
@@ -641,10 +709,12 @@ function analyzeVideoTopic(title,desc){
     bedtime:/bedtime|sleep|lullaby|night|dream|rest|nap/.test(combined),
     hygiene:/wash|clean|teeth|brush|bath|hygiene|potty|toilet/.test(combined),
     community:/helper|police|doctor|firefighter|teacher|nurse|community/.test(combined),
-    seasons:/spring|summer|fall|autumn|winter|season/.test(combined)
+    seasons:/spring|summer|fall|autumn|winter|season/.test(combined),
+    worldCultures:/culture|world|carnival|kwanzaa|diwali|hanami|lunar|chinese new year|hanukkah|eid|ramadan|celebration|tradition|festival|around the world|multicultural|diverse|heritage/.test(combined),
+    geography:/country|continent|africa|asia|europe|america|australia|ocean|map|globe|flag/.test(combined)
   };
   // Priority order matters - check most specific first
-  var priority=["halloween","christmas","easter","thanksgiving","breathing","affirmations","counting","colors","alphabet","shapes","bodyParts","bedtime","hygiene","emotions","socialSkills","animals","food","music","sentences","science","movement","community","seasons","paris","italy","general"];
+  var priority=["halloween","christmas","easter","thanksgiving","breathing","affirmations","worldCultures","geography","counting","colors","alphabet","shapes","bodyParts","bedtime","hygiene","emotions","socialSkills","animals","food","music","sentences","science","movement","community","seasons","paris","italy","general"];
   var primary=priority.find(function(k){return topics[k];})||"general";
   var ageGroup=/toddler|babies|baby|infant/.test(combined)?"toddlers":/preschool|pre-k/.test(combined)?"preschool":/elementary|grade|school age/.test(combined)?"early-kids":"all-kids";
   var theme=topics.paris?"paris":topics.italy?"italy":topics.halloween?"halloween":topics.christmas?"christmas":null;
@@ -682,6 +752,8 @@ function generateSuggestedTitle(title,description){
   else if(p==="hygiene")suggested="Stay Clean and Healthy! Good Habits for "+age;
   else if(p==="community")suggested="Community Helpers! Learning for "+age;
   else if(p==="seasons")suggested="Learn the Seasons! Nature for "+age;
+  else if(p==="worldCultures")suggested="Celebrations Around the World! Cultures for "+age;
+  else if(p==="geography")suggested="Explore the World! Geography for "+age;
   else{var words=t.replace(/[!?|:]/g,"").split(" ").filter(function(w){return w.length>3&&!STOP.has(w.toLowerCase());});var core=words.slice(0,3).join(" ")||t.split(" ").slice(0,3).join(" ");suggested="Learn About "+core+"! Fun for "+age;}
   if(suggested.length>60)suggested=suggested.replace("Preschoolers","Kids").replace(" and Toddlers","");
   if(suggested.length>60)suggested=suggested.substring(0,60);
@@ -708,6 +780,8 @@ function generateSuggestedDesc(title,existingDesc){
     halloween:"Halloween learning is HERE! This fun spooky-friendly video combines holiday excitement with key learning concepts your little ones will LOVE.",
     community:"Our community helpers are everyday heroes! This fun video introduces kids to the important people who keep our communities safe and running.",
     hygiene:"Good hygiene habits start early! This fun video makes washing hands, brushing teeth, and staying clean something kids actually WANT to do.",
+    worldCultures:"Get ready to travel the world without leaving home! This colorful video introduces little ones to beautiful celebrations and traditions from cultures around the globe -- building empathy, curiosity, and global awareness from the very start.",
+    geography:"The world is an amazing place -- and your little explorer is about to discover it! This fun video introduces continents, countries, and the incredible diversity of our planet in a totally kid-friendly way.",
     general:"Get ready for some serious fun learning! This video is packed with colorful characters, catchy moments, and key concepts your little one will love."
   };
   var learningPoints={
@@ -723,6 +797,8 @@ function generateSuggestedDesc(title,existingDesc){
     sentences:"- How sentences are structured\n- Key ELA concepts in a fun engaging way\n- Building blocks of strong communication skills",
     movement:"- Fun exercises to keep little bodies healthy\n- Coordination and gross motor skill development\n- The joy of moving and staying active",
     bedtime:"- Calming techniques for bedtime\n- How to wind down and prepare for sleep\n- Soothing songs for a peaceful night",
+    worldCultures:"- Beautiful traditions and celebrations from cultures around the world\n- That our differences make the world a richer and more exciting place\n- Key vocabulary for talking about different cultures with curiosity and respect",
+    geography:"- Names of continents and countries\n- Fun facts about different parts of the world\n- That every culture has something amazing to share",
     general:"- Key concepts made simple and fun\n- Colorful visuals designed for little eyes\n- Memorable lessons through repetition"
   };
   var hashtagSets={
@@ -738,6 +814,8 @@ function generateSuggestedDesc(title,existingDesc){
     movement:"#ExerciseForKids #KidsMovement #GrossMotorKids #ActiveKids #KidsWorkout #MovementSong #BrainBreakKids #KidsPhysical #DanceToddlers #FunExerciseKids",
     halloween:"#HalloweenForKids #HalloweenLearning #HalloweenCounting #KidsHalloween #HalloweenSong #HalloweenEducational #SpookyKidsLearning #HalloweenPreschool #KidsHalloweenSong #OctoberKids",
     bedtime:"#BedtimeSongsKids #LullabyBabies #KidsBedtime #SleepSongsChildren #CalmingKids #KidsGoodnightVideo #BedtimeRoutineKids #RelaxKids #SleepyToddlers #KidsBedtimeRoutine",
+    worldCultures:"#WorldCulturesKids #DiversityForKids #MulticulturalKids #CelebrationsAroundTheWorld #KidsCulture #GlobalLearningKids #KwanzaaForKids #DiwaliForKids #ChineseNewYearKids #KidsWorldTour",
+    geography:"#GeographyForKids #WorldForKids #KidsExplore #ContinentsForKids #MapForKids #AroundTheWorldKids #KidsGlobe #WorldLearningKids #KidsTravelVideo #ExploreTheWorldKids",
     general:"#KidsLearning #ChildrensYouTube #ToddlerLearning #FamilyFriendly #EducationalKidsVideo #EarlyChildhood #PreschoolLearning #KidsEducation"
   };
   var hook=hooks[p]||hooks.general;
@@ -763,6 +841,8 @@ function generateSuggestedTags(title,existingTags,existingDesc){
     movement:["exercise for kids","kids movement video","gross motor skills kids","active kids video","kids workout","movement song kids","brain break kids","kids physical activity","dance for toddlers","kids yoga video","movement activities kids","get moving kids","fun exercise kids","kids fitness video","movement break kids"],
     halloween:["halloween for kids","halloween learning video","halloween counting kids","kids halloween video","halloween songs kids","halloween educational","spooky kids learning","halloween preschool","kids halloween song","halloween activities kids","halloween alphabet","halloween colors kids","october kids video","halloween fun kids","halloween education"],
     bedtime:["bedtime songs for kids","lullaby for babies","kids bedtime video","sleep songs children","calming songs kids","kids goodnight video","bedtime routine kids","relax kids video","sleepy song toddlers","kids bedtime routine","goodnight song kids","toddler bedtime video","sleep music children","kids lullaby video","calm bedtime kids"],
+    worldCultures:["world cultures for kids","celebrations around the world","multicultural kids video","diversity for kids","cultural learning children","kwanzaa for kids","diwali for kids","chinese new year kids","carnival for kids","kids world tour","traditions for toddlers","around the world kids","cultural celebrations kids","global learning kids","diverse kids content"],
+    geography:["geography for kids","world for kids","continents for kids","countries for kids","map for kids","explore the world kids","kids globe video","world learning kids","kids travel video","flags of the world kids","kids geography song","around the world children","world cultures kids","global kids education","kids world video"],
     general:["kids learning videos","educational videos for kids","toddler learning","children youtube","preschool learning","kids educational content","learning for toddlers","fun kids videos","early childhood education","family friendly youtube","kids youtube channel","toddler educational videos","learning videos for kids","kids songs and learning","children educational channel"]
   };
   return (tagSets[p]||tagSets.general).slice(0,15);
@@ -787,6 +867,8 @@ function generateExistingThumbPrompt(title,description){
     christmas:"surrounded by Christmas lights and ornaments, wearing a santa hat, pure holiday joy",
     bedtime:"in cozy pajamas with a content sleepy smile, crescent moon and stars surrounding them, soft warm lighting",
     science:"with wide excited eyes looking at a colorful science experiment, wearing a mini lab coat, surrounded by bubbles and chemistry symbols",
+    worldCultures:"surrounded by colorful flags and symbols from different cultures around the world, wearing a fun explorer outfit, with mini landmarks like the Eiffel Tower, pyramids, and lanterns in the background",
+    geography:"holding a colorful globe or map, surrounded by miniature landmarks from different continents, explorer hat on, wide excited eyes",
     general:"looking directly at camera with a huge excited smile, arms outstretched wide, radiating pure joy and curiosity"
   };
   var scene=scenes[p]||scenes.general;
@@ -897,6 +979,9 @@ function buildDetailPanel(id){
   html+=scoreItem("Title",v.titleScore,getTitleTip(v.titleScore,v.title));
   html+=scoreItem("Description",v.descScore,getDescTip(v.descScore,v.description));
   html+=scoreItem("Tags",v.tagsScore,getTagsTip(v.tagsScore,v.tags));
+  var ls=v.lengthScore||scoreLengthForKids(v.durationSecs||0);
+  var durMin=v.durationSecs?Math.round(v.durationSecs/60)+"min":"";
+  html+=scoreItem("Video Length"+(durMin?" ("+durMin+")":""),ls,getLengthTip(ls,v.durationSecs));
   html+="</div>";
   if(howTo.length>0){html+="<div class='how-to-a'><h4>How to get this video to an A:</h4><ul>";howTo.forEach(function(h){html+="<li>"+esc(h)+"</li>";});html+="</ul></div>";}
   else html+="<div class='how-to-a'><h4>This video is already scoring an A! Great work!</h4></div>";
@@ -931,6 +1016,8 @@ function buildDetailPanel(id){
   html+="</select>";
   html+="<div class='detail-label' style='margin:14px 0 6px'>Playlists -- tap to select</div>";
   html+="<div id='plChips-"+id+"' style='display:flex;flex-wrap:wrap;min-height:36px'><span style='font-size:13px;color:var(--gray-400)'>Loading playlists...</span></div>";
+  html+="<div class='detail-label' style='margin:14px 0 6px'>Thumbnail Self-Assessment</div>";
+  html+="<label style='display:flex;align-items:center;gap:10px;padding:10px;background:white;border:1.5px solid var(--gray-200);border-radius:var(--r-sm);margin-bottom:8px;cursor:pointer'><input type='checkbox' id='chkLogo-"+id+"' checked style='width:16px;height:16px'/><div><strong style='font-size:13px'>My thumbnail has my channel logo</strong><div style='font-size:11px;color:var(--gray-500)'>Uncheck if missing -- affects your grade</div></div></label>";
   html+="<div class='detail-label' style='margin:14px 0 6px'>Thumbnail Prompt -- paste into ChatGPT, Gemini, or DALL-E</div>";
   html+="<div class='thumb-prompt'><p id='thumbPrompt-"+id+"'>"+esc(thumbP)+"</p></div>";
   html+="<div class='detail-actions'>";
@@ -1113,7 +1200,7 @@ function loadVideoIdeas(){
 }
 var SEO_TIP_POOLS=[
   [{tip:"Use for kids or for toddlers in EVERY title",why:"This is literally how parents search -- without it YouTube will not surface your video in those searches"},{tip:"Your first 2 lines of description are your SEO gold",why:"YouTube shows only ~150 chars in search results -- put your strongest keyword and hook there, then subscribe CTA"},{tip:"15 tags minimum, ALL multi-word phrases",why:"Single-word tags are too broad -- toddler learning video beats learning 100% of the time"},{tip:"Post Shorts of your best moments",why:"YouTube heavily promotes channels using both Shorts and long-form -- Shorts bring new subscribers who then watch your full videos"},{tip:"Same upload day every week",why:"YouTube rewards scheduling consistency -- subscribers get notified and early engagement spikes boost ranking"},{tip:"First 5 seconds must hook immediately -- no intros",why:"Watch time in the first 30 seconds determines if YouTube promotes the video. Start with action, music, or a question"}],
-  [{tip:"Respond to every comment in the first 24 hours",why:"Comment engagement signals to YouTube that your audience is active -- this boosts the video in recommendations"},{tip:"Use chapters in your description for longer videos",why:"Timestamps improve watch time by letting viewers skip to relevant parts -- YouTube rewards high watch time"},{tip:"Upload a custom thumbnail for EVERY video",why:"Videos with custom thumbnails get up to 30% higher click-through rates than auto-generated ones"},{tip:"Include your channel name or a catchphrase in every description",why:"Branded descriptions help with channel recognition and repeat viewership -- parents remember you"},{tip:"Add end screens linking to your other videos",why:"End screens keep viewers on your channel -- higher session time means YouTube promotes you more"},{tip:"Create playlists and add every new video to one",why:"Playlists autoplay, which dramatically increases watch time and session length -- YouTube loves this"}],
+  [{tip:"Respond to every comment in the first 24 hours",why:"Comment engagement signals to YouTube that your audience is active -- this boosts the video in recommendations"},{tip:"Use chapters in your description for longer videos",why:"Timestamps improve watch time by letting viewers skip to relevant parts -- YouTube rewards high watch time"},{tip:"Upload a custom thumbnail for EVERY video",why:"Videos with custom thumbnails get up to 30% higher click-through rates than auto-generated ones"},{tip:"Include your channel name or a catchphrase in every description",why:"Branded descriptions help with channel recognition and repeat viewership -- parents remember you"},{tip:"Add to playlists strategically -- put each video in 2-3 relevant playlists",why:"Playlists autoplay which dramatically increases watch time and session length -- YouTube loves this"},{tip:"Create playlists and add every new video to one",why:"Playlists autoplay, which dramatically increases watch time and session length -- YouTube loves this"}],
   [{tip:"Title formula that works: Action + Topic + For Age Group",why:"Example: Learn Colors! Rainbow Song for Toddlers -- follows the exact pattern parents search for"},{tip:"Description keyword density matters -- mention your topic 3-5 times naturally",why:"YouTube scans your description for keywords to decide who to recommend your video to"},{tip:"Upload at least 1 week before seasonal holidays",why:"It takes YouTube 1-2 weeks to index, score, and start pushing new videos -- upload Halloween content by Oct 17"},{tip:"Pin a comment with a call to action on every video",why:"Pinned comments get seen by every viewer -- use it to ask a question or prompt engagement"},{tip:"Use all 500 characters in your tags field",why:"More relevant tags = more opportunities for YouTube to match your video to search queries"},{tip:"Re-upload or refresh old videos with new thumbnails and descriptions",why:"YouTube re-evaluates videos when metadata changes -- an old video with fresh SEO can suddenly take off"}]
 ];
 var seoTipIdx=0;
