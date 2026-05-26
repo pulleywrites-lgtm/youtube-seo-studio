@@ -178,6 +178,24 @@ textarea{resize:vertical}
 .insight-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(192,132,252,0.2);font-size:13px;line-height:1.5}
 .insight-item:last-child{border-bottom:none}
 .holiday-banner{border-radius:10px;padding:10px 14px;margin-bottom:12px}
+.sister-screen{display:flex;align-items:center;justify-content:center;min-height:60vh;padding:40px 20px}
+.sister-card{background:white;border-radius:var(--r-lg);padding:40px;max-width:480px;width:100%;box-shadow:var(--shadow-lg);text-align:center}
+.sister-card h2{font-size:24px;font-weight:900;margin-bottom:8px}
+.sister-card p{font-size:14px;color:var(--gray-500);margin-bottom:32px;line-height:1.6}
+.sister-btn{width:100%;padding:20px;border-radius:var(--r-lg);border:none;cursor:pointer;font-family:"Nunito",sans-serif;font-size:18px;font-weight:900;transition:all 0.2s;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:12px}
+.sister-btn:active{transform:scale(0.97)}
+.btn-mp{background:linear-gradient(135deg,#FF69B4,#FFB6C1,#FF1493);color:white;box-shadow:0 4px 20px rgba(255,105,180,0.4)}
+.btn-mp:hover{box-shadow:0 6px 28px rgba(255,105,180,0.6);transform:scale(1.02)}
+.btn-ap{background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);color:white;box-shadow:0 4px 20px rgba(0,0,0,0.3)}
+.btn-ap:hover{box-shadow:0 6px 28px rgba(0,0,0,0.4);transform:scale(1.02)}
+.sparkle{display:inline-block;animation:sparkleAnim 1.5s ease-in-out infinite}
+@keyframes sparkleAnim{0%,100%{transform:scale(1) rotate(0deg);}50%{transform:scale(1.2) rotate(10deg);}}
+.active-user-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700;font-family:"Nunito",sans-serif}
+.badge-mp{background:linear-gradient(135deg,#FF69B4,#FFB6C1);color:white}
+.badge-ap{background:linear-gradient(135deg,#1a1a2e,#16213e);color:white}
+.thumb-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:300;align-items:center;justify-content:center;cursor:pointer}
+.thumb-lightbox.open{display:flex}
+.thumb-lightbox img{max-width:90vw;max-height:80vh;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.5)}
 @media(max-width:768px){.table-head,.video-row{grid-template-columns:42px 1fr 60px 70px}.th:nth-child(5),.td:nth-child(5){display:none}.ba-grid,.h-ba{grid-template-columns:1fr}}
 </style>
 </head>
@@ -189,11 +207,33 @@ textarea{resize:vertical}
 <div class="logo-text"><h1>YouTube SEO Studio</h1><p>Kids Content · Quota-Smart · Built for You and Your Sister</p></div>
 </div>
 <div class="header-right">
+<div id="activeUserBadge" style="display:none"></div>
 <div class="sync-info" id="syncInfo">Not synced yet</div>
 <button class="auth-pill" id="authBtn"><span class="dot dot-red" id="authDot"></span><span id="authLabel">Connect YouTube</span></button>
 </div>
 </div>
-<div class="screen active" id="screenConnect">
+<div class="screen active" id="screenSister">
+<div class="sister-screen">
+<div class="sister-card">
+<div style="font-size:56px;margin-bottom:16px">🎬</div>
+<h2>Little Learners Network</h2>
+<p>Hey! Who is using the studio today?</p>
+<button class="sister-btn btn-mp" id="btnMP">
+<span class="sparkle">✨</span>
+<span>I am MP 🐱</span>
+<span class="sparkle">✨</span>
+</button>
+<button class="sister-btn btn-ap" id="btnAP">
+<span>🌿</span>
+<span>I am AP 🪴</span>
+<span>🌿</span>
+</button>
+<div style="font-size:12px;color:var(--gray-300);margin-top:16px">Your activity will be tracked separately in Push History</div>
+</div>
+</div>
+</div>
+
+<div class="screen" id="screenConnect">
 <div class="connect-wrap"><div class="connect-card">
 <div class="connect-icon"><svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.05a8.16 8.16 0 004.77 1.52V7.12a4.85 4.85 0 01-1-.43z"/></svg></div>
 <h2>Welcome to Your Studio!</h2>
@@ -239,6 +279,9 @@ textarea{resize:vertical}
 <button class="btn btn-ghost btn-sm" id="refreshBtn">Refresh View (Free)</button>
 <button class="btn btn-red btn-sm" id="syncBtn">Sync from YouTube</button>
 <button class="btn btn-primary btn-sm" id="bulkUpdateBtn" style="background:var(--purple)">⚡ Bulk Update All Videos</button>
+<button class="btn btn-ghost btn-sm" id="filterNeedsWork" style="border:1.5px solid var(--orange);color:var(--orange)">⚠️ Needs Work Only</button>
+<button class="btn btn-ghost btn-sm" id="filterQuickWin" style="border:1.5px solid var(--green);color:var(--green)">🎯 Quick Wins</button>
+<button class="btn btn-ghost btn-sm" id="filterAll" style="display:none">✕ Show All</button>
 </div>
 <div id="syncAlert" style="margin-bottom:12px"></div>
 <div class="table-wrap">
@@ -258,6 +301,7 @@ textarea{resize:vertical}
 <h3 style="font-size:20px;margin-bottom:8px">Ready to analyze your channel</h3>
 <p style="font-size:14px;color:var(--gray-500);margin-bottom:20px">Sync your videos first, then get your full strategy report. 100% free!</p>
 <button class="btn btn-primary" id="genStrategyBtn">Generate My Strategy Report</button>
+<button class="btn btn-ghost" id="showTrendBtn" style="margin-top:10px">📈 View Channel Score Trend</button>
 </div></div>
 </div>
 <div id="tabPulse" style="display:none">
@@ -417,6 +461,8 @@ textarea{resize:vertical}
 
 <script>
 var SCOPES="https://www.googleapis.com/auth/youtube.force-ssl";
+var currentUser=localStorage.getItem("llnUser")||null; // "MP" or "AP"
+
 var CLIENT_ID="35258696737-jf4dg4hjaksc42o0nmm7npm28npjkehj.apps.googleusercontent.com";
 var API_KEY_DEFAULT="AIzaSyAuCjH_oNav9ij4axUXMBrP2Vvgtz44H1I";
 // Credentials pre-baked -- sister just clicks Connect, no typing needed
@@ -455,12 +501,27 @@ window.addEventListener("DOMContentLoaded",function(){
   document.getElementById("cancelSyncBtn").addEventListener("click",function(){document.getElementById("syncModal").classList.remove("open");});
   document.getElementById("exportCsvBtn").addEventListener("click",exportCSV);
   document.getElementById("genStrategyBtn").addEventListener("click",generateStrategy);
+  document.getElementById("showTrendBtn").addEventListener("click",showChannelTrend);
   document.getElementById("rotateTrendsBtn").addEventListener("click",rotateTrends);
   document.getElementById("liveTrendsBtn").addEventListener("click",function(){showQuotaModal(100,doLiveTrends);});
   document.getElementById("loadIdeasBtn").addEventListener("click",loadVideoIdeas);
   document.getElementById("loadTipsBtn").addEventListener("click",loadSeoTips);
   document.getElementById("rotateTipsBtn").addEventListener("click",loadSeoTips);
   document.getElementById("bulkUpdateBtn").addEventListener("click",openBulkModal);
+  document.getElementById("filterNeedsWork").addEventListener("click",function(){
+    filterVideos(["C","D","F"]);
+    document.getElementById("filterAll").style.display="inline-flex";
+    document.getElementById("bulkUpdateBtn").textContent="⚡ Bulk Update Needs Work";
+  });
+  document.getElementById("filterQuickWin").addEventListener("click",function(){
+    filterQuickWins();
+    document.getElementById("filterAll").style.display="inline-flex";
+  });
+  document.getElementById("filterAll").addEventListener("click",function(){
+    document.getElementById("filterAll").style.display="none";
+    document.getElementById("bulkUpdateBtn").textContent="⚡ Bulk Update All Videos";
+    sortAndRender();
+  });
   document.getElementById("bulkCancelBtn").addEventListener("click",function(){document.getElementById("bulkModal").classList.remove("open");});
   document.getElementById("bulkProceedBtn").addEventListener("click",startBulkUpdate);
   document.getElementById("bulkDoneBtn").addEventListener("click",function(){document.getElementById("bulkProgressModal").classList.remove("open");});
@@ -481,6 +542,14 @@ window.addEventListener("DOMContentLoaded",function(){
   document.getElementById("quotaModal").addEventListener("click",function(e){if(e.target===this){this.classList.remove("open");pendingModalAction=null;}});
   document.getElementById("syncModal").addEventListener("click",function(e){if(e.target===this)this.classList.remove("open");});
   rotateTrends();
+  // Sister selector
+  document.getElementById("btnMP").addEventListener("click",function(){selectUser("MP");});
+  document.getElementById("btnAP").addEventListener("click",function(){selectUser("AP");});
+  // If user already selected this session, skip selector
+  if(currentUser){
+    showScreen("screenConnect");
+    updateUserBadge();
+  }
   // Auto-fill and attempt silent connect if credentials already saved
   if(localStorage.getItem("ytClientId")&&localStorage.getItem("ytApiKey")){
     document.getElementById("clientIdInput").value=localStorage.getItem("ytClientId");
@@ -493,6 +562,22 @@ window.addEventListener("DOMContentLoaded",function(){
     localStorage.setItem("ytApiKey",API_KEY_DEFAULT);
   }
 });
+
+function selectUser(user){
+  currentUser=user;
+  localStorage.setItem("llnUser",user);
+  updateUserBadge();
+  showScreen("screenConnect");
+}
+
+function updateUserBadge(){
+  var el=document.getElementById("activeUserBadge");
+  if(!el||!currentUser)return;
+  var isMP=currentUser==="MP";
+  el.style.display="inline-flex";
+  el.className="active-user-badge "+(isMP?"badge-mp":"badge-ap");
+  el.innerHTML=(isMP?"✨ MP 🐱":"🌿 AP 🪴");
+}
 
 function saveAndConnect(){
   var cid=document.getElementById("clientIdInput").value.trim();
@@ -580,7 +665,7 @@ async function doSync(){
     }
     allVideos=details.map(function(v){
       var s=v.snippet||{},tags=s.tags||[],privacy=(v.status&&v.status.privacyStatus)||"public";
-      var dur=(v.contentDetails&&v.contentDetails.duration)||"";
+      var dur=(v.contentDetails&&(v.contentDetails.duration||v.contentDetails.contentDetails&&v.contentDetails.contentDetails.duration))||"";
       var durationSecs=parseDuration(dur);
       var ts=scoreTitle(s.title||""),ds=scoreDesc(s.description||""),tagsS=scoreTags(tags);
       var ls=scoreLengthForKids(durationSecs);
@@ -588,7 +673,7 @@ async function doSync(){
       return {id:v.id,title:s.title||"",description:s.description||"",tags:tags,thumbUrl:s.thumbnails&&s.thumbnails.medium?s.thumbnails.medium.url:"",publishedAt:s.publishedAt||"",categoryId:s.categoryId||"27",privacy:privacy,titleScore:ts,descScore:ds,tagsScore:tagsS,lengthScore:ls,durationSecs:durationSecs,overall:overall,grade:scoreToGrade(overall)};
     });
     localStorage.setItem("ytVideoCache",JSON.stringify(allVideos));localStorage.setItem("ytLastSync",Date.now().toString());
-    updateSyncInfo();updateStats();sortAndRender();
+    updateSyncInfo();updateStats();sortAndRender();recordChannelScore();
     showSyncAlert("Sync complete! "+allVideos.length+" videos loaded. Next sync in 30 days.","success");
   }catch(e){
     showSyncAlert("Sync failed: "+e.message,"danger");
@@ -767,41 +852,64 @@ function analyzeVideoTopic(title,desc){
 function generateSuggestedTitle(title,description){
   if(!title)return "";
   var t=title.trim().replace(/^"+|"+$/g,"").trim();
+  var tL=t.toLowerCase();
   var info=analyzeVideoTopic(t,description||"");
+  var age=tL.indexOf("preschool")>-1?"Preschoolers":tL.indexOf("toddler")>-1?"Toddlers":tL.indexOf("baby")>-1||tL.indexOf("babies")>-1?"Babies":"Kids";
+  var hasKidsKw=scoreChannelKeywords(t)===100;
+  var goodLength=t.length>=30&&t.length<=60;
+  var hasHook=/^(learn|sing|meet|explore|discover|count|build|move|breathe|feel|be|let|join|welcome|get|watch|play)/i.test(t);
+
+  // If already great, return as-is or minor trim
+  if(hasKidsKw&&goodLength&&hasHook){
+    return t.length>60?t.substring(0,60):t;
+  }
+
+  // Extract CORE SUBJECT - preserve what the video is actually about
+  var core=t
+    .replace(/\s*[|:]\s*.*/g,"")
+    .replace(/\s*-\s*fun kids.*$/i,"")
+    .replace(/\s*for kids.*$/i,"")
+    .replace(/\s*for toddlers.*$/i,"")
+    .replace(/\s*for children.*$/i,"")
+    .replace(/\s*for babies.*$/i,"")
+    .replace(/\s*for preschoolers.*$/i,"")
+    .trim();
+
+  // Pick emoji based on detected topic
   var p=info.primary;
-  var age=info.ageGroup==="preschool"?"Preschoolers":info.ageGroup==="toddlers"?"Toddlers":info.ageGroup==="babies"?"Babies":"Kids";
-  var suggested="";
-  if(p==="breathing")suggested="Breathe & Relax! Fun Calm Down Exercises for "+age;
-  else if(p==="affirmations")suggested="I Am Amazing! Positive Affirmations for "+age;
-  else if(p==="emotions")suggested="All About Feelings! Emotions Song for "+age;
-  else if(p==="socialSkills")suggested="Being a Good Friend! Social Skills for "+age;
-  else if(p==="counting"&&info.topics.halloween)suggested="Count with Halloween! Fun Numbers for "+age;
-  else if(p==="counting")suggested="Learn to Count! Fun Numbers Song for "+age;
-  else if(p==="colors")suggested="Learn Colors! Rainbow Song for "+age;
-  else if(p==="alphabet")suggested="Sing the ABCs! Alphabet Song for "+age;
-  else if(p==="shapes")suggested="Learn Shapes! Fun Shapes Song for "+age;
-  else if(p==="animals")suggested="Meet the Animals! Learn and Play for "+age;
-  else if(p==="bodyParts")suggested="Head Shoulders Knees and Toes! Body Parts for "+age;
-  else if(p==="food")suggested="Yummy Healthy Food! Learning for "+age;
-  else if(p==="music")suggested="Sing Along! Fun Kids Song for "+age;
-  else if(p==="sentences"&&info.topics.paris)suggested="Build Sentences! Paris Adventure ELA for "+age;
-  else if(p==="sentences"&&info.topics.italy)suggested="Build Sentences! Italian Adventure ELA for "+age;
-  else if(p==="sentences")suggested="Build Sentences! Fun ELA Learning for "+age;
-  else if(p==="science")suggested="Lets Do Science! Fun Experiments for "+age;
-  else if(p==="movement")suggested="Move and Groove! Fun Exercise for "+age;
-  else if(p==="halloween")suggested="Happy Halloween! Spooky Fun for "+age;
-  else if(p==="christmas")suggested="Merry Christmas! Holiday Fun for "+age;
-  else if(p==="bedtime")suggested="Time to Sleep! Bedtime Songs for "+age;
-  else if(p==="hygiene")suggested="Stay Clean and Healthy! Good Habits for "+age;
-  else if(p==="community")suggested="Community Helpers! Learning for "+age;
-  else if(p==="seasons")suggested="Learn the Seasons! Nature for "+age;
-  else if(p==="worldCultures")suggested="Celebrations Around the World! Cultures for "+age;
-  else if(p==="geography")suggested="Explore the World! Geography for "+age;
-  else{var words=t.replace(/[!?|:]/g,"").split(" ").filter(function(w){return w.length>3&&!STOP.has(w.toLowerCase());});var core=words.slice(0,3).join(" ")||t.split(" ").slice(0,3).join(" ");suggested="Learn About "+core+"! Fun for "+age;}
-  if(suggested.length>60)suggested=suggested.replace("Preschoolers","Kids").replace(" and Toddlers","");
-  if(suggested.length>60)suggested=suggested.substring(0,60);
-  return suggested;
+  var emojiMap={breathing:"",affirmations:"",emotions:"",socialSkills:"",counting:"",colors:"",alphabet:"",shapes:"",animals:"",bodyParts:"",food:"",music:"",sentences:"",science:"",movement:"",halloween:"",christmas:"",easter:"",thanksgiving:"",paris:"",italy:"",bedtime:"",hygiene:"",community:"",seasons:"",worldCultures:"",geography:"",general:""};
+  // Use text emoji fallbacks to avoid encoding issues
+  var emojiText={breathing:"(Calm Down!)",affirmations:"(You Are Amazing!)",emotions:"(Feelings!)",socialSkills:"(Friends!)",counting:"(Count with Me!)",colors:"(Rainbow!)",alphabet:"(ABCs!)",shapes:"(Shapes!)",animals:"(Animals!)",bodyParts:"(Body Parts!)",food:"(Yummy!)",music:"(Music!)",sentences:"(ELA!)",science:"(Science!)",movement:"(Move!)",halloween:"(Halloween!)",christmas:"(Christmas!)",easter:"(Easter!)",thanksgiving:"(Thanksgiving!)",paris:"(Paris!)",italy:"(Italy!)",bedtime:"(Bedtime!)",hygiene:"(Hygiene!)",community:"(Helpers!)",seasons:"(Seasons!)",worldCultures:"(World!)",geography:"(Geography!)",general:""};
+
+  var improved="";
+
+  if(!hasKidsKw){
+    // Add kids keyword - preserve core subject
+    if(core.length<=45){
+      improved=core+" for "+age+"!";
+    } else {
+      improved=core.substring(0,48)+" for "+age;
+    }
+  } else if(!goodLength&&t.length>60){
+    // Too long - trim but keep core subject
+    improved=core;
+    if(!hasKidsKw)improved+=" for "+age;
+  } else if(!hasHook){
+    // Has kids kw but needs hook - just add a !
+    improved=core.indexOf("!")>-1?core:core+"!";
+    if(!hasKidsKw)improved+=" for "+age;
+  } else {
+    improved=t;
+  }
+
+  // Clean up
+  if(improved.length>60)improved=improved.replace(" and Toddlers","").replace("Preschoolers","Kids");
+  if(improved.length>60)improved=improved.substring(0,60);
+  improved=improved.replace(/\.\.$/,"").replace(/\s+/g," ").trim();
+
+  return improved;
 }
+
 
 function generateSuggestedDesc(title,existingDesc){
   var info=analyzeVideoTopic(title||"",existingDesc||"");
@@ -956,6 +1064,17 @@ function buildStrongTags(topic,title){return generateSuggestedTags(title||topic,
 function buildThumbPrompt(topic,title,ageGroup){return generateExistingThumbPrompt(title||topic,topic);}
 function getCategoryForTopic(topic){var info=analyzeVideoTopic(topic,"");if(info.topics.music||info.topics.bedtime)return {id:"10",name:"Music"};return {id:"27",name:"Education"};}
 
+function recordChannelScore(){
+  var publicVids=allVideos.filter(function(v){return v.privacy==="public"||!v.privacy;});
+  if(!publicVids.length)return;
+  var avg=Math.round(publicVids.reduce(function(a,v){return a+v.overall;},0)/publicVids.length);
+  var history=JSON.parse(localStorage.getItem("channelScoreHistory")||"[]");
+  history.push({date:new Date().toISOString(),score:avg,total:publicVids.length,grades:{A:publicVids.filter(function(v){return v.grade==="A";}).length,B:publicVids.filter(function(v){return v.grade==="B";}).length,C:publicVids.filter(function(v){return v.grade==="C";}).length,D:publicVids.filter(function(v){return v.grade==="D";}).length,F:publicVids.filter(function(v){return v.grade==="F";}).length}});
+  // Keep last 30 snapshots
+  if(history.length>30)history=history.slice(-30);
+  localStorage.setItem("channelScoreHistory",JSON.stringify(history));
+}
+
 function updateStats(){
   document.getElementById("statTotal").textContent=allVideos.length;
   document.getElementById("statA").textContent=allVideos.filter(function(v){return v.grade==="A";}).length;
@@ -989,6 +1108,8 @@ function renderTable(videos){
     // Thumb
     var td1=document.createElement("div");td1.className="td";
     var img=document.createElement("img");img.className="thumb";img.src=v.thumbUrl;img.alt="";
+    img.style.cursor="pointer";img.title="Click to preview thumbnail";
+    img.addEventListener("click",function(e){e.stopPropagation();if(v.thumbUrl){document.getElementById("thumbLightboxImg").src=v.thumbUrl;document.getElementById("thumbLightbox").classList.add("open");}});
     td1.appendChild(img);row.appendChild(td1);
     // Title
     var td2=document.createElement("div");td2.className="td";
@@ -1192,9 +1313,49 @@ async function proceedPush(videoId){
     if(window[plKey])window[plKey].forEach(async function(plId){try{await fetch("https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&key="+savedApiKey(),{method:"POST",headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"},body:JSON.stringify({snippet:{playlistId:plId,resourceId:{kind:"youtube#video",videoId:videoId}}})});addQuota(50);}catch(e){}});
     var ts=scoreTitle(title),ds=scoreDesc(desc),tagsS=scoreTags(tags),newOverall=Math.round((ts*0.4)+(ds*0.3)+(tagsS*0.3)),newGrade=scoreToGrade(newOverall);
     var idx=allVideos.findIndex(function(v){return v.id===videoId;});
-    if(idx>=0){allVideos[idx].title=title;allVideos[idx].description=desc;allVideos[idx].tags=tags;allVideos[idx].titleScore=ts;allVideos[idx].descScore=ds;allVideos[idx].tagsScore=tagsS;allVideos[idx].overall=newOverall;allVideos[idx].grade=newGrade;localStorage.setItem("ytVideoCache",JSON.stringify(allVideos));var gc=document.getElementById("grade-cell-"+videoId);if(gc)gc.innerHTML="<span class='grade-badge grade-"+newGrade+"'>"+newGrade+"</span>";pushHistory.unshift({date:new Date().toISOString(),videoId:videoId,oldTitle:oldVideo?oldVideo.title:"",newTitle:title,oldDesc:(oldVideo&&oldVideo.description||"").substring(0,300),newDesc:desc.substring(0,300),oldTags:oldVideo?oldVideo.tags:[],newTags:tags,oldGrade:oldGrade,newGrade:newGrade,oldScore:oldScore,newScore:newOverall});localStorage.setItem("ytHistory_v2",JSON.stringify(pushHistory));pushCount++;updateStats();}
+    if(idx>=0){allVideos[idx].title=title;allVideos[idx].description=desc;allVideos[idx].tags=tags;allVideos[idx].titleScore=ts;allVideos[idx].descScore=ds;allVideos[idx].tagsScore=tagsS;allVideos[idx].overall=newOverall;allVideos[idx].grade=newGrade;localStorage.setItem("ytVideoCache",JSON.stringify(allVideos));var gc=document.getElementById("grade-cell-"+videoId);if(gc)gc.innerHTML="<span class='grade-badge grade-"+newGrade+"'>"+newGrade+"</span>";pushHistory.unshift({date:new Date().toISOString(),videoId:videoId,oldTitle:oldVideo?oldVideo.title:"",newTitle:title,oldDesc:(oldVideo&&oldVideo.description||"").substring(0,300),newDesc:desc.substring(0,300),oldTags:oldVideo?oldVideo.tags:[],newTags:tags,oldGrade:oldGrade,newGrade:newGrade,oldScore:oldScore,newScore:newOverall,user:currentUser||"Unknown"});localStorage.setItem("ytHistory_v2",JSON.stringify(pushHistory));pushCount++;updateStats();}
     showSyncAlert("Pushed to YouTube! Grade: "+oldGrade+" to "+newGrade,"success");toggleDetail(videoId);
   }catch(e){showSyncAlert("Push failed: "+e.message,"danger");}
+}
+
+function showChannelTrend(){
+  var history=JSON.parse(localStorage.getItem("channelScoreHistory")||"[]");
+  var el=document.getElementById("strategyContent");
+  if(!history.length){
+    el.innerHTML="<div class='strategy-card' style='text-align:center;padding:40px'><p style='color:var(--gray-500)'>No trend data yet. Sync your videos and generate a strategy report first -- each action records a snapshot!</p><button class='btn btn-primary' id='genStratBtn2' style='margin-top:16px'>Generate Strategy Report</button></div>";
+    document.getElementById("genStratBtn2").addEventListener("click",generateStrategy);
+    return;
+  }
+  var html="<div class='strategy-card'><h3 style='font-size:18px;font-weight:900;margin-bottom:16px'>📈 Channel Score Trend</h3>";
+  // Simple bar chart using div heights
+  html+="<div style='display:flex;align-items:flex-end;gap:4px;height:120px;margin-bottom:8px;padding:0 4px'>";
+  var maxScore=Math.max.apply(null,history.map(function(h){return h.score;}));
+  history.slice(-20).forEach(function(h){
+    var pct=Math.round((h.score/100)*100);
+    var col=h.score>=85?"#06D6A0":h.score>=70?"#4361EE":h.score>=55?"#FFD166":h.score>=40?"#FF8C42":"#ef4444";
+    html+="<div style='flex:1;background:"+col+";border-radius:4px 4px 0 0;height:"+pct+"%;min-height:4px;cursor:pointer;transition:opacity 0.2s' title='"+new Date(h.date).toLocaleDateString()+": Score "+h.score+"'></div>";
+  });
+  html+="</div>";
+  html+="<div style='display:flex;justify-content:space-between;font-size:11px;color:var(--gray-400);margin-bottom:16px'>";
+  html+="<span>"+new Date(history[Math.max(0,history.length-20)].date).toLocaleDateString()+"</span>";
+  html+="<span>"+new Date(history[history.length-1].date).toLocaleDateString()+"</span>";
+  html+="</div>";
+  // Latest snapshot details
+  var latest=history[history.length-1];
+  var first=history[0];
+  var improvement=latest.score-first.score;
+  html+="<div style='display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px'>";
+  html+="<div style='text-align:center;background:var(--gray-50);border-radius:var(--r-sm);padding:12px'><div style='font-size:28px;font-weight:900;font-family:Nunito,sans-serif;color:"+barColor(latest.score)+"'>"+latest.score+"</div><div style='font-size:11px;color:var(--gray-500)'>Current Score</div></div>";
+  html+="<div style='text-align:center;background:var(--gray-50);border-radius:var(--r-sm);padding:12px'><div style='font-size:28px;font-weight:900;font-family:Nunito,sans-serif;color:"+(improvement>=0?"var(--green)":"var(--red)")+"'>"+(improvement>=0?"+":"")+improvement+"</div><div style='font-size:11px;color:var(--gray-500)'>Total Change</div></div>";
+  html+="<div style='text-align:center;background:var(--gray-50);border-radius:var(--r-sm);padding:12px'><div style='font-size:28px;font-weight:900;font-family:Nunito,sans-serif;color:var(--blue)'>"+history.length+"</div><div style='font-size:11px;color:var(--gray-500)'>Snapshots</div></div>";
+  html+="</div>";
+  // Grade breakdown
+  html+="<div style='display:grid;grid-template-columns:repeat(5,1fr);gap:8px'>";
+  ["A","B","C","D","F"].forEach(function(g){html+="<div style='text-align:center;background:var(--gray-50);border-radius:8px;padding:8px'><div style='font-size:20px;font-weight:900;font-family:Nunito,sans-serif;color:"+gradeColor(g)+"'>"+(latest.grades[g]||0)+"</div><div style='font-size:11px;color:var(--gray-500)'>Grade "+g+"</div></div>";});
+  html+="</div></div>";
+  html+="<button class='btn btn-ghost btn-sm' id='backToStratBtn'>← Back to Strategy Report</button>";
+  el.innerHTML=html;
+  document.getElementById("backToStratBtn").addEventListener("click",generateStrategy);
 }
 
 function generateStrategy(){
@@ -1343,7 +1504,8 @@ function renderHistory(){
   var html="";
   pushHistory.forEach(function(h,i){
     html+="<div class='history-entry'><div class='history-summary' data-hi='"+i+"'>";
-    html+="<div><div style='font-size:13px;font-weight:700'>"+esc(h.newTitle)+"</div><div style='font-size:11px;color:var(--gray-400);margin-top:2px'>"+new Date(h.date).toLocaleString()+" -- <a href='https://youtube.com/watch?v="+h.videoId+"' target='_blank' style='color:var(--blue)'>View on YouTube</a></div></div>";
+    var userBadgeHtml=h.user?"<span style='font-size:10px;font-weight:700;padding:1px 6px;border-radius:999px;margin-left:6px;"+(h.user==="MP"?"background:#FF69B4;color:white":"background:#1a1a2e;color:white")+"'>"+h.user+(h.user==="MP"?" 🐱":" 🪴")+"</span>":"";
+    html+="<div><div style='font-size:13px;font-weight:700'>"+esc(h.newTitle)+(h.bulkUpdate?"<span style='font-size:10px;background:var(--purple-l);color:var(--purple);padding:1px 6px;border-radius:999px;margin-left:6px;font-weight:700'>bulk</span>":"")+userBadgeHtml+"</div><div style='font-size:11px;color:var(--gray-400);margin-top:2px'>"+new Date(h.date).toLocaleString()+" -- <a href='https://youtube.com/watch?v="+h.videoId+"' target='_blank' style='color:var(--blue)'>View on YouTube</a></div></div>";
     html+="<span style='color:"+gradeColor(h.oldGrade||"F")+";font-weight:900;font-size:16px;font-family:Nunito,sans-serif'>"+(h.oldGrade||"?")+"</span>";
     html+="<span style='font-size:14px;color:var(--gray-400)'>to</span>";
     html+="<span style='color:"+gradeColor(h.newGrade||"A")+";font-weight:900;font-size:16px;font-family:Nunito,sans-serif'>"+(h.newGrade||"?")+"</span>";
@@ -1352,9 +1514,20 @@ function renderHistory(){
     if(h.oldTitle!==h.newTitle){html+="<div style='font-size:11px;font-weight:800;text-transform:uppercase;color:var(--gray-500);margin-bottom:6px'>Title</div><div class='h-ba'><div class='h-before'><div class='h-label'>Before</div><div class='h-val'>"+esc(h.oldTitle||"")+"</div></div><div class='h-after'><div class='h-label'>After</div><div class='h-val'>"+esc(h.newTitle||"")+"</div></div></div>";}
     if(h.oldDesc&&h.oldDesc!==h.newDesc){html+="<div style='font-size:11px;font-weight:800;text-transform:uppercase;color:var(--gray-500);margin-bottom:6px'>Description</div><div class='h-ba'><div class='h-before'><div class='h-label'>Before</div><div class='h-val'>"+esc((h.oldDesc||"").substring(0,150))+"...</div></div><div class='h-after'><div class='h-label'>After</div><div class='h-val'>"+esc((h.newDesc||"").substring(0,150))+"...</div></div></div>";}
     if(h.oldTags&&JSON.stringify(h.oldTags)!==JSON.stringify(h.newTags)){html+="<div style='font-size:11px;font-weight:800;text-transform:uppercase;color:var(--gray-500);margin-bottom:6px'>Tags</div><div class='h-ba'><div class='h-before'><div class='h-label'>Before</div><div class='h-val'>"+esc((h.oldTags||[]).join(", ").substring(0,150))+"</div></div><div class='h-after'><div class='h-label'>After</div><div class='h-val'>"+esc((h.newTags||[]).join(", ").substring(0,150))+"</div></div></div>";}
+    html+="<button class='copy-btn' data-revert='"+i+"' style='font-size:11px;margin-top:8px;border-color:var(--orange);color:var(--orange)'>↩️ Revert to original</button>";
     html+="</div></div>";
   });
   el.innerHTML=html;
+  document.querySelectorAll("[data-revert]").forEach(function(btn){
+    btn.addEventListener("click",function(e){
+      e.stopPropagation();
+      var i=parseInt(btn.dataset.revert);
+      var h=pushHistory[i];
+      if(!h)return;
+      if(!confirm("Revert this video back to its original title and description? This will cost ~50 quota units."))return;
+      revertPush(h);
+    });
+  });
   document.querySelectorAll(".history-summary").forEach(function(s){s.addEventListener("click",function(){document.getElementById("hd-"+s.dataset.hi).classList.toggle("open");});});
 }
 function openBulkModal(){
@@ -1419,7 +1592,7 @@ async function startBulkUpdate(){
         allVideos[idx2].titleScore=ts;allVideos[idx2].descScore=ds;allVideos[idx2].tagsScore=tagsS;
         allVideos[idx2].overall=newOverall;allVideos[idx2].grade=newGrade;
       }
-      pushHistory.unshift({date:new Date().toISOString(),videoId:v.id,oldTitle:v.title,newTitle:newTitle,oldDesc:(v.description||"").substring(0,300),newDesc:newDesc.substring(0,300),oldTags:v.tags||[],newTags:newTagsArr,oldGrade:v.grade,newGrade:newGrade,oldScore:v.overall,newScore:newOverall,bulkUpdate:true});
+      pushHistory.unshift({date:new Date().toISOString(),videoId:v.id,oldTitle:v.title,newTitle:newTitle,oldDesc:(v.description||"").substring(0,300),newDesc:newDesc.substring(0,300),oldTags:v.tags||[],newTags:newTagsArr,oldGrade:v.grade,newGrade:newGrade,oldScore:v.overall,newScore:newOverall,bulkUpdate:true,user:currentUser||"Unknown"});
       done++;
       log.innerHTML+="<span style='color:#059669'>✓</span> "+esc(v.title.substring(0,45))+" → Grade "+v.grade+" to "+newGrade+"<br>";
     }catch(e){
@@ -1439,9 +1612,58 @@ async function startBulkUpdate(){
   pushCount+=done;updateStats();sortAndRender();
 }
 
+function filterVideos(grades){
+  var filtered=allVideos.filter(function(v){return grades.includes(v.grade)&&(v.privacy==="public"||!v.privacy);});
+  renderTable(filtered);
+  showSyncAlert("Showing "+filtered.length+" videos graded "+grades.join(", ")+" (public only)","info");
+}
+
+function filterQuickWins(){
+  // Quick wins: videos scoring 65-84 that need just ONE fix to reach A
+  var qw=allVideos.filter(function(v){
+    if(v.privacy!=="public"&&v.privacy)return false;
+    if(v.overall<65||v.overall>=85)return false;
+    var fixes=0;
+    if(v.titleScore<85)fixes++;
+    if(v.descScore<85)fixes++;
+    if(v.tagsScore<85)fixes++;
+    return fixes<=1; // only one thing needs fixing
+  });
+  renderTable(qw);
+  showSyncAlert("Showing "+qw.length+" Quick Win videos -- one fix away from an A!","success");
+}
+
+async function revertPush(h){
+  if(!accessToken){alert("Please connect to YouTube first.");return;}
+  try{
+    var r=await fetch("https://www.googleapis.com/youtube/v3/videos?part=snippet&key="+savedApiKey(),{
+      method:"PUT",
+      headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"},
+      body:JSON.stringify({id:h.videoId,snippet:{title:h.oldTitle,description:h.oldDesc||"",tags:h.oldTags||[],categoryId:"27"}})
+    });
+    var d=await r.json();
+    if(d.error)throw new Error(d.error.message);
+    addQuota(50);
+    // Update local cache
+    var idx=allVideos.findIndex(function(v){return v.id===h.videoId;});
+    if(idx>=0){
+      allVideos[idx].title=h.oldTitle;allVideos[idx].description=h.oldDesc||"";allVideos[idx].tags=h.oldTags||[];
+      var ts=scoreTitle(h.oldTitle),ds=scoreDesc(h.oldDesc||""),tagsS=scoreTags(h.oldTags||[]),ls=scoreLengthForKids(allVideos[idx].durationSecs||0);
+      allVideos[idx].overall=Math.round((ts*0.35)+(ds*0.25)+(tagsS*0.25)+(ls*0.15));
+      allVideos[idx].grade=scoreToGrade(allVideos[idx].overall);
+      localStorage.setItem("ytVideoCache",JSON.stringify(allVideos));
+    }
+    showSyncAlert("Reverted successfully!","success");
+    renderHistory();
+  }catch(e){showSyncAlert("Revert failed: "+e.message,"danger");}
+}
+
 function exportCSV(){if(!pushHistory.length){alert("No history to export yet.");return;}var rows=[["Date","Video ID","Old Title","New Title","Old Grade","New Grade","Old Score","New Score"]];pushHistory.forEach(function(h){rows.push([h.date,h.videoId,h.oldTitle,h.newTitle,h.oldGrade,h.newGrade,h.oldScore,h.newScore]);});var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c||"").replace(/"/g,'""')+'"';}).join(",");}).join("\n");var a=document.createElement("a");a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);a.download="youtube-push-history.csv";a.click();}
 function copyField(id){var el=document.getElementById(id);if(!el)return;navigator.clipboard.writeText(el.value).then(function(){el.style.background="#DCFCE7";setTimeout(function(){el.style.background="";},800);});}
 function copyEl(id){var el=document.getElementById(id);if(!el)return;navigator.clipboard.writeText(el.textContent).then(function(){el.style.background="#DCFCE7";setTimeout(function(){el.style.background="";},800);});}
 </script>
+<div class="thumb-lightbox" id="thumbLightbox" onclick="document.getElementById('thumbLightbox').classList.remove('open')">
+<img id="thumbLightboxImg" src="" alt="Thumbnail preview"/>
+</div>
 </body>
 </html>
