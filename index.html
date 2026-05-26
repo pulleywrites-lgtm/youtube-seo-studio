@@ -806,65 +806,88 @@ function generateSuggestedTitle(title,description){
 function generateSuggestedDesc(title,existingDesc){
   var info=analyzeVideoTopic(title||"",existingDesc||"");
   var p=info.primary;
+  var tClean=(title||"").replace(/[|:]/g,"--").replace(/[^\w\s,!?.\'\-]/g,"").trim();
+  
+  // Check if existing description is rich and worth building on
+  var existingIsGood=existingDesc&&existingDesc.length>300&&existingDesc.toLowerCase().indexOf("subscribe")>-1;
+  
+  // Extract meaningful subject from title for unique descriptions
+  var titleWords=(title||"").replace(/[!?|:]/g," ").split(" ").filter(function(w){
+    return w.length>3&&!STOP.has(w.toLowerCase())&&
+    !["kids","toddlers","preschool","babies","children","little","learners","network","video","fun","learn","learning"].includes(w.toLowerCase());
+  });
+  var subject=titleWords.slice(0,4).join(" ")||tClean;
+  
+  // Topic-specific hooks - unique and parent-focused
   var hooks={
-    breathing:"Does your little one struggle to calm down? These fun deep breathing exercises help kids manage big feelings, reduce anxiety, and find their calm in just minutes!",
-    affirmations:"Help your child build unshakeable confidence with these powerful positive affirmations! Say them together every day and watch your little one bloom.",
-    emotions:"Helping kids understand and express their feelings is one of the greatest gifts you can give them. This fun video makes learning about emotions easy and joyful!",
-    socialSkills:"Learning to be a good friend, share, and show kindness -- skills that last a lifetime! This fun video makes social skills easy and memorable for little ones.",
-    counting:"Counting is one of the first and most important math skills! This fun colorful video makes numbers exciting and easy to remember for little learners.",
-    colors:"Learning colors is one of the first big milestones -- and this video makes it SO much fun! Bright, bold, and full of energy your kids will love.",
-    alphabet:"The ABCs are the foundation of reading! This fun video makes learning the alphabet exciting and something your child will want to watch again and again.",
-    shapes:"Shapes are everywhere! This video helps little ones recognize and name shapes through songs, colors, and adorable characters.",
-    animals:"Kids LOVE animals -- and this video turns that love into learning! Discover amazing animals, their sounds, and fun facts in the most engaging way.",
-    sentences:"Building strong language skills early sets kids up for reading success! This engaging video makes sentence structure fun and accessible for young learners.",
-    movement:"Get those little bodies moving! This fun exercise video helps kids develop coordination, burn energy, and build healthy habits while having a blast!",
-    bedtime:"A calming bedtime routine makes all the difference for little ones. Let this soothing video help your child wind down, relax, and drift off to dreamland.",
-    science:"Little scientists in the making! This fun video sparks curiosity and introduces key science concepts in a totally age-appropriate and exciting way.",
-    halloween:"Halloween learning is HERE! This fun spooky-friendly video combines holiday excitement with key learning concepts your little ones will LOVE.",
-    community:"Our community helpers are everyday heroes! This fun video introduces kids to the important people who keep our communities safe and running.",
-    hygiene:"Good hygiene habits start early! This fun video makes washing hands, brushing teeth, and staying clean something kids actually WANT to do.",
-    worldCultures:"Get ready to travel the world without leaving home! This colorful video introduces little ones to beautiful celebrations and traditions from cultures around the globe -- building empathy, curiosity, and global awareness from the very start.",
-    geography:"The world is an amazing place -- and your little explorer is about to discover it! This fun video introduces continents, countries, and the incredible diversity of our planet in a totally kid-friendly way.",
-    general:"Get ready for some serious fun learning! This video is packed with colorful characters, catchy moments, and key concepts your little one will love."
+    breathing:"Does your little one struggle to calm down when big feelings hit? These simple deep breathing exercises give kids a real tool they can use anytime -- at home, at school, anywhere. Watch them go from frustrated to calm in minutes!",
+    affirmations:"The words we say to ourselves matter -- especially for little ones still figuring out who they are. These powerful I AM affirmations help your child build the confidence and self-belief that will carry them through life. Say them together every morning!",
+    emotions:"Big feelings can be overwhelming for little ones -- and for parents too! This video gives kids the words and tools to understand what they're feeling and why, making emotional moments easier for the whole family.",
+    socialSkills:"Making friends, sharing, being kind -- these skills don't come naturally to everyone, and that's okay! This fun video gives little ones the language and understanding they need to navigate the social world with confidence.",
+    counting:"Numbers are everywhere -- and the earlier kids feel comfortable with them, the better! This fun colorful video turns counting into an adventure your little one will want to go on again and again.",
+    colors:"Colors are one of the first big concepts little ones learn -- and this video makes the journey absolutely magical! Bright, bold, and bursting with energy, it's the perfect introduction to the colorful world around us.",
+    alphabet:"Reading starts with letters -- and this video makes learning them the most fun thing your child has ever done! Catchy, colorful, and perfectly paced for little learners who are just beginning their literacy journey.",
+    shapes:"Shapes are hiding everywhere in our world -- in houses, in food, in toys! This fun video helps little ones spot and name them, building the foundational geometry skills that will serve them for years to come.",
+    animals:"Animals are one of the great loves of childhood -- and this video turns that passion into pure learning! Discover amazing creatures, fascinating facts, and the sounds that make each animal unique.",
+    sentences:"Strong readers start with strong sentence skills! This engaging video breaks down how sentences work in a way that feels like play, building the language foundation your child needs for reading success.",
+    science:"Curiosity is the engine of learning -- and this video turbocharges it! Little scientists will explore, discover, and wonder as they take their first steps into the exciting world of science.",
+    movement:"Little bodies need to MOVE -- and this video gives them the perfect excuse! Fun, energetic, and perfectly designed for kids, it gets them up, active, and building the gross motor skills that support all learning.",
+    halloween:"Halloween is the most magical time of year for little ones -- and this video makes it even better! Fun, age-appropriate, and packed with learning, it brings the holiday to life in a totally kid-friendly way.",
+    christmas:"The most wonderful time of the year just got even more wonderful! This joyful holiday video combines the magic of Christmas with key learning concepts your little one will absolutely love.",
+    bedtime:"A good bedtime routine is one of the greatest gifts you can give your child -- and this soothing video is the perfect addition to yours. Calming, cozy, and beautifully paced for tired little minds.",
+    worldCultures:"Our world is full of incredible celebrations, traditions, and stories -- and this video brings them all to life for little ones! Building cultural awareness early helps children grow into curious, empathetic global citizens.",
+    geography:"The world is an amazing place -- and your little explorer is about to discover it! This fun video introduces countries, continents, and the incredible diversity of our planet in a totally age-appropriate way.",
+    community:"The people who keep our communities safe and running are real-life heroes -- and this video helps little ones understand and appreciate them! Building community awareness is one of the most important early lessons.",
+    hygiene:"Good hygiene habits built early last a lifetime! This fun video makes washing hands, brushing teeth, and staying clean feel like an adventure rather than a chore -- parents everywhere will thank you.",
+    general:"This video is all about "+subject+" -- and we have made it as fun, colorful, and engaging as possible for little learners! Whether your child is a toddler, preschooler, or early elementary student, they will find something to love here."
   };
+  
   var learningPoints={
-    breathing:"- How to take calming deep belly breaths\n- Simple calm-down techniques they can use anywhere\n- How breathing helps manage big feelings and anxiety",
-    affirmations:"- Powerful I AM affirmations to build confidence\n- How to talk to themselves with kindness\n- Daily positive thinking habits that build resilience",
-    emotions:"- How to name and identify different feelings\n- That ALL emotions are valid and okay\n- Healthy ways to express and manage their emotions",
-    socialSkills:"- How to be a kind and thoughtful friend\n- The importance of sharing, taking turns, and listening\n- Simple ways to navigate social situations",
-    counting:"- How to count with confidence\n- Number recognition and sequencing\n- Fun ways to see numbers in everyday life",
-    colors:"- Color names and recognition\n- How to spot colors in the world around them\n- Color mixing basics in a fun visual way",
-    alphabet:"- Letter names and their sounds\n- The order of the alphabet\n- Early phonics foundations for reading success",
-    shapes:"- Shape names and recognition\n- How to spot shapes in everyday objects\n- Basic geometry concepts made simple",
-    animals:"- Animal names, sounds, and habitats\n- Fun facts about amazing creatures\n- Respect and love for the animal world",
-    sentences:"- How sentences are structured\n- Key ELA concepts in a fun engaging way\n- Building blocks of strong communication skills",
-    movement:"- Fun exercises to keep little bodies healthy\n- Coordination and gross motor skill development\n- The joy of moving and staying active",
-    bedtime:"- Calming techniques for bedtime\n- How to wind down and prepare for sleep\n- Soothing songs for a peaceful night",
-    worldCultures:"- Beautiful traditions and celebrations from cultures around the world\n- That our differences make the world a richer and more exciting place\n- Key vocabulary for talking about different cultures with curiosity and respect",
-    geography:"- Names of continents and countries\n- Fun facts about different parts of the world\n- That every culture has something amazing to share",
-    general:"- Key concepts made simple and fun\n- Colorful visuals designed for little eyes\n- Memorable lessons through repetition"
+    breathing:"- How to take calming deep belly breaths that actually work\n- Simple techniques they can use when overwhelmed at school or home\n- How breathing connects to managing anxiety, frustration, and big emotions",
+    affirmations:"- Powerful I AM statements that rewire self-perception over time\n- How to practice positive self-talk as a daily habit\n- The science of why affirmations work for growing brains",
+    emotions:"- Names for all the big feelings -- happy, sad, angry, scared, and more\n- That ALL emotions are valid and part of being human\n- Healthy, age-appropriate ways to express and process their feelings",
+    socialSkills:"- How to introduce themselves and start a friendship\n- The art of sharing, taking turns, and being a team player\n- How to handle disagreements with kindness and empathy",
+    counting:"- How to count confidently from 1 to 10 (and beyond!)\n- Number recognition and what each number means\n- How to spot numbers in the everyday world around them",
+    colors:"- All the colors of the rainbow by name\n- How to identify colors in objects, nature, and art\n- Basic color mixing and what happens when colors combine",
+    alphabet:"- Every letter of the alphabet by name and sound\n- The connection between letters and the words we speak\n- Early phonics foundations that set them up for reading success",
+    shapes:"- The names of basic shapes -- circle, square, triangle, rectangle, and more\n- How to spot shapes in buildings, food, toys, and nature\n- The foundational geometry thinking that supports all STEM learning",
+    animals:"- Animal names, their unique sounds, and where they live\n- Fascinating facts that spark curiosity and love for the natural world\n- Respect and care for all living creatures",
+    sentences:"- How words come together to form complete thoughts\n- The building blocks of great writing and communication\n- Fun ways to practice language skills that feel like play",
+    science:"- A key scientific concept explained at exactly the right level\n- How to think like a scientist -- observe, ask questions, discover\n- That science is everywhere, and it is for them",
+    movement:"- Fun, age-appropriate exercises for little bodies\n- Coordination, balance, and gross motor skill development\n- That staying active is one of the most fun things you can do",
+    worldCultures:"- Beautiful traditions and celebrations from cultures around the globe\n- That our differences make the world a richer, more exciting place\n- Key vocabulary for talking about other cultures with curiosity and respect",
+    geography:"- The names and locations of continents and countries\n- Fascinating facts about different parts of our amazing world\n- That every culture has something incredible to teach us",
+    general:"- Everything they need to know about "+subject+" at an age-appropriate level\n- Key concepts presented through colorful, engaging visuals\n- Memorable lessons delivered at the perfect pace for little learners"
   };
+  
   var hashtagSets={
-    breathing:"#KidsBreathing #CalmKids #MindfulnessForKids #KidsYoga #DeepBreathingKids #KidsMeditation #CalmDownKids #AnxietyKids #SELKids #KidsWellness",
-    affirmations:"#KidsAffirmations #PositiveKids #ChildConfidence #KidsSelfEsteem #PositiveThinkingKids #KidsMindset #IAmAmazing #KidsMotivation #SELKids #KidsWellness",
-    emotions:"#EmotionsForKids #FeelingsForKids #SELKids #KidsEmotions #EmotionalLearning #KindnessForKids #SocialSkillsKids #PreschoolEmotions #FeelingsVideo #KidsWellness",
-    socialSkills:"#SocialSkillsKids #KindnessKids #FriendshipKids #SELKids #KidsManners #EmpathyKids #BeingAGoodFriend #SocialDevelopment #PreschoolSocial #KidsCharacter",
-    counting:"#CountingForKids #NumbersForKids #MathForKids #KidsMath #CountingSong #NumberLearning #PreschoolMath #ToddlerLearning #KidsNumbers #EarlyMath",
-    colors:"#LearnColors #ColorsForKids #ColorSong #ToddlerColors #RainbowKids #KidsColors #ColorsForToddlers #ColorLearning #PreschoolColors #ColorVideo",
-    alphabet:"#ABCSong #AlphabetForKids #PhonicsForKids #LetterLearning #KidsABC #AlphabetSong #LearnABC #PreschoolReading #KidsLiteracy #ABCKids",
-    sentences:"#ELAForKids #SentenceBuilding #KidsELA #LanguageArtsKids #ReadingKids #GrammarForKids #KidsLiteracy #PreschoolELA #LiteracyKids #KidsReading",
-    science:"#ScienceForKids #KidsScienceVideo #STEMKids #NatureKids #KidsExperiment #EarlyScience #PreschoolScience #KidsStem #FunScienceKids #LittleScientists",
-    movement:"#ExerciseForKids #KidsMovement #GrossMotorKids #ActiveKids #KidsWorkout #MovementSong #BrainBreakKids #KidsPhysical #DanceToddlers #FunExerciseKids",
-    halloween:"#HalloweenForKids #HalloweenLearning #HalloweenCounting #KidsHalloween #HalloweenSong #HalloweenEducational #SpookyKidsLearning #HalloweenPreschool #KidsHalloweenSong #OctoberKids",
-    bedtime:"#BedtimeSongsKids #LullabyBabies #KidsBedtime #SleepSongsChildren #CalmingKids #KidsGoodnightVideo #BedtimeRoutineKids #RelaxKids #SleepyToddlers #KidsBedtimeRoutine",
-    worldCultures:"#WorldCulturesKids #DiversityForKids #MulticulturalKids #CelebrationsAroundTheWorld #KidsCulture #GlobalLearningKids #KwanzaaForKids #DiwaliForKids #ChineseNewYearKids #KidsWorldTour",
-    geography:"#GeographyForKids #WorldForKids #KidsExplore #ContinentsForKids #MapForKids #AroundTheWorldKids #KidsGlobe #WorldLearningKids #KidsTravelVideo #ExploreTheWorldKids",
-    general:"#KidsLearning #ChildrensYouTube #ToddlerLearning #FamilyFriendly #EducationalKidsVideo #EarlyChildhood #PreschoolLearning #KidsEducation"
+    breathing:"#KidsBreathing #CalmKids #MindfulnessForKids #KidsYoga #DeepBreathingKids #KidsMeditation #CalmDownKids #AnxietyKids #SELKids #KidsWellness #KidsMindfulness #CalmingKids #BreathingExercisesKids #KidsRelax #KidsMentalHealth",
+    affirmations:"#KidsAffirmations #PositiveKids #ChildConfidence #KidsSelfEsteem #PositiveThinkingKids #KidsMindset #IAmAmazing #KidsMotivation #SELKids #KidsWellness #KidsEmpowerment #PositiveKidsVideo #KidsSelfLove #AffirmationsForChildren #GrowthMindsetKids",
+    emotions:"#EmotionsForKids #FeelingsForKids #SELKids #KidsEmotions #EmotionalLearning #KindnessForKids #SocialSkillsKids #PreschoolEmotions #FeelingsVideo #KidsWellness #BigFeelingsKids #KidsEmotion #EmotionalIntelligenceKids #FeelingsToddlers #KidsMindfulness",
+    socialSkills:"#SocialSkillsKids #KindnessKids #FriendshipKids #SELKids #KidsManners #EmpathyKids #BeingAGoodFriend #SocialDevelopment #PreschoolSocial #KidsCharacter #SharingKids #KidsFriendship #GoodManners #KidsSocial #PreschoolFriendship",
+    counting:"#CountingForKids #NumbersForKids #MathForKids #KidsMath #CountingSong #NumberLearning #PreschoolMath #ToddlerLearning #KidsNumbers #EarlyMath #123ForKids #NumbersToddlers #CountWithMe #KidsCountingSong #NumberRecognition",
+    colors:"#LearnColors #ColorsForKids #ColorSong #ToddlerColors #RainbowKids #KidsColors #ColorsForToddlers #ColorLearning #PreschoolColors #ColorVideo #WhatColorIsIt #RainbowColors #LearnColorsKids #ColorSongKids #ColorsAndShapes",
+    alphabet:"#ABCSong #AlphabetForKids #PhonicsForKids #LetterLearning #KidsABC #AlphabetSong #LearnABC #PreschoolReading #KidsLiteracy #ABCKids #LetterSong #AlphabetKids #LearnLetters #ABCLearning #PhonicsKids",
+    sentences:"#ELAForKids #SentenceBuilding #KidsELA #LanguageArtsKids #ReadingKids #GrammarForKids #KidsLiteracy #PreschoolELA #LiteracyKids #KidsReading #SentenceSkills #LanguageDevelopment #ReadingReadiness #KidsEnglish #EarlyLiteracy",
+    science:"#ScienceForKids #KidsScienceVideo #STEMKids #NatureKids #KidsExperiment #EarlyScience #PreschoolScience #KidsStem #FunScienceKids #LittleScientists #KidsScienceFun #ScienceSong #KidsSTEM #ScienceExperiments #LearnScience",
+    movement:"#ExerciseForKids #KidsMovement #GrossMotorKids #ActiveKids #KidsWorkout #MovementSong #BrainBreakKids #KidsPhysical #DanceToddlers #FunExerciseKids #KidsFitness #MoveAndGroove #KidsActivity #PhysicalEducationKids #KidsExercise",
+    worldCultures:"#WorldCulturesKids #DiversityForKids #MulticulturalKids #CelebrationsAroundTheWorld #KidsCulture #GlobalLearningKids #KwanzaaForKids #DiwaliForKids #ChineseNewYearKids #KidsWorldTour #CulturalEducationKids #WorldFestivalsKids #MulticulturalEducation #KidsTraditions #DiverseKidsContent",
+    geography:"#GeographyForKids #WorldForKids #KidsExplore #ContinentsForKids #MapForKids #AroundTheWorldKids #KidsGlobe #WorldLearningKids #KidsTravelVideo #ExploreTheWorldKids #CountriesForKids #KidsWorldVideo #GlobalKids #WorldCulturesKids #KidsGeography",
+    general:"#KidsLearning #ChildrensYouTube #ToddlerLearning #FamilyFriendly #EducationalKidsVideo #EarlyChildhood #PreschoolLearning #KidsEducation #LittleLearnersNetwork #KidsChannel #ToddlerVideo #EducationalKids #KidsYouTube #LearningForKids #FunKidsVideo"
   };
+  
   var hook=hooks[p]||hooks.general;
   var points=learningPoints[p]||learningPoints.general;
   var hashtags=hashtagSets[p]||hashtagSets.general;
-  var desc=hook+"\n\nWhat your child will learn:\n"+points+"\n\nSUBSCRIBE and ring the bell so you never miss a new video -- we post weekly!\nLIKE this video if your little one enjoyed it!\nCOMMENT below and tell us what your child thought -- we LOVE hearing from families!\nSAVE this video to your playlist for easy rewatching!\n\n"+hashtags;
+  
+  var desc=hook+"\n\n";
+  desc+="What your child will learn:\n"+points+"\n\n";
+  desc+="SUBSCRIBE and ring the bell so you never miss a new video -- we post new content every week!\n";
+  desc+="LIKE this video if your little one enjoyed it -- it really helps other families find us!\n";
+  desc+="COMMENT below and tell us what your child thought -- we genuinely LOVE hearing from our community!\n";
+  desc+="SAVE this video to your playlist for easy rewatching -- repetition is key for early learning!\n\n";
+  desc+=hashtags;
+  
   return desc;
 }
 
@@ -928,7 +951,7 @@ function buildStrongKidsTitle(topic,ageGroup){
   return suggested;
 }
 
-function buildStrongDescription(topic,title,ageGroup){return generateSuggestedDesc(title||topic,"");}
+function buildStrongDescription(topic,title,ageGroup){return generateSuggestedDesc(title||topic,topic);}
 function buildStrongTags(topic,title){return generateSuggestedTags(title||topic,[],topic);}
 function buildThumbPrompt(topic,title,ageGroup){return generateExistingThumbPrompt(title||topic,topic);}
 function getCategoryForTopic(topic){var info=analyzeVideoTopic(topic,"");if(info.topics.music||info.topics.bedtime)return {id:"10",name:"Music"};return {id:"27",name:"Education"};}
@@ -1010,10 +1033,10 @@ function toggleDetail(id){
 
 function buildDetailPanel(id){
   var v=allVideos.find(function(x){return x.id===id;});if(!v)return "";
-  var sugTitle=generateSuggestedTitle(v.title);
-  var sugDesc=generateSuggestedDesc(v.title);
-  var sugTags=generateSuggestedTags(v.title,v.tags);
-  var thumbP=generateExistingThumbPrompt(v.title);
+  var sugTitle=generateSuggestedTitle(v.title,v.description);
+  var sugDesc=generateSuggestedDesc(v.title,v.description);
+  var sugTags=generateSuggestedTags(v.title,v.tags,v.description);
+  var thumbP=generateExistingThumbPrompt(v.title,v.description);
   var howTo=howToGetA(v);
   var html="<div style='display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px'>";
   html+="<h3 style='font-size:16px;font-weight:900'>Full SEO Breakdown and Improvements</h3>";
@@ -1082,11 +1105,29 @@ async function loadPlaylistsBg(){
   if(!accessToken||playlists.length)return;
   try{var r=await fetch("https://www.googleapis.com/youtube/v3/playlists?part=snippet&mine=true&maxResults=50&key="+savedApiKey(),{headers:{Authorization:"Bearer "+accessToken}});var d=await r.json();playlists=(d.items||[]).map(function(p){return {id:p.id,title:p.snippet.title};});}catch(e){playlists=[];}
 }
+function isShortVideo(videoId){
+  var v=allVideos.find(function(x){return x.id===videoId;});
+  return v&&v.durationSecs&&v.durationSecs<=60;
+}
+
+function isShortPlaylist(playlistTitle){
+  var t=(playlistTitle||"").toLowerCase();
+  return t.indexOf("short")>-1||t.indexOf("#short")>-1;
+}
+
 function loadPlaylistsForVideo(videoId){
   var container=document.getElementById("plChips-"+videoId);if(!container)return;
   if(!playlists.length){container.innerHTML="<span style='font-size:13px;color:var(--gray-400)'>No playlists found</span>";return;}
   var video=allVideos.find(function(v){return v.id===videoId;}),titleLow=video?video.title.toLowerCase():"";
-  var scored=playlists.map(function(p){var w=p.title.toLowerCase().split(" "),m=w.filter(function(wd){return wd.length>3&&titleLow.indexOf(wd)>-1;}).length;return {id:p.id,title:p.title,score:m};}).sort(function(a,b){return b.score-a.score;});
+  var isShort=isShortVideo(videoId);
+  // Filter out shorts playlists for non-short videos and vice versa
+  var eligiblePlaylists=playlists.filter(function(p){
+    var pIsShorts=isShortPlaylist(p.title);
+    if(pIsShorts&&!isShort)return false; // dont suggest shorts playlist for regular videos
+    if(!pIsShorts&&isShort)return false; // dont suggest regular playlists for shorts
+    return true;
+  });
+  var scored=eligiblePlaylists.map(function(p){var w=p.title.toLowerCase().split(" "),m=w.filter(function(wd){return wd.length>3&&titleLow.indexOf(wd)>-1;}).length;return {id:p.id,title:p.title,score:m};}).sort(function(a,b){return b.score-a.score;});
   var autoSel=new Set(scored.slice(0,3).map(function(p){return p.id;}));
   window["pl_"+videoId]=new Set(autoSel);container.innerHTML="";
   playlists.forEach(function(p){var chip=document.createElement("span");chip.className="playlist-chip"+(autoSel.has(p.id)?" selected":"");chip.textContent=p.title;chip.addEventListener("click",function(){var key="pl_"+videoId;if(!window[key])window[key]=new Set();if(window[key].has(p.id)){window[key].delete(p.id);chip.classList.remove("selected");}else{window[key].add(p.id);chip.classList.add("selected");}});container.appendChild(chip);});
@@ -1095,7 +1136,9 @@ function loadNewVideoPlaylists(){
   var container=document.getElementById("newVideoPlaylists");if(!container)return;
   if(!playlists.length){container.innerHTML="<span style='font-size:13px;color:var(--gray-400)'>Connect YouTube to see your playlists</span>";return;}
   var topic=(document.getElementById("newVideoTopic")||{}).value||"",topicLow=topic.toLowerCase();
-  var scored=playlists.map(function(p){var w=p.title.toLowerCase().split(" "),m=w.filter(function(wd){return wd.length>3&&topicLow.indexOf(wd)>-1;}).length;return {id:p.id,title:p.title,score:m};}).sort(function(a,b){return b.score-a.score;});
+  // Filter out shorts playlists for new regular videos
+  var eligiblePl=playlists.filter(function(p){return !isShortPlaylist(p.title);});
+  var scored=eligiblePl.map(function(p){var w=p.title.toLowerCase().split(" "),m=w.filter(function(wd){return wd.length>3&&topicLow.indexOf(wd)>-1;}).length;return {id:p.id,title:p.title,score:m};}).sort(function(a,b){return b.score-a.score;});
   var top3=scored.slice(0,3);container.innerHTML="";
   top3.forEach(function(p){var chip=document.createElement("span");chip.className="playlist-chip selected";chip.textContent=p.title;container.appendChild(chip);});
   if(!top3.length)container.innerHTML="<span style='font-size:13px;color:var(--gray-400)'>No matching playlists found</span>";
@@ -1257,6 +1300,13 @@ function generateNewVideoMeta(){
   var topic=document.getElementById("newVideoTopic").value.trim();
   var ageGroup=document.getElementById("newVideoAge").value;
   if(!topic){alert("Please describe what your video is about first!");return;}
+  // Content safety check for kids channel
+  var topicLow=topic.toLowerCase();
+  var flagged=/fight|hit|smack|punch|kick|slap|violence|violent|scary|horror|blood|weapon|gun|knife|adult|sexual|drugs|alcohol|profan|curse|swear/.test(topicLow);
+  if(flagged){
+    var proceed=confirm("⚠️ Content Warning: This topic may not be appropriate for a kids YouTube channel. YouTube Kids has strict content guidelines and videos with this content could be removed or demonetized. Are you sure you want to continue?");
+    if(!proceed)return;
+  }
   var title=buildStrongKidsTitle(topic,ageGroup);
   var desc=buildStrongDescription(topic,title,ageGroup);
   var tags=buildStrongTags(topic,title);
