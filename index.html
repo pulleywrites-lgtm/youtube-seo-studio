@@ -12,39 +12,48 @@
 body{font-family:"DM Sans",sans-serif;background:linear-gradient(135deg,#F0F4FF 0%,#FFF0F6 100%);min-height:100vh;color:var(--gray-900)}
 h1,h2,h3,h4,h5{font-family:"Nunito",sans-serif}
 .channel-hh{
-  --bg-from:#0F0F1A;--bg-to:#1A0F2E;
-  --card-bg:#1E1E2E;--card-border:#2D2D3F;
-  --text-primary:#E8E8F0;--text-secondary:#9999BB;
-  --accent:#F59E0B;--accent-l:#F59E0B22;
-  --secondary:#A78BFA;--secondary-l:#A78BFA22;
-  --blue:#A78BFA;--blue-l:#A78BFA22;
-  --green:#10B981;--green-l:#10B98122;
-  --shadow:0 2px 12px rgba(0,0,0,0.3);--shadow-lg:0 8px 32px rgba(0,0,0,0.5);
+  --bg-from:#0D0D1A;--bg-to:#1A0D2E;
+  --card-bg:#16162A;--card-border:#2A2A45;
+  --text-primary:#F0EEF8;--text-secondary:#B8B0D8;
+  --accent:#F4A261;--accent-l:#F4A26118;
+  --secondary:#C084FC;--secondary-l:#C084FC18;
+  --blue:#C084FC;--blue-l:#C084FC18;
+  --green:#34D399;--green-l:#34D39918;
+  --shadow:0 2px 16px rgba(192,132,252,0.08);--shadow-lg:0 8px 40px rgba(0,0,0,0.6);
+  --glow:0 0 20px rgba(192,132,252,0.15);
 }
-.channel-hh body{background:linear-gradient(135deg,#0F0F1A 0%,#1A0F2E 100%)}
+.channel-hh body{background:linear-gradient(135deg,#0D0D1A 0%,#1A0D2E 50%,#120D1E 100%)}
 .channel-hh .app{color:var(--text-primary)}
 .channel-hh .connect-card,.channel-hh .stat-card,.channel-hh .table-wrap,
 .channel-hh .new-video-card,.channel-hh .strategy-card,.channel-hh .pulse-card,
 .channel-hh .history-entry,.channel-hh .modal,.channel-hh .quota-bar-wrap,
 .channel-hh .nav-tabs,.channel-hh .score-item,.channel-hh .ba-before,
-.channel-hh .draft-item{background:var(--card-bg);border-color:var(--card-border);color:var(--text-primary)}
+.channel-hh .draft-item{background:var(--card-bg);border-color:var(--card-border);color:var(--text-primary);box-shadow:var(--glow)}
+.channel-hh .stat-card:hover{border-color:var(--secondary);box-shadow:0 0 24px rgba(192,132,252,0.2)}
 .channel-hh .nav-tab{color:var(--text-secondary)}
-.channel-hh .nav-tab.active{background:var(--accent);color:#000}
-.channel-hh .logo-icon{background:var(--accent)}
-.channel-hh .btn-primary{background:var(--accent);color:#000}
-.channel-hh .btn-red{background:var(--accent);color:#000}
-.channel-hh input,.channel-hh textarea,.channel-hh select{background:#2D2D3F;border-color:#3D3D5F;color:var(--text-primary)}
+.channel-hh .nav-tab.active{background:linear-gradient(135deg,#C084FC,#A855F7);color:white;box-shadow:0 0 16px rgba(192,132,252,0.4)}
+.channel-hh .logo-icon{background:linear-gradient(135deg,#C084FC,#A855F7);box-shadow:0 4px 16px rgba(192,132,252,0.4)}
+.channel-hh .btn-primary{background:linear-gradient(135deg,#C084FC,#A855F7);color:white;box-shadow:0 4px 16px rgba(192,132,252,0.3)}
+.channel-hh .btn-primary:hover{box-shadow:0 6px 24px rgba(192,132,252,0.5)}
+.channel-hh .btn-red{background:linear-gradient(135deg,#F4A261,#E8892A);color:white;box-shadow:0 4px 16px rgba(244,162,97,0.3)}
+.channel-hh .btn-green{background:linear-gradient(135deg,#34D399,#10B981);color:white}
+.channel-hh input,.channel-hh textarea,.channel-hh select{background:#1E1E38;border-color:#3D3A6A;color:#F0EEF8!important}
 .channel-hh .table-head{background:#252535;border-color:#3D3D5F}
 .channel-hh .video-row{border-color:#2D2D3F}
 .channel-hh .video-row:hover{background:#252540}
-.channel-hh .vid-title-text{color:var(--text-primary)}
-.channel-hh .vid-date,.channel-hh .bar-num,.channel-hh .th,.channel-hh .stat-label{color:var(--text-secondary)}
+.channel-hh .vid-title-text{color:#F0EEF8!important}
+.channel-hh .vid-date,.channel-hh .bar-num,.channel-hh .th,.channel-hh .stat-label{color:#B8B0D8!important}
+.channel-hh h1,.channel-hh h2,.channel-hh h3,.channel-hh h4{color:#F0EEF8}
+.channel-hh p,.channel-hh span,.channel-hh div,.channel-hh label{color:#E8E4F4}
+.channel-hh .detail-label{color:#C084FC!important}
+.channel-hh .ba-label{color:#C084FC!important}
+.channel-hh .score-item-label{color:#B8B0D8!important}
 .channel-hh .detail-panel{background:#181828;border-color:#A78BFA33}
-.channel-hh .how-to-a{background:linear-gradient(135deg,#1A2A1A,#162616);border-color:#10B98133}
+.channel-hh .how-to-a{background:linear-gradient(135deg,#1E1635,#251840);border-color:#C084FC33}
 .channel-hh .ba-after{background:#1A2A1A;border-color:#10B98133}
-.channel-hh .thumb-prompt{background:#1A1A2E;border-color:#A78BFA55}
-.channel-hh .thumb-prompt p{color:#A78BFA}
-.channel-hh .tag-chip{background:#A78BFA22;color:#A78BFA}
+.channel-hh .thumb-prompt{background:#1A1535;border-color:#C084FC55;box-shadow:0 0 12px rgba(192,132,252,0.1)}
+.channel-hh .thumb-prompt p{color:#DDB6FC!important}
+.channel-hh .tag-chip{background:#C084FC22;color:#C084FC;border:1px solid #C084FC44}
 .channel-hh .alert-info{background:#1E3A5F;color:#90CAF9;border-color:#1565C0}
 .channel-hh .alert-success{background:#1A2A1A;color:#10B981;border-color:#10B98155}
 .channel-hh .alert-warn{background:#2A1F0A;color:#F59E0B;border-color:#F59E0B55}
@@ -394,15 +403,28 @@ textarea{resize:vertical}
 </div>
 </div>
 <div id="tabStrategy" style="display:none">
+<div id="seoBriefWrap" style="display:none">
+<div class="strategy-card">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+<h3 style="font-size:16px;font-weight:900">🔍 Weekly SEO Intelligence Brief</h3>
+<button class="btn btn-ghost btn-sm" id="closeBriefBtn">← Back to Strategy</button>
+</div>
+<p style="font-size:12px;color:var(--gray-500);margin-bottom:14px">Real-time analysis of YouTube algorithm changes and SEO trends for your channel type. Uses web search.</p>
+<div id="seoBriefContent"><p style="color:var(--gray-400);font-size:13px">Click Load to fetch the latest SEO intelligence...</p></div>
+<button class="btn btn-primary btn-sm" id="loadBriefBtn" style="margin-top:12px">🔍 Load Latest SEO Brief</button>
+</div>
+</div>
 <div id="strategyContent"><div class="strategy-card" style="text-align:center;padding:48px">
 <div style="font-size:48px;margin-bottom:16px">&#129504;</div>
 <h3 style="font-size:20px;margin-bottom:8px">Ready to analyze your channel</h3>
 <p style="font-size:14px;color:var(--gray-500);margin-bottom:20px">Sync your videos first, then get your full strategy report. 100% free!</p>
 <button class="btn btn-primary" id="genStrategyBtn">Generate My Strategy Report</button>
 <button class="btn btn-ghost" id="showTrendBtn" style="margin-top:10px">📈 View Channel Score Trend</button>
+<button class="btn btn-ghost" id="seoBriefBtn" style="margin-top:10px;border-color:var(--orange);color:var(--orange)">🔍 Get Weekly SEO Brief</button>
 </div></div>
 </div>
 <div id="tabPulse" style="display:none">
+<div id="hhCheatSheet" style="display:none">
 <div class="pulse-card">
 <h3>What is Trending in Kids YouTube</h3>
 <p class="sub">Click any idea to instantly generate metadata for it in the New Video tab! Free, no quota.</p>
@@ -659,6 +681,15 @@ window.addEventListener("DOMContentLoaded",function(){
   document.getElementById("exportCsvBtn").addEventListener("click",exportCSV);
   document.getElementById("genStrategyBtn").addEventListener("click",generateStrategy);
   document.getElementById("showTrendBtn").addEventListener("click",showChannelTrend);
+  document.getElementById("seoBriefBtn").addEventListener("click",function(){
+    document.getElementById("seoBriefWrap").style.display="block";
+    document.getElementById("strategyContent").style.display="none";
+  });
+  document.getElementById("closeBriefBtn").addEventListener("click",function(){
+    document.getElementById("seoBriefWrap").style.display="none";
+    document.getElementById("strategyContent").style.display="block";
+  });
+  document.getElementById("loadBriefBtn").addEventListener("click",loadSEOBrief);
   document.getElementById("rotateTrendsBtn").addEventListener("click",rotateTrends);
   document.getElementById("liveTrendsBtn").addEventListener("click",function(){showQuotaModal(100,doLiveTrends);});
   document.getElementById("loadIdeasBtn").addEventListener("click",loadVideoIdeas);
@@ -869,8 +900,10 @@ async function doSync(){
       var dur=(cdObj&&cdObj.duration)||""; // e.g. PT4M30S
       var durationSecs=parseDuration(dur);
       var ts=scoreTitle(s.title||""),ds=scoreDesc(s.description||""),tagsS=scoreTags(tags);
-      var ls=durationSecs>0?scoreLengthForKids(durationSecs):50; // 50=neutral if unknown
+      var ls=durationSecs>0?scoreLengthForKids(durationSecs):50;
       var overall=Math.round((ts*0.35)+(ds*0.25)+(tagsS*0.25)+(ls*0.15));
+      var hasLogo=localStorage.getItem(storageKey("logo_"+v.id))!=="false";
+      if(!hasLogo)overall=Math.max(0,overall-10);
       return {id:v.id,title:s.title||"",description:s.description||"",tags:tags,thumbUrl:s.thumbnails&&s.thumbnails.medium?s.thumbnails.medium.url:"",publishedAt:s.publishedAt||"",categoryId:s.categoryId||"27",privacy:privacy,titleScore:ts,descScore:ds,tagsScore:tagsS,lengthScore:ls,durationSecs:durationSecs,overall:overall,grade:scoreToGrade(overall)};
     });
     localStorage.setItem(storageKey("videoCache"),JSON.stringify(allVideos));localStorage.setItem(storageKey("lastSync"),Date.now().toString());
@@ -889,8 +922,36 @@ function dailyRefresh(){
 }
 function showSyncAlert(msg,type){document.getElementById("syncAlert").innerHTML="<div class='alert alert-"+type+"'>"+msg+"</div>";}
 
+function scoreTitleHH(t){
+  if(!t)return 0; var s=20;
+  // HH title length: 45-70 is ideal
+  if(t.length>=45&&t.length<=70)s+=25;
+  else if(t.length>=35&&t.length<45)s+=15;
+  else if(t.length>70&&t.length<=85)s+=10;
+  else if(t.length>0)s+=3;
+  // HH keywords
+  var hhKw=["lofi","lo-fi","chill","study","sleep","rain","storm","ambience","ambient","focus","cozy","calm","relax","meditation","beats","sounds","nature","coffee","fireplace","night","peaceful","soothing","no copyright","hour","piano","jazz","background"];
+  hhKw.forEach(function(w){if(t.toLowerCase().indexOf(w)>-1)s+=4;});
+  // Big bonuses
+  if(/\d+\s*hour/i.test(t))s+=12;
+  if(/no copyright|royalty free/i.test(t))s+=10;
+  return Math.min(Math.max(s,0),100);
+}
+
+function scoreDescHH(d){
+  if(!d)return 0; var s=10;
+  if(d.length>200)s+=15;if(d.length>400)s+=10;
+  if(/subscribe/i.test(d))s+=10;
+  if(/no copyright|royalty free/i.test(d))s+=15;
+  if(/\d+:\d+/.test(d))s+=20; // timestamps present
+  if(/lofi|chill|study|sleep|relax|cozy|peaceful|ambient/i.test(d))s+=10;
+  if(/#/.test(d))s+=10;
+  return Math.min(Math.max(s,0),100);
+}
+
 function scoreTitle(t){
   if(!t)return 0;
+  if(getConfig().audience!=="kids")return scoreTitleHH(t);
   var cfg=getConfig();
   var s=15;
   var min=cfg.idealTitleMin,max=cfg.idealTitleMax;
@@ -915,9 +976,10 @@ function scoreTitle(t){
 }
 function scoreDesc(d){
   if(!d)return 0;
+  if(getConfig().audience!=="kids")return scoreDescHH(d);
   var cfg=getConfig();
   var s=5;
-  var isHH=cfg.audience!=="kids";
+  var isHH=false;
   if(d.length>100)s+=10;if(d.length>300)s+=15;if(d.length>500)s+=15;
   if(d.toLowerCase().indexOf("subscribe")>-1)s+=15;if(d.indexOf("#")>-1)s+=10;
   if(d.toLowerCase().indexOf("like")>-1||d.toLowerCase().indexOf("comment")>-1)s+=10;
@@ -977,24 +1039,43 @@ function barColor(s){if(s>=85)return "#06D6A0";if(s>=70)return "#4361EE";if(s>=5
 
 function getTitleTip(s,title){
   if(s>=85)return "Great title!";
+  var isHH=getConfig().audience!=="kids";
   var tips=[];
-  if(!title||title.length<30)tips.push("Too short -- aim for 40-60 characters");
-  else if(title.length>60)tips.push("Too long ("+title.length+" chars) -- keep under 60 so it shows fully in search results");
+  if(isHH){
+    if(!title||title.length<35)tips.push("Too short -- aim for 45-70 characters for HH");
+    else if(title.length>85)tips.push("Too long ("+title.length+" chars) -- keep under 85 for HH titles");
+    if(!/\d+\s*hour/i.test(title))tips.push("Add duration like 1 Hour or 2 Hours -- huge search modifier for ambient content");
+    if(!/lofi|chill|study|sleep|rain|ambient|relax|cozy|focus|beats|sounds/i.test(title))tips.push("Add a mood keyword: lofi, chill, study, sleep, rain, ambient, cozy, or focus");
+  } else {
+    if(!title||title.length<30)tips.push("Too short -- aim for 40-60 characters");
+    else if(title.length>60)tips.push("Too long ("+title.length+" chars) -- keep under 60 so it shows fully in search results");
   if(title&&(title.charAt(0)==='"'||title.charAt(title.length-1)==='"'))tips.push("Remove the quote marks from your title -- they hurt SEO and look unprofessional");
   var pw=["kids","children","toddler","toddlers","baby","babies","preschool","learn","learning","fun"];
   var has=pw.some(function(w){return title&&title.toLowerCase().indexOf(w)>-1;});
   if(!has)tips.push("Missing a kids keyword -- add Kids, Toddlers, Learn or Baby");
   if(title&&(title.split("!").length-1)>1)tips.push("Too many exclamation marks -- one max");
   if(!tips.length)tips.push("Needs a stronger kids YouTube hook -- see suggested title below");
+  }
+  if(isHH){
+    if(!tips.length)tips.push("Needs a stronger HH hook -- add duration and mood keywords");
+  }
   return "Warning: "+tips.join(" and ");
 }
 function getDescTip(s,desc){
   if(s>=85)return "Great description!";
+  var isHH=getConfig().audience!=="kids";
   var tips=[];
-  if(!desc||desc.length<300)tips.push("Too short -- write at least 300 characters");
-  if(desc&&desc.toLowerCase().indexOf("subscribe")===-1)tips.push("Add a Subscribe call to action");
-  if(desc&&desc.indexOf("#")===-1)tips.push("Add 3-5 hashtags like #KidsLearning");
-  if(desc&&desc.toLowerCase().indexOf("like")===-1)tips.push("Ask viewers to Like and Comment");
+  if(isHH){
+    if(!desc||desc.length<200)tips.push("Too short -- write at least 200 characters");
+    if(desc&&!/\d+:\d+/.test(desc))tips.push("Add timestamps every 15-20 minutes -- improves retention and session time");
+    if(desc&&!/no copyright|royalty free/i.test(desc))tips.push("Add no copyright mention -- huge search modifier");
+    if(desc&&desc.toLowerCase().indexOf("subscribe")===-1)tips.push("Add a Subscribe call to action");
+  } else {
+    if(!desc||desc.length<300)tips.push("Too short -- write at least 300 characters");
+    if(desc&&desc.toLowerCase().indexOf("subscribe")===-1)tips.push("Add a Subscribe call to action");
+    if(desc&&desc.indexOf("#")===-1)tips.push("Add 3-5 hashtags like #KidsLearning");
+    if(desc&&desc.toLowerCase().indexOf("like")===-1)tips.push("Ask viewers to Like and Comment");
+  }
   return tips.length?"Warning: "+tips.join(" and "):"Needs improvement";
 }
 function getLengthTip(s,secs){
@@ -1078,10 +1159,29 @@ function analyzeVideoTopic(title,desc){
     cooking:/cook|bake|recipe|food|kitchen|ingredient|mix|stir|measure|healthy|meal|snack|fruit|vegetable/.test(combined),
     family:/family|mom|dad|sister|brother|grandma|grandpa|parent|baby|sibling|home|house|love|hug|together/.test(combined),
     fantasy:/magic|wizard|dragon|fairy|unicorn|princess|prince|kingdom|spell|enchant|fantasy|imagine|pretend/.test(combined),
-    diversity:/diverse|inclusion|different|same|unique|culture|identity|skin|hair|family|belong|accept|celebrate|proud/.test(combined)
+    diversity:/diverse|inclusion|different|same|unique|culture|identity|skin|hair|family|belong|accept|celebrate|proud/.test(combined),
+    newYear:/new year|countdown|firework|celebrate new|january|resolution/.test(combined),
+    valentines:/valentine|love|heart|friendship day|february|cupid/.test(combined),
+    stPatricks:/patrick|shamrock|lucky|rainbow pot|leprechaun|irish/.test(combined),
+    fourthJuly:/july|independence|america|patriot|flag usa|red white blue/.test(combined),
+    kidsHealth:/sick|cold|flu|doctor|nurse|medicine|healthy|germ|wash hand|sneeze|fever|allergy|hospital/.test(combined),
+    standardTest:/test|exam|quiz|grade|school|kindergarten|first grade|second grade|third grade|math test|reading test|standardized/.test(combined),
+    nature2:/tree|flower|garden|plant|insect|butterfly|bee|grass|leaf|season|grow|seed|nature walk/.test(combined),
+    socialJustice:/equal|fair|right|justice|peace|protest|vote|leader|president|government|law|citizen/.test(combined),
+    nutrition:/healthy eating|nutrition|vitamin|vegetable|fruit|food group|protein|dairy|grain|balanced meal/.test(combined),
+    culturalHero:/hero|leader|activist|pioneer|inventor|scientist|artist|musician|athlete|icon|legend|role model/.test(combined),
+    international:/international|global|world day|earth day|world peace|united nation|continent|country|flag/.test(combined),
+    religious:/church|mosque|temple|prayer|faith|god|jesus|allah|buddha|bible|quran|torah|religious|spiritual/.test(combined),
+    indigenous:/native|indigenous|tribal|reservation|pow wow|first nation|cherokee|navajo|sioux|apache/.test(combined),
+    latinx:/hispanic|latino|latina|latinx|cinco de mayo|dia de los muertos|spanish|mexico|venezuela|colombia/.test(combined),
+    asian:/asian|chinese|japanese|korean|indian|vietnamese|thai|diwali|lunar new year|chinese new year|asian pacific/.test(combined),
+    african:/african|kwanzaa|juneteenth|ghana|nigeria|kenya|egypt|africa|swahili|yoruba|zulu/.test(combined),
+    lifeSkills:/money|save|budget|share|help|chore|responsibility|clean|organize|time|schedule|routine|discipline/.test(combined),
+    mentalHealth:/worry|anxious|stress|calm down|feel better|therapy|emotion regulation|cope|self care|well being/.test(combined),
+    spaceStem:/space|planet|star|moon|rocket|astronaut|galaxy|universe|solar system|nasa|stem|technology|robot|code|engineer/.test(combined)
   };
   // Priority order matters - check most specific first
-  var priority=["halloween","christmas","easter","thanksgiving","breathing","affirmations","blackHistory","sports","adventure","history","worldCultures","geography","diversity","fantasy","art","cooking","family","reading","math","counting","colors","alphabet","shapes","bodyParts","bedtime","hygiene","emotions","socialSkills","animals","food","music","sentences","science","movement","community","seasons","paris","italy","general"];
+  var priority=["halloween","christmas","newYear","valentines","easter","thanksgiving","stPatricks","fourthJuly","breathing","affirmations","blackHistory","african","latinx","asian","indigenous","culturalHero","socialJustice","international","sports","adventure","history","worldCultures","geography","diversity","kidsHealth","mentalHealth","standardTest","spaceStem","lifeSkills","nutrition","nature2","fantasy","art","cooking","family","reading","math","counting","colors","alphabet","shapes","bodyParts","bedtime","hygiene","emotions","socialSkills","animals","food","music","sentences","science","movement","community","seasons","paris","italy","religious","general"];
   var primary=priority.find(function(k){return topics[k];})||"general";
   var ageGroup=/toddler|babies|baby|infant/.test(combined)?"toddlers":/preschool|pre-k/.test(combined)?"preschool":/elementary|grade|school age/.test(combined)?"early-kids":"all-kids";
   var theme=topics.paris?"paris":topics.italy?"italy":topics.halloween?"halloween":topics.christmas?"christmas":null;
@@ -1187,6 +1287,69 @@ function generateSuggestedTitle(title,description){
 }
 
 
+
+// New topic hooks
+var NEW_HOOKS = {
+  newYear:"New year, new adventures! This fun video helps little ones celebrate the New Year and understand what resolutions and new beginnings are all about -- in the most age-appropriate, joyful way possible!",
+  valentines:"Love is all around -- and this video helps little ones understand kindness, friendship, and what it means to care for the people in our lives! Perfect for Valentine's Day and every day.",
+  stPatricks:"Luck of the Irish is HERE! This fun St. Patrick's Day video introduces little ones to Irish culture, the legend of leprechauns, and the magic of rainbows and shamrocks!",
+  fourthJuly:"Happy 4th of July! This fun patriotic video helps little ones understand American independence, what freedom means, and why we celebrate with fireworks and community.",
+  kidsHealth:"Staying healthy is one of the most important things we can teach little ones -- and this video makes it fun! Understanding how our bodies work and how to take care of them sets kids up for a lifetime of good habits.",
+  standardTest:"Test time doesn't have to be scary! This video helps little ones build the skills and confidence they need to do their very best -- making learning feel like an adventure, not a challenge.",
+  nature2:"Nature is the greatest classroom in the world -- and this video brings it to life for little ones! Discovering plants, insects, flowers, and the living world around us builds curiosity that lasts a lifetime.",
+  socialJustice:"Teaching kids about fairness, equality, and standing up for what's right is one of the most important things we can do. This age-appropriate video introduces these big concepts through the lens of kindness and empathy.",
+  kidsHealth2:"Every child gets sick sometimes -- and this video helps little ones understand what's happening in their bodies and how to feel better! Building health literacy early empowers kids to advocate for themselves.",
+  nutrition:"Healthy eating habits start early -- and this video makes fruits, vegetables, and balanced meals feel exciting rather than boring! Teaching kids to love good food is one of the greatest gifts.",
+  culturalHero:"Heroes come in all shapes, sizes, and backgrounds -- and this video celebrates the extraordinary people who changed our world! Building a diverse hero narrative helps every child see themselves as capable of greatness.",
+  international:"The world is an incredible place -- and this video celebrates the global community we are all part of! From Earth Day to World Peace Day, helping kids think globally builds empathy and curiosity.",
+  latinx:"Celebrating Latino and Hispanic culture is a joy -- and this video brings the richness, beauty, and vibrancy of these traditions to life for little learners! From music to food to holidays, representation matters.",
+  asian:"The cultures of Asia are ancient, beautiful, and endlessly fascinating -- and this video brings them to life for little ones! From Lunar New Year to Diwali, celebrating Asian heritage builds cultural appreciation.",
+  african:"African history and culture is rich beyond measure -- and this video celebrates the incredible diversity, traditions, and achievements of the African continent and diaspora for little learners.",
+  lifeSkills:"Life skills are the foundation of independence -- and the earlier we teach them, the better! This fun video helps little ones learn responsibility, organization, and the habits that will serve them forever.",
+  mentalHealth:"Taking care of our minds is just as important as taking care of our bodies -- and this video helps little ones build the emotional tools they need to cope, calm down, and feel their best.",
+  spaceStem:"Blast off into the world of STEM! This exciting video sparks curiosity about space, technology, engineering, and science -- building the foundation for a lifetime of discovery and innovation.",
+  indigenous:"Indigenous cultures represent some of the oldest and most profound wisdom on Earth -- and this video honors and celebrates their traditions, stories, and contributions with respect and joy.",
+  religious:"Faith, tradition, and spirituality are important parts of many families' lives -- and this age-appropriate video explores these themes with warmth, respect, and inclusivity for all beliefs."
+};
+
+var NEW_LEARNING_POINTS = {
+  newYear:"- What the New Year represents and why we celebrate\\n- How to set simple, achievable resolutions\\n- That every new beginning is a chance to grow",
+  valentines:"- The meaning of Valentine's Day beyond just romance\\n- How to show kindness and appreciation to friends and family\\n- Different ways to express love and care",
+  kidsHealth:"- How germs spread and how to stop them\\n- The importance of handwashing, sleep, and nutrition\\n- What to do when you feel sick and how doctors help",
+  standardTest:"- Key academic skills presented in a fun, accessible way\\n- Test-taking strategies and confidence building\\n- That hard work and preparation lead to success",
+  nature2:"- The names and characteristics of plants, insects, and natural phenomena\\n- How ecosystems work and why every living thing matters\\n- A deep appreciation for the natural world around them",
+  latinx:"- Beautiful Latino and Hispanic traditions and celebrations\\n- Key Spanish words and cultural context\\n- That diversity makes our world richer and more interesting",
+  asian:"- Rich traditions from across Asia presented with respect and joy\\n- Key cultural celebrations like Lunar New Year and Diwali\\n- Appreciation for the incredible diversity of Asian cultures",
+  african:"- The richness and diversity of African and diaspora culture\\n- Key traditions, celebrations, and achievements\\n- Pride in African heritage and history",
+  spaceStem:"- Key STEM concepts made exciting and accessible\\n- How scientists, engineers, and astronauts think\\n- That every child can be a scientist and inventor",
+  mentalHealth:"- Simple, powerful tools for managing big feelings\\n- That mental health is just as important as physical health\\n- How to ask for help and talk about feelings openly",
+  general:"- Key concepts made simple and fun\\n- Colorful visuals designed for little eyes\\n- Memorable lessons delivered at the perfect pace"
+};
+
+var NEW_HASHTAGS = {
+  newYear:"#NewYearKids #NewYearKidsVideo #HappyNewYearKids #NewYearsEveKids #KidsNewYear #NewYearLearning #CountdownKids #NewYearPreschool #KidsResolutions #NewYearToddlers",
+  valentines:"#ValentinesDayKids #ValentinesForKids #KindnessKids #FriendshipKids #ValentinesPreschool #LoveKids #ValentinesSong #KidsValentines #HeartKids #FriendshipSong",
+  kidsHealth:"#KidsHealth #HealthForKids #GermKids #WashHandsKids #HealthyKids #KidsBodyVideo #HealthEducationKids #StayHealthyKids #KidsMedicine #HealthyHabitsKids",
+  standardTest:"#KidsTest #TestPrepKids #KindergartenReady #SchoolSkillsKids #KidsAcademic #TestTakingKids #SchoolReadiness #KidsLearningSkills #AcademicKids #SchoolPrep",
+  nature2:"#NatureKids #KidsNature #GardenKids #InsectsKids #PlantsForKids #NatureWalkKids #KidsOutdoor #NatureLearnKids #GrowingKids #KidsEnvironment",
+  latinx:"#HispanicHeritageKids #LatinoKids #CincoMayoKids #SpanishKids #HispanicKids #LatinaKids #LatinoCulture #HispanicCultureKids #BilingualKids #DiverseKidsContent",
+  asian:"#AsianCultureKids #LunarNewYearKids #DiwaliKids #AsianHeritageKids #ChineseNewYearKids #AsianAmericanKids #AsianPacificKids #KidsAsianCulture #DiverseKidsContent #RepresentationMatters",
+  african:"#AfricanCultureKids #KwanzaaKids #JuneteenthKids #AfricanAmericanKids #AfricanHeritageKids #BlackExcellenceKids #AfricanKids #CelebrateAfricaKids #DiverseKidsContent #AfricanHistoryKids",
+  spaceStem:"#SpaceKids #STEMKids #ScienceKids #SpaceExploration #AstronautKids #KidsScience #STEMEducation #SpaceLearning #KidsTech #EngineeringKids",
+  mentalHealth:"#KidsMentalHealth #EmotionalWellnessKids #SELKids #KidsAnxiety #MindfulnessKids #KidsCopingSkills #EmotionalHealthKids #KidsTherapy #WellnessKids #KidsMindfulness",
+  general:"#KidsLearning #ChildrensYouTube #ToddlerLearning #FamilyFriendly #EducationalKidsVideo #EarlyChildhood #PreschoolLearning #KidsEducation #LittleLearnersNetwork #KidsChannel"
+};
+
+var NEW_TAGS = {
+  newYear:["new year for kids","happy new year kids","new years kids video","countdown for kids","new year learning","kids new year video","new year preschool","new year celebration kids","new year toddlers","kids new years eve","new year song kids","celebration kids video","january kids video","new year resolution kids","countdown song kids"],
+  valentines:["valentines day for kids","valentines kids video","kindness for kids","friendship song kids","valentines preschool","love song kids","heart kids video","valentines day learning","kids valentines song","friendship kids video","kindness song children","valentines day toddlers","love and kindness kids","february kids video","valentines crafts kids"],
+  kidsHealth:["health for kids","kids health video","germs for kids","washing hands kids","healthy habits kids","kids body video","health education kids","stay healthy kids","kids medicine","immune system kids","sick day kids","doctor for kids","hygiene kids","health song kids","kids wellness video"],
+  standardTest:["test prep for kids","kids test video","kindergarten ready","school skills kids","academic kids video","test taking kids","school readiness","learning skills kids","academic video kids","school prep kids","math test kids","reading test kids","school confidence kids","kindergarten skills","first grade skills"],
+  latins:["hispanic heritage kids","latino kids video","cinco de mayo kids","spanish kids video","hispanic kids","latina kids","latino culture kids","hispanic culture kids","bilingual kids","diverse kids content","spanish learning kids","mexico for kids","latin america kids","hispanic history kids","cultural celebration kids"],
+  spaceStem:["space for kids","stem kids video","science for kids","space exploration kids","astronaut kids","kids science video","stem education kids","space learning kids","kids technology","engineering kids","coding for kids","robot kids video","space song kids","planet song kids","stem activities kids"],
+  general:["kids learning videos","educational videos for kids","toddler learning","children youtube","preschool learning","kids educational content","learning for toddlers","fun kids videos","early childhood education","family friendly youtube","kids youtube channel","toddler educational videos","learning videos for kids","kids songs and learning","children educational channel"]
+};
+
 function generateSuggestedDesc(title,existingDesc){
   if(getConfig().audience!=="kids") return generateHHDesc(title,existingDesc||"");
 
@@ -1283,9 +1446,9 @@ function generateSuggestedDesc(title,existingDesc){
     general:"#KidsLearning #ChildrensYouTube #ToddlerLearning #FamilyFriendly #EducationalKidsVideo #EarlyChildhood #PreschoolLearning #KidsEducation #LittleLearnersNetwork #KidsChannel #ToddlerVideo #EducationalKids #KidsYouTube #LearningForKids #FunKidsVideo"
   };
   
-  var hook=hooks[p]||hooks.general;
-  var points=learningPoints[p]||learningPoints.general;
-  var hashtags=hashtagSets[p]||hashtagSets.general;
+  var hook=NEW_HOOKS[p]||hooks[p]||hooks.general;
+  var points=NEW_LEARNING_POINTS[p]||learningPoints[p]||learningPoints.general;
+  var hashtags=NEW_HASHTAGS[p]||hashtagSets[p]||hashtagSets.general;
   
   var desc=hook+"\n\n";
   desc+="What your child will learn:\n"+points+"\n\n";
@@ -1325,7 +1488,7 @@ function generateSuggestedTags(title,existingTags,existingDesc){
     diversity:["diversity for kids","inclusion for kids","representation matters","diverse kids content","multicultural kids","kids diversity video","celebrate differences","every child matters","inclusive kids video","kids identity","unique and beautiful","kids belong","diverse education","inclusion for all","celebrate kids"],
     general:["kids learning videos","educational videos for kids","toddler learning","children youtube","preschool learning","kids educational content","learning for toddlers","fun kids videos","early childhood education","family friendly youtube","kids youtube channel","toddler educational videos","learning videos for kids","kids songs and learning","children educational channel"]
   };
-  return (tagSets[p]||tagSets.general).slice(0,15);
+  return (NEW_TAGS[p]||tagSets[p]||tagSets.general).slice(0,15);
 }
 
 function generateExistingThumbPrompt(title,description){
@@ -1470,7 +1633,7 @@ function generateHHDesc(title, existingDesc){
     lofi:"lofi hip hop, lofi beats, chill lofi music, lofi chill beats, lo-fi hip hop, lofi music",
     general:"lofi music, chill music, ambient music, relaxing music, focus music, calm music"
   };
-  var hook=hooks[p]||hooks.general;
+  var hook=NEW_HOOKS[p]||hooks[p]||hooks.general;
   var ts=timestamps[p]||timestamps.general;
   var tagline=tags[p]||tags.general;
   var desc=hook+"\n\n";
@@ -1495,7 +1658,7 @@ function generateHHTags(title, existingDesc){
     coffee:["coffee shop ambience","cafe sounds","coffee shop background noise","coffee shop music","coffee shop sounds studying","cafe ambience","coffee shop lofi","coffee shop white noise","study in coffee shop","coffee shop sounds no music","cafe background","cozy cafe sounds","coffee shop atmosphere","coffee shop studying","cafe lofi"],
     general:["lofi music","chill music","ambient music","relaxing music","focus music","calm music","background music","study music","sleep music","no copyright music","free music","chill beats","ambient beats","peaceful music","soothing music"]
   };
-  return (tagSets[p]||tagSets.general).slice(0,15);
+  return (NEW_TAGS[p]||tagSets[p]||tagSets.general).slice(0,15);
 }
 
 function generateHHThumbPrompt(title){
@@ -1578,7 +1741,12 @@ function renderTable(videos){
     // Thumb
     var td1=document.createElement("div");td1.className="td";
     var img=document.createElement("img");img.className="thumb";img.src=v.thumbUrl;img.alt="";
-    img.style.cursor="pointer";img.title="Click to preview thumbnail";
+    img.style.cursor="zoom-in";
+    img.title="Click to expand thumbnail";
+    img.style.border="2px solid transparent";
+    img.style.transition="border-color 0.2s,transform 0.2s";
+    img.addEventListener("mouseover",function(){this.style.borderColor="var(--blue)";this.style.transform="scale(1.05)";});
+    img.addEventListener("mouseout",function(){this.style.borderColor="transparent";this.style.transform="scale(1)";});
     img.addEventListener("click",function(e){e.stopPropagation();if(v.thumbUrl){document.getElementById("thumbLightboxImg").src=v.thumbUrl;document.getElementById("thumbLightbox").classList.add("open");}});
     td1.appendChild(img);row.appendChild(td1);
     // Title
@@ -1614,6 +1782,30 @@ function toggleDetail(id){
     panel.innerHTML=buildDetailPanel(id);panel.classList.add("open");row.classList.add("expanded");
     var p=document.getElementById("pushBtn-"+id);if(p)p.addEventListener("click",function(e){e.stopPropagation();initiatePush(id);});
     var cl=document.getElementById("closeBtn-"+id);if(cl)cl.addEventListener("click",function(e){e.stopPropagation();toggleDetail(id);});
+    var unlk=document.getElementById("unlockTitle-"+id);
+    if(unlk)unlk.addEventListener("click",function(e){
+      e.stopPropagation();
+      var wrap=document.getElementById("titleEditWrap-"+id);
+      if(wrap){wrap.style.display="block";unlk.textContent="🔓 Editing";}
+    });
+    var logoChk=document.getElementById("chkLogo-"+id);
+    if(logoChk){
+      var savedLogo=localStorage.getItem(storageKey("logo_"+id));
+      if(savedLogo==="false")logoChk.checked=false;
+      logoChk.addEventListener("change",function(){
+        localStorage.setItem(storageKey("logo_"+id),this.checked?"true":"false");
+        // Recalculate score
+        var v2=allVideos.find(function(x){return x.id===id;});
+        if(v2){
+          var ts2=scoreTitle(v2.title),ds2=scoreDesc(v2.description),tagsS2=scoreTags(v2.tags),ls2=scoreLengthForKids(v2.durationSecs||0);
+          var newOverall=Math.round((ts2*0.35)+(ds2*0.25)+(tagsS2*0.25)+(ls2*0.15));
+          if(!this.checked)newOverall=Math.max(0,newOverall-10);
+          v2.overall=newOverall;v2.grade=scoreToGrade(newOverall);
+          var gc=document.getElementById("grade-cell-"+id);
+          if(gc)gc.innerHTML="<span class='grade-badge grade-"+v2.grade+"'>"+v2.grade+"</span>";
+        }
+      });
+    }
     var regen=document.getElementById("regenBtn-"+id);if(regen)regen.addEventListener("click",function(e){
       e.stopPropagation();
       var override=document.getElementById("topicOverride-"+id);
@@ -1660,15 +1852,28 @@ function buildDetailPanel(id,topicOverride){
   var durMin=v.durationSecs?Math.round(v.durationSecs/60)+"min":"";
   html+=scoreItem("Video Length"+(durMin?" ("+durMin+")":""),ls,getLengthTip(ls,v.durationSecs));
   html+="</div>";
-  if(howTo.length>0){html+="<div class='how-to-a'><h4>How to get this video to an A:</h4><ul>";howTo.forEach(function(h){html+="<li>"+esc(h)+"</li>";});html+="</ul></div>";}
-  else html+="<div class='how-to-a'><h4>This video is already scoring an A! Great work!</h4></div>";
+  if(v.grade==="A"){
+    html+="<div class='how-to-a'><h4>This video is already an A! Keep it up!</h4></div>";
+  } else if(howTo.length>0){
+    html+="<div class='how-to-a'><h4>How to get this video to an A:</h4><ul>";
+    howTo.forEach(function(h){html+="<li>"+esc(h)+"</li>";});
+    html+="</ul></div>";
+  }
   html+="<div class='detail-label' style='margin-bottom:6px'>Title (60 chars max for best SEO)</div>";
   html+="<div class='ba-grid'>";
   html+="<div class='ba-before'><div class='ba-label'>Current ("+v.title.length+" chars)</div><div class='ba-val'>"+esc(v.title)+"</div></div>";
   html+="<div class='ba-after'><div class='ba-label'>Suggested ("+sugTitle.length+" chars)</div><div class='ba-val'>"+esc(sugTitle)+"</div></div>";
   html+="</div>";
-  html+="<textarea class='editable' id='editTitle-"+id+"' rows='2'>"+esc(sugTitle)+"</textarea>";
-  html+="<div style='font-size:11px;color:var(--gray-400);margin-top:2px'>"+sugTitle.length+"/60 characters</div>";
+  if(v.titleScore>=85){
+    html+="<div style='display:flex;align-items:center;gap:8px;margin-bottom:6px'>";
+    html+="<div style='flex:1;background:linear-gradient(135deg,#DCFCE7,#BBF7D0);border:1.5px solid #86EFAC;border-radius:var(--r-sm);padding:10px 14px;font-size:13px;font-weight:600;color:#15803D'>"+esc(v.title)+"</div>";
+    html+="<button class='copy-btn' id='unlockTitle-"+id+"' style='border-color:#15803D;color:#15803D;white-space:nowrap'>🔒 Unlock to Edit</button>";
+    html+="</div>";
+    html+="<div id='titleEditWrap-"+id+"' style='display:none'><textarea class='editable' id='editTitle-"+id+"' rows='2'>"+esc(v.title)+"</textarea></div>";
+  } else {
+    html+="<textarea class='editable' id='editTitle-"+id+"' rows='2'>"+esc(sugTitle)+"</textarea>";
+    html+="<div style='font-size:11px;color:var(--gray-400);margin-top:2px'>"+sugTitle.length+"/60 characters</div>";
+  }
   html+="<div class='detail-label' style='margin:14px 0 6px'>Description</div>";
   html+="<div class='ba-grid'>";
   html+="<div class='ba-before'><div class='ba-label'>Current</div><div class='ba-val' style='max-height:70px;overflow:hidden'>"+esc((v.description||"No description yet").substring(0,200))+"...</div></div>";
@@ -1896,7 +2101,26 @@ function generateStrategy(){
   document.querySelectorAll(".priority-video[data-vid]").forEach(function(el){el.addEventListener("click",function(){jumpToVideoDetail(el.dataset.vid);});});
 }
 
-function jumpToVideoDetail(videoId){showTab("tabVideos");setTimeout(function(){var row=document.getElementById("row-"+videoId);if(row){row.scrollIntoView({behavior:"smooth",block:"center"});setTimeout(function(){toggleDetail(videoId);},400);}},150);}
+function jumpToVideoDetail(videoId){
+  showTab("tabVideos");
+  // Make sure table is rendered before trying to find the row
+  if(allVideos.length&&!document.getElementById("row-"+videoId)){
+    sortAndRender();
+  }
+  setTimeout(function(){
+    var row=document.getElementById("row-"+videoId);
+    if(row){
+      row.scrollIntoView({behavior:"smooth",block:"center"});
+      setTimeout(function(){toggleDetail(videoId);},500);
+    } else {
+      // Try once more after a longer delay
+      setTimeout(function(){
+        var row2=document.getElementById("row-"+videoId);
+        if(row2){row2.scrollIntoView({behavior:"smooth",block:"center"});toggleDetail(videoId);}
+      },800);
+    }
+  },200);
+}
 function jumpToNewVideo(topic){showTab("tabNew");setTimeout(function(){var input=document.getElementById("newVideoTopic");if(input){input.value=topic;input.focus();}generateNewVideoMeta();},100);}
 
 function getHolidayBanner(){
@@ -1912,6 +2136,12 @@ var TREND_POOLS=[
 ];
 
 function rotateTrends(){
+  // Show/hide HH cheat sheet
+  var cheatSheet=document.getElementById("hhCheatSheet");
+  if(cheatSheet)cheatSheet.style.display=getConfig().audience!=="kids"?"block":"none";
+  if(getConfig().audience!=="kids"&&cheatSheet&&!cheatSheet.innerHTML){
+    cheatSheet.innerHTML=buildHHCheatSheet();
+  }
   var activePools=getConfig().audience!=="kids"?generateHHTrendingTopics():TREND_POOLS;
   var pool=activePools[trendIdx%activePools.length];trendIdx++;
   var banner=getHolidayBanner();
@@ -2190,7 +2420,7 @@ function openSettings(){
   document.getElementById("settingsModal").classList.add("open");
 }
 
-function getThumbCountKey(){return getPrefix()+"thumbCount_"+new Date().toISOString().slice(0,10);}
+function getThumbCountKey(){return "thumbCount_"+new Date().toISOString().slice(0,10);} // Shared across channels - same ChatGPT account
 function getThumbCount(){return parseInt(localStorage.getItem(getThumbCountKey())||"0");}
 function incrementThumbCount(){
   var count=getThumbCount()+1;
@@ -2219,6 +2449,12 @@ function updateThumbCountDisplay(){
 
 async function loadAnalytics(){
   if(!accessToken){showTab("tabVideos");showSyncAlert("Please connect to YouTube first.","warn");return;}
+  var used=getQuotaUsed();
+  var remaining=10000-used;
+  if(remaining<100){
+    document.getElementById("analyticsContent").innerHTML="<div class='strategy-card'><div class='alert alert-danger'>You are low on quota ("+remaining+" units remaining). Loading analytics costs ~10 units. Consider waiting until midnight PT when quota resets.</div><button class='btn btn-primary' style='margin-top:12px' onclick='loadAnalyticsForced()'>Load Anyway</button></div>";
+    return;
+  }
   document.getElementById("analyticsContent").innerHTML="<div class='strategy-card' style='text-align:center;padding:40px'><div class='spinner'></div><p style='margin-top:12px;color:var(--gray-500)'>Loading analytics data from YouTube...</p></div>";
   try{
     // Get channel ID first
@@ -2239,6 +2475,8 @@ async function loadAnalytics(){
     document.getElementById("analyticsContent").innerHTML="<div class='strategy-card'><div class='alert alert-danger'>Analytics failed: "+esc(e.message)+"<br><br>Make sure you have enabled the YouTube Analytics API in Google Cloud and added the yt-analytics.readonly scope to your OAuth consent screen.</div></div>";
   }
 }
+
+function loadAnalyticsForced(){document.getElementById("analyticsContent").innerHTML="<div class='strategy-card' style='text-align:center;padding:40px'><div class='spinner'></div><p style='margin-top:12px;color:var(--gray-500)'>Loading analytics...</p></div>";loadAnalytics();}
 
 function renderAnalytics(data,startDate,endDate){
   if(!data.rows||!data.rows.length){
@@ -2321,6 +2559,96 @@ function openThumbnailInChatGPT(promptText){
   window.open("https://chatgpt.com/?q="+encoded,"_blank");
   incrementThumbCount();
   updateThumbCountDisplay();
+}
+
+function buildHHCheatSheet(){
+  return "<div class='pulse-card' style='margin-bottom:16px'>" +
+  "<h3 style='font-size:16px;font-weight:900;margin-bottom:4px'>🎯 The Hush Hour Fast Creation Guide</h3>" +
+  "<p class='sub'>Everything you need to create a great ambient video fast, using mostly free or Canva Pro tools.</p>" +
+
+  "<div style='font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:var(--gray-500);margin:16px 0 8px'>STEP 1: GET YOUR AUDIO (FREE)</div>" +
+  "<div class='trend-item trend-static'><span class='trend-num'>1</span><div><strong>Free Music Archive (freemusicarchive.org)</strong><br><span style='color:var(--gray-500);font-size:12px'>Thousands of free lofi, ambient, and instrumental tracks. Filter by genre and license. Download MP3 directly.</span></div></div>" +
+  "<div class='trend-item trend-static'><span class='trend-num'>2</span><div><strong>Pixabay Music (pixabay.com/music)</strong><br><span style='color:var(--gray-500);font-size:12px'>Completely free, no attribution required. Great for lofi beats, nature ambience, and relaxing instrumentals.</span></div></div>" +
+  "<div class='trend-item trend-static'><span class='trend-num'>3</span><div><strong>YouTube Audio Library (studio.youtube.com)</strong><br><span style='color:var(--gray-500);font-size:12px'>Free music and sound effects directly from YouTube. Filter by mood, genre, duration. All pre-cleared for YouTube use.</span></div></div>" +
+  "<div class='trend-item trend-static'><span class='trend-num'>4</span><div><strong>Freesound.org</strong><br><span style='color:var(--gray-500);font-size:12px'>Best source for nature sounds -- rain, thunder, ocean, forest, birds. Search by sound type and download free.</span></div></div>" +
+  "<div class='trend-item trend-static'><span class='trend-num'>5</span><div><strong>BBC Sound Effects (bbcrewind.co.uk/sound-effects)</strong><br><span style='color:var(--gray-500);font-size:12px'>Professional quality nature and environment sounds from the BBC. Free for personal and non-commercial use.</span></div></div>" +
+
+  "<div style='font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:var(--gray-500);margin:16px 0 8px'>STEP 2: CREATE YOUR LONG VIDEO (FREE)</div>" +
+  "<div class='trend-item trend-static'><span class='trend-num'>1</span><div><strong>Loop audio in Audacity (audacityteam.org) -- Free</strong><br><span style='color:var(--gray-500);font-size:12px'>Import your 5-min audio. Effect > Repeat to loop it to 1-2 hours. Export as MP3. Takes 5 minutes total.</span></div></div>" +
+  "<div class='trend-item trend-static'><span class='trend-num'>2</span><div><strong>Combine audio + image in Canva Pro</strong><br><span style='color:var(--gray-500);font-size:12px'>Create a 1920x1080 cozy dark image. Add your looped audio. Export as MP4. Done in under 10 minutes.</span></div></div>" +
+  "<div class='trend-item trend-static'><span class='trend-num'>3</span><div><strong>Alternatively: CapCut (free desktop app)</strong><br><span style='color:var(--gray-500);font-size:12px'>Import image + audio, set duration to match audio length, export. Simple and fast for long ambient videos.</span></div></div>" +
+
+  "<div style='font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:var(--gray-500);margin:16px 0 8px'>STEP 3: CREATE YOUR THUMBNAIL (Canva Pro)</div>" +
+  "<div class='trend-item trend-static'><span class='trend-num'>1</span><div><strong>Start with a YouTube Thumbnail template (1280x720)</strong><br><span style='color:var(--gray-500);font-size:12px'>Search Canva for dark aesthetic or lofi templates. The vibe should feel like the audio before they click.</span></div></div>" +
+  "<div class='trend-item trend-static'><span class='trend-num'>2</span><div><strong>Use dark moody photos from Unsplash</strong><br><span style='color:var(--gray-500);font-size:12px'>Search: rainy window, cozy desk, dark cafe, fireplace glow, forest night. All free for commercial use in Canva.</span></div></div>" +
+  "<div class='trend-item trend-static'><span class='trend-num'>3</span><div><strong>Add ONE mood word in large clean font</strong><br><span style='color:var(--gray-500);font-size:12px'>STUDY. SLEEP. RAIN. LOFI. Keep it minimal -- one word, warm color (amber or white), no clutter.</span></div></div>" +
+  "<div class='trend-item trend-static'><span class='trend-num'>4</span><div><strong>Add duration in smaller text</strong><br><span style='color:var(--gray-500);font-size:12px'>1 HOUR or 2 HOURS in the corner. This is a key search driver -- people look for long sessions.</span></div></div>" +
+
+  "<div style='font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:var(--gray-500);margin:16px 0 8px'>STEP 4: YOUTUBE UPLOAD SETTINGS</div>" +
+  "<div class='trend-item trend-static'><span class='trend-num'>1</span><div><strong>Category: Music</strong><br><span style='color:var(--gray-500);font-size:12px'>Even for rain sounds -- Music category performs best for ambient content on YouTube.</span></div></div>" +
+  "<div class='trend-item trend-static'><span class='trend-num'>2</span><div><strong>NOT made for kids</strong><br><span style='color:var(--gray-500);font-size:12px'>The Hush Hour targets general audiences -- students, WFH, sleep. Mark as NOT made for kids.</span></div></div>" +
+  "<div class='trend-item trend-static'><span class='trend-num'>3</span><div><strong>Allow all countries + all age groups</strong><br><span style='color:var(--gray-500);font-size:12px'>Ambient content has global appeal -- maximize your reach by allowing all regions.</span></div></div>" +
+
+  "</div>";
+}
+
+
+async function loadSEOBrief(){
+  var el=document.getElementById("seoBriefContent");
+  if(!el)return;
+  el.innerHTML="<div style='text-align:center;padding:20px'><div class='spinner'></div><p style='margin-top:12px;color:var(--gray-500)'>Searching for latest YouTube SEO updates...</p></div>";
+  var cfg=getConfig();
+  var isHH=cfg.audience!=="kids";
+  var queries=isHH?
+    ["YouTube algorithm update lofi ambient 2025","YouTube SEO changes ambient music channel 2025","YouTube watch time algorithm update 2025"] :
+    ["YouTube kids content algorithm update 2025","YouTube SEO best practices kids channel 2025","YouTube kids content policy changes 2025"];
+  try{
+    var response=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        model:"claude-sonnet-4-20250514",
+        max_tokens:1000,
+        tools:[{type:"web_search_20250305",name:"web_search"}],
+        messages:[{role:"user",content:"Search for the latest YouTube algorithm updates and SEO trends for "+(isHH?"lofi and ambient music channels":"kids educational YouTube channels")+" in 2025. Look for: recent algorithm changes, title/description best practices, what is working right now, any policy changes. Then give me:\n1. A plain English summary of what changed or what is trending\n2. Specific action items for this channel\n3. A WARNING section if anything suggests our current tool settings might need updating (like title length, keyword strategy, etc)\n\nFormat your response as:\nSUMMARY: [2-3 sentences]\nACTION ITEMS: [bullet list]\nCODE UPDATE ALERT: [anything that might need a settings change, or NONE if nothing]"}]
+      })
+    });
+    var data=await response.json();
+    var text=data.content.filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("\n");
+    renderSEOBrief(text,isHH);
+  }catch(e){
+    el.innerHTML="<div class='alert alert-danger'>Could not load SEO brief: "+esc(e.message)+"</div>";
+  }
+}
+
+function renderSEOBrief(text,isHH){
+  var el=document.getElementById("seoBriefContent");
+  if(!el)return;
+  var hasAlert=text.toUpperCase().indexOf("CODE UPDATE ALERT:")>-1&&text.toUpperCase().indexOf("NONE")===-1;
+  var summaryMatch=text.match(/SUMMARY:\s*([\s\S]*?)(?=ACTION ITEMS:|$)/i);
+  var actionsMatch=text.match(/ACTION ITEMS:\s*([\s\S]*?)(?=CODE UPDATE ALERT:|$)/i);
+  var alertMatch=text.match(/CODE UPDATE ALERT:\s*([\s\S]*?)$/i);
+  var summary=summaryMatch?summaryMatch[1].trim():text.substring(0,300);
+  var actions=actionsMatch?actionsMatch[1].trim():"";
+  var alertText=alertMatch?alertMatch[1].trim():"";
+  var html="";
+  if(hasAlert&&alertText&&alertText.toUpperCase()!=="NONE"){
+    html+="<div style='background:linear-gradient(135deg,#FFF7ED,#FEF3C7);border:2px solid #F59E0B;border-radius:var(--r-sm);padding:14px;margin-bottom:14px'>";
+    html+="<div style='font-size:13px;font-weight:800;color:#B45309;margin-bottom:6px'>⚠️ POSSIBLE TOOL UPDATE NEEDED</div>";
+    html+="<div style='font-size:13px;color:#92400E;line-height:1.6'>"+esc(alertText)+"</div>";
+    html+="<div style='font-size:12px;color:#B45309;margin-top:8px;font-weight:600'>Ask Claude to update the tool settings or scoring weights if needed.</div>";
+    html+="</div>";
+  }
+  html+="<div style='font-size:13px;line-height:1.7;color:var(--gray-700);margin-bottom:12px'>"+esc(summary)+"</div>";
+  if(actions){
+    var actionLines=actions.split("\n").filter(function(l){return l.trim();});
+    html+="<div style='font-size:12px;font-weight:800;text-transform:uppercase;color:var(--gray-500);margin-bottom:8px'>Action Items</div>";
+    actionLines.forEach(function(line){
+      html+="<div style='display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--gray-100);font-size:13px'><span style='color:var(--blue);font-weight:700'>→</span><span>"+esc(line.replace(/^[-•*]\s*/,""))+"</span></div>";
+    });
+  }
+  el.innerHTML=html;
+  localStorage.setItem("seoBrief_"+new Date().toISOString().slice(0,10),JSON.stringify({text:text,channel:isHH?"HH":"LLN",timestamp:Date.now()}));
 }
 
 function exportCSV(){if(!pushHistory.length){alert("No history to export yet.");return;}var rows=[["Date","Video ID","Old Title","New Title","Old Grade","New Grade","Old Score","New Score"]];pushHistory.forEach(function(h){rows.push([h.date,h.videoId,h.oldTitle,h.newTitle,h.oldGrade,h.newGrade,h.oldScore,h.newScore]);});var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c||"").replace(/"/g,'""')+'"';}).join(",");}).join("\n");var a=document.createElement("a");a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);a.download="youtube-push-history.csv";a.click();}
