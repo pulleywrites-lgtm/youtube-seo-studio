@@ -41,7 +41,7 @@ h1,h2,h3,h4,h5{font-family:"Nunito",sans-serif}
 .channel-hh .table-head{background:#252535;border-color:#3D3D5F}
 .channel-hh .video-row{border-color:#2D2D3F}
 .channel-hh .video-row:hover{background:#252540}
-.channel-hh .vid-title-text{color:#F0EEF8!important}
+.channel-hh *{color:#E8E4F4}.channel-hh .vid-title-text{color:#F0EEF8!important}
 .channel-hh .vid-date,.channel-hh .bar-num,.channel-hh .th,.channel-hh .stat-label{color:#B8B0D8!important}
 .channel-hh h1,.channel-hh h2,.channel-hh h3,.channel-hh h4{color:#F0EEF8}
 .channel-hh p,.channel-hh span,.channel-hh div,.channel-hh label{color:#E8E4F4}
@@ -476,7 +476,8 @@ textarea{resize:vertical}
 <option value="3hr">3 hours</option>
 <option value="8hr">8 hours (sleep)</option>
 </select></div>
-<button class="btn btn-primary" id="newVideoBtn">Generate Metadata</button>
+<button class="btn btn-primary" id="newVideoBtn">✨ Generate with AI</button>
+<div id="newVideoAIStatus" style="margin-top:10px;font-size:13px;display:none"></div>
 </div>
 <div id="newVideoResult" style="display:none">
 <div class="new-video-card">
@@ -1245,7 +1246,7 @@ function analyzeVideoTopic(title,desc){
     animals:/animal|dog|cat|bird|lion|tiger|elephant|bear|farm|zoo|jungle|ocean|fish|dinosaur/.test(combined),
     bodyParts:/body part|head shoulders|shoulder|knee|toes song|\btoe\b|\beye\b|\bear\b|nose and mouth|\bmouth\b|\bhand\b|\bfoot\b|feet song/.test(combined),
     food:/food|fruit|vegetable|eat|healthy|snack|lunch|breakfast/.test(combined),
-    music:/song|music|sing|dance|rhythm|beat|melody|nursery/.test(combined),
+    music:/song|music|sing|dance|rhythm|beat|melody|nursery|row row|itsy bitsy|twinkle|wheels on the bus|old macdonald|humpty|jack and jill|mary had|baa baa|hickory dickory/.test(combined),
     sentences:/sentence|grammar|ela|sequenc|write|writing|read|reading|phonics|language arts/.test(combined),
     science:/science|experiment|nature|plant|grow|weather|solar|planet|space|earth/.test(combined),
     movement:/exercise|move|jump|run|stretch|active|physical|dance|gross motor/.test(combined),
@@ -1900,6 +1901,12 @@ function toggleDetail(id){
       var wrap=document.getElementById("titleEditWrap-"+id);
       if(wrap){wrap.style.display="block";unlk.textContent="🔓 Editing";}
     });
+    var aiBtn=document.getElementById("aiGenBtn-"+id);
+    if(aiBtn)aiBtn.addEventListener("click",function(e){
+      e.stopPropagation();
+      var keyword=(document.getElementById("targetKeyword-"+id)||{}).value||"";
+      generateAISuggestions(id,keyword);
+    });
     var logoChk=document.getElementById("chkLogo-"+id);
     if(logoChk){
       var savedLogo=localStorage.getItem(storageKey("logo_"+id));
@@ -1965,6 +1972,20 @@ function buildDetailPanel(id,topicOverride){
   var durMin=v.durationSecs?Math.round(v.durationSecs/60)+"min":"";
   html+=scoreItem(isHHChannel?"Video Length (longer=better)"+(durMin?" ("+durMin+")":""):"Video Length"+(durMin?" ("+durMin+")":""),ls,getLengthTip(ls,v.durationSecs));
   html+="</div>";
+  // AI Generation section
+  html+="<div style=\'background:linear-gradient(135deg,#EEF2FF,#F5F3FF);border:1.5px solid #C4B5FD;border-radius:var(--r-sm);padding:14px;margin-bottom:16px\'>";
+  html+="<div style=\'display:flex;align-items:center;gap:8px;margin-bottom:10px\'>";
+  html+="<span style=\'font-size:14px\'>✨</span>";
+  html+="<span style=\'font-size:13px;font-weight:700;color:#5B21B6\'>AI-Powered Suggestions</span>";
+  html+="<span style=\'font-size:11px;color:#7C3AED;background:#EDE9FE;padding:2px 8px;border-radius:999px\'>~$0.001 per generation</span>";
+  html+="</div>";
+  html+="<div style=\'display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px\'>";
+  html+="<input type=\'text\' id=\'targetKeyword-"+id+"\'  placeholder=\'Target keyword (optional) e.g. row row row your boat\' style=\'flex:1;min-width:160px;padding:7px 12px;border:1.5px solid #C4B5FD;border-radius:var(--r-sm);font-size:12px;background:white\'/>";
+  html+="</div>";
+  html+="<button class=\'btn btn-sm\' id=\'aiGenBtn-"+id+"\' style=\'background:linear-gradient(135deg,#7C3AED,#5B21B6);color:white;width:100%;justify-content:center\'>✨ Generate AI Suggestions</button>";
+  html+="<div id=\'aiGenStatus-"+id+"\' style=\'margin-top:8px;font-size:12px;color:#5B21B6;display:none\'></div>";
+  html+="</div>";
+
   var isAlreadyA=v.overall>=85;
   if(isAlreadyA){
     html+="<div class='how-to-a'><h4>This video is already scoring an A! Great work!</h4></div>";
@@ -2048,7 +2069,15 @@ function isShortPlaylist(playlistTitle){
 
 function loadPlaylistsForVideo(videoId){
   var container=document.getElementById("plChips-"+videoId);if(!container)return;
-  if(!playlists.length){container.innerHTML="<span style='font-size:13px;color:var(--gray-400)'>No playlists found</span>";return;}
+  if(!playlists.length){
+    var isHH2=getConfig().audience!=="kids";
+    if(isHH2){
+      container.innerHTML="<div style='font-size:12px;color:var(--gray-500)'><div style='font-weight:700;margin-bottom:6px'>No playlists yet. Suggested playlists to create:</div><div style='display:flex;flex-wrap:wrap;gap:4px'>"+"Lofi Beats to Study and Focus,Sleep Music and Relaxing Sounds,Rain and Storm Ambience,Nature Sounds for Focus,Cozy Coffee Shop Vibes,Dark Academia Study Music,1 Hour Chill Beats,Peaceful Piano and Jazz,Fall and Winter Lofi,Deep Sleep Sounds".split(",").map(function(p){return "<span style='background:#3D2A5A;color:#E9D5FF;padding:3px 8px;border-radius:999px;font-size:11px;margin:2px'>+"+p+"</span>";}).join("")+"</div></div>";
+    } else {
+      container.innerHTML="<span style='font-size:13px;color:var(--gray-400)'>No playlists found -- connect YouTube to see playlists</span>";
+    }
+    return;
+  }
   var video=allVideos.find(function(v){return v.id===videoId;}),titleLow=video?video.title.toLowerCase():"";
   var isShort=isShortVideo(videoId);
   // Filter out shorts playlists for non-short videos and vice versa
@@ -2396,22 +2425,17 @@ function generateNewVideoMeta(){
     var proceed=confirm("⚠️ Content Warning: This topic may not be appropriate for a kids YouTube channel. YouTube Kids has strict content guidelines and videos with this content could be removed or demonetized. Are you sure you want to continue?");
     if(!proceed)return;
   }
-  var title,desc,tags,thumbP,cat;
-  if(getConfig().audience!=="kids"){
-    var dur=document.getElementById("newVideoDuration")?document.getElementById("newVideoDuration").value:"1hr";
-    var durLabel={"30min":"30 Minutes","1hr":"1 Hour","2hr":"2 Hours","3hr":"3 Hours","8hr":"8 Hours"}[dur]||"1 Hour";
-    title=generateHHTitle(topic+" "+durLabel);
-    desc=generateHHDesc(title,topic);
-    tags=generateHHTags(title,topic);
-    thumbP=generateHHThumbPrompt(title);
-    cat={id:"10",name:"Music"};
-  } else {
-    title=buildStrongKidsTitle(topic,ageGroup);
-    desc=buildStrongDescription(topic,title,ageGroup);
-    tags=buildStrongTags(topic,title);
-    thumbP=buildThumbPrompt(topic,title,ageGroup);
-    cat=getCategoryForTopic(topic);
+  // Use AI generation - show status div
+  var statusDiv=document.getElementById("newVideoAIStatus");
+  if(!statusDiv){
+    var sd=document.createElement("div");
+    sd.id="newVideoAIStatus";
+    sd.style.cssText="margin-bottom:12px;font-size:13px;color:var(--purple)";
+    var btn=document.getElementById("newVideoBtn");
+    if(btn&&btn.parentNode)btn.parentNode.insertBefore(sd,btn.nextSibling);
   }
+  generateNewVideoMetaAI(topic,ageGroup);
+  return; // AI function handles the rest
   document.getElementById("newTitle").value=title;
   document.getElementById("newTitleCount").textContent=title.length+"/60 characters";
   document.getElementById("newTitleCount").style.color=title.length>60?"var(--red)":"var(--gray-400)";
@@ -2851,6 +2875,171 @@ function renderSEOBrief(text,isHH){
   }
   el.innerHTML=html;
   localStorage.setItem("seoBrief_"+new Date().toISOString().slice(0,10),JSON.stringify({text:text,channel:isHH?"HH":"LLN",timestamp:Date.now()}));
+}
+
+
+// ============================================================
+// AI-POWERED SUGGESTION ENGINE
+// ============================================================
+
+async function generateAISuggestions(videoId, targetKeyword){
+  var v=allVideos.find(function(x){return x.id===videoId;});
+  if(!v)return;
+  
+  var statusEl=document.getElementById("aiGenStatus-"+videoId);
+  var btnEl=document.getElementById("aiGenBtn-"+videoId);
+  if(statusEl){statusEl.style.display="block";statusEl.textContent="✨ Claude is analyzing your video...";}
+  if(btnEl){btnEl.disabled=true;btnEl.textContent="Generating...";}
+  
+  var isHH=getConfig().audience!=="kids";
+  var channelContext=isHH?
+    "The Hush Hour is a lofi/ambient music channel. Target audience: students, WFH adults, people who need sleep/focus/relaxation music. Content: lofi beats, rain sounds, nature ambience, study music, sleep music. Videos are typically 1-2+ hours long." :
+    "Little Learners Network is a kids educational YouTube channel. Target audience: parents of toddlers and preschoolers ages 0-8. Content: culturally diverse, multicultural, social-emotional learning, alphabet, counting, colors, world cultures, holidays, Black history, Latino culture, Asian culture, nature, STEM, health. Channel values: diversity, representation, inclusion.";
+  
+  var thumbContext=isHH?
+    "Thumbnail: dark cozy atmospheric scene -- rainy window, warm lamp, cozy desk. Cinematic, moody. NO cartoon characters. One mood word in large minimal text. Duration in corner." :
+    "Thumbnail: always feature a Black or Latino child as the main character. If multiple characters, add one more diverse child. High quality modern cartoon style. Bright bold colors. Maximum saturation. Large readable text overlay.";
+  
+  var keywordContext=targetKeyword?("\n\nTARGET KEYWORD the creator wants to rank for: "+targetKeyword):"";
+  
+  var prompt="You are a YouTube SEO expert specializing in "+( isHH?"ambient/lofi music channels":"kids educational content")+".\n\n"+
+    "CHANNEL: "+channelContext+"\n\n"+
+    "VIDEO TITLE: "+v.title+"\n\n"+
+    "FULL DESCRIPTION:\n"+(v.description||"No description yet")+"\n\n"+
+    keywordContext+"\n\n"+
+    "Based on the title and full description above, generate optimized YouTube metadata for this specific video.\n\n"+
+    "REQUIREMENTS:\n"+
+    (isHH?
+      "- Title: 45-70 chars, include a mood keyword (lofi/chill/study/sleep/rain/ambient) and duration (1 Hour/2 Hours). Never change the core subject.\n- Description: Start with a compelling hook about the mood/use case. Include timestamps every 20-30 mins. Mention no copyright. 200+ chars.\n- Tags: 15 multi-word phrases specific to THIS video's audio type and mood. No single words.\n- Hashtags: 10 relevant ambient/lofi hashtags.":
+      "- Title: 30-60 chars, include a kids keyword (Kids/Toddlers/Preschoolers/etc). Start with an action word or the subject. Never completely replace the video subject.\n- Description: Start with a compelling hook that speaks to parents about WHY this matters for their child. Be specific to this exact video topic. 300+ chars. Include Subscribe CTA. Include 10+ relevant hashtags at the end.\n- Tags: 15 multi-word phrases specific to THIS video topic. No single words, no hashtags.\n- Thumbnail: Specific scene description for this exact video topic.")+"\n\n"+
+    thumbContext+"\n\n"+
+    "CRITICAL: Generate content specific to THIS video. Do not use generic templates. Read the description carefully and understand what this video is actually about.\n\n"+
+    "Respond ONLY with valid JSON in this exact format, no markdown, no explanation:\n"+
+    "{\"title\":\"...\",\"description\":\"...\",\"tags\":[\"tag1\",\"tag2\"],\"thumbnailPrompt\":\"...\"}";
+  
+  try{
+    var response=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        model:"claude-sonnet-4-20250514",
+        max_tokens:1500,
+        messages:[{role:"user",content:prompt}]
+      })
+    });
+    
+    var data=await response.json();
+    if(data.error)throw new Error(data.error.message||"API error");
+    
+    var text=data.content.filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("").trim();
+    // Strip any markdown code fences
+    text=text.replace(/^```json\s*/,"").replace(/^```\s*/,"").replace(/\s*```$/,"").trim();
+    
+    var result=JSON.parse(text);
+    
+    // Apply results to the edit fields
+    if(result.title){
+      var titleEl=document.getElementById("editTitle-"+videoId);
+      var titleWrap=document.getElementById("titleEditWrap-"+videoId);
+      // Unlock if locked
+      if(titleWrap)titleWrap.style.display="block";
+      if(titleEl)titleEl.value=result.title;
+      var unlk=document.getElementById("unlockTitle-"+videoId);
+      if(unlk)unlk.textContent="🔓 AI Updated";
+    }
+    if(result.description){
+      var descEl=document.getElementById("editDesc-"+videoId);
+      if(descEl)descEl.value=result.description;
+    }
+    if(result.tags&&result.tags.length){
+      var tagsEl=document.getElementById("editTags-"+videoId);
+      if(tagsEl)tagsEl.value=result.tags.join(", ");
+    }
+    if(result.thumbnailPrompt){
+      var thumbEl=document.getElementById("thumbPrompt-"+videoId);
+      if(thumbEl)thumbEl.textContent=result.thumbnailPrompt;
+    }
+    
+    if(statusEl){
+      statusEl.style.cssText="display:block;font-size:12px;color:#059669;font-weight:600;background:#DCFCE7;padding:8px 10px;border-radius:6px;margin-top:6px";
+      statusEl.textContent="AI suggestions applied! Review and edit above, then push to YouTube when ready.";
+    }
+    if(btnEl){btnEl.disabled=false;btnEl.textContent="✨ Regenerate AI Suggestions";}
+    
+  }catch(e){
+    if(statusEl){
+      statusEl.style.cssText="display:block;font-size:12px;color:#DC2626;background:#FEE2E2;padding:8px 10px;border-radius:6px;margin-top:6px";
+      statusEl.textContent="Error: "+esc(e.message)+". Check your connection and try again.";
+    }
+    if(btnEl){btnEl.disabled=false;btnEl.textContent="✨ Generate AI Suggestions";}
+  }
+}
+
+// AI generation for New Video tab
+async function generateNewVideoMetaAI(topic, ageGroup){
+  var isHH=getConfig().audience!=="kids";
+  var statusEl=document.getElementById("newVideoAIStatus");
+  var btnEl=document.getElementById("newVideoBtn");
+  
+  if(statusEl){statusEl.style.display="block";statusEl.innerHTML="<div class='spinner-sm' style='display:inline-block;margin-right:8px'></div>Claude is generating your metadata...";}
+  if(btnEl){btnEl.disabled=true;btnEl.textContent="Generating...";}
+  
+  var channelContext=isHH?
+    "The Hush Hour is a lofi/ambient music channel. Target audience: students, WFH adults, sleep/focus/relaxation seekers. Videos are typically 1-3 hours long. No copyright music only.":
+    "Little Learners Network is a kids educational YouTube channel. Culturally diverse content for ages 0-8. Values diversity, representation, and inclusion. Black and Latino representation always featured in thumbnails.";
+  
+  var dur=document.getElementById("newVideoDuration")?document.getElementById("newVideoDuration").value:"1hr";
+  var durLabel={"30min":"30 Minutes","1hr":"1 Hour","2hr":"2 Hours","3hr":"3 Hours","8hr":"8 Hours"}[dur]||"1 Hour";
+  
+  var prompt="You are a YouTube SEO expert. Generate optimized metadata for a new "+( isHH?"ambient/lofi":"kids educational")+" YouTube video.\n\n"+
+    "CHANNEL: "+channelContext+"\n\n"+
+    "VIDEO TOPIC: "+topic+"\n"+
+    (isHH?"TARGET DURATION: "+durLabel+"\n":"")+
+    (ageGroup&&!isHH?"TARGET AGE GROUP: "+ageGroup+"\n":"")+"\n"+
+    "Generate YouTube metadata optimized for search and clicks.\n\n"+
+    "REQUIREMENTS:\n"+
+    (isHH?
+      "- Title: 45-70 chars, include mood keyword and "+durLabel+" duration\n- Description: Compelling mood hook, timestamps, no copyright mention, subscribe CTA, hashtags\n- Tags: 15 specific multi-word phrases for this audio type":
+      "- Title: 30-60 chars, kids keyword required, action verb start\n- Description: Parent-focused hook explaining WHY this matters, specific to topic, 300+ chars, CTAs, 10+ hashtags\n- Tags: 15 specific multi-word phrases for this topic\n- Thumbnail: Scene with Black or Latino child as main character")+"\n\n"+
+    "Respond ONLY with valid JSON, no markdown:\n"+
+    "{\"title\":\"...\",\"description\":\"...\",\"tags\":[],\"thumbnailPrompt\":\"...\",\"category\":\"Education\"}";
+  
+  try{
+    var response=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        model:"claude-sonnet-4-20250514",
+        max_tokens:1500,
+        messages:[{role:"user",content:prompt}]
+      })
+    });
+    
+    var data=await response.json();
+    if(data.error)throw new Error(data.error.message||"API error");
+    
+    var text=data.content.filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("").trim();
+    text=text.replace(/^```json\s*/,"").replace(/^```\s*/,"").replace(/\s*```$/,"").trim();
+    
+    var result=JSON.parse(text);
+    
+    if(result.title){document.getElementById("newTitle").value=result.title;document.getElementById("newTitleCount").textContent=result.title.length+"/60 characters";document.getElementById("newTitleCount").style.color=result.title.length>60?"var(--red)":"var(--gray-400)";}
+    if(result.description)document.getElementById("newDesc").value=result.description;
+    if(result.tags)document.getElementById("newTags").value=result.tags.join(", ");
+    if(result.thumbnailPrompt)document.getElementById("newThumbPrompt").textContent=result.thumbnailPrompt;
+    if(result.category)document.getElementById("newCategory").value=result.category;
+    
+    document.getElementById("newVideoResult").style.display="block";
+    loadNewVideoPlaylists();
+    document.getElementById("newVideoResult").scrollIntoView({behavior:"smooth"});
+    
+    if(statusEl){statusEl.style.display="none";}
+    if(btnEl){btnEl.disabled=false;btnEl.textContent="✨ Regenerate with AI";}
+    
+  }catch(e){
+    if(statusEl){statusEl.innerHTML="<div class='alert alert-danger'>Error: "+esc(e.message)+"</div>";}
+    if(btnEl){btnEl.disabled=false;btnEl.textContent="✨ Generate Metadata";}
+  }
 }
 
 function exportCSV(){if(!pushHistory.length){alert("No history to export yet.");return;}var rows=[["Date","Video ID","Old Title","New Title","Old Grade","New Grade","Old Score","New Score"]];pushHistory.forEach(function(h){rows.push([h.date,h.videoId,h.oldTitle,h.newTitle,h.oldGrade,h.newGrade,h.oldScore,h.newScore]);});var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c||"").replace(/"/g,'""')+'"';}).join(",");}).join("\n");var a=document.createElement("a");a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);a.download="youtube-push-history.csv";a.click();}
