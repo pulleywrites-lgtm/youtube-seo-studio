@@ -260,11 +260,20 @@ textarea{resize:vertical}
 </div>
 <div id="tabVideos">
 <div class="stats-row">
-<div class="stat-card"><div class="stat-num" id="statTotal" style="color:var(--blue)">--</div><div class="stat-label">Total Videos</div></div>
-<div class="stat-card"><div class="stat-num" id="statA" style="color:#15803D">--</div><div class="stat-label">Grade A</div></div>
-<div class="stat-card"><div class="stat-num" id="statB" style="color:var(--blue)">--</div><div class="stat-label">Grade B</div></div>
-<div class="stat-card"><div class="stat-num" id="statNeedsWork" style="color:var(--orange)">--</div><div class="stat-label">Need Work</div></div>
+<div class="stat-card" id="statCardAll" style="cursor:pointer" title="Show all videos"><div class="stat-num" id="statTotal" style="color:var(--blue)">--</div><div class="stat-label">Total Videos</div></div>
+<div class="stat-card" id="statCardA" style="cursor:pointer" title="Filter Grade A videos"><div class="stat-num" id="statA" style="color:#15803D">--</div><div class="stat-label">Grade A ⭐</div></div>
+<div class="stat-card" id="statCardB" style="cursor:pointer" title="Filter Grade B videos"><div class="stat-num" id="statB" style="color:var(--blue)">--</div><div class="stat-label">Grade B 👍</div></div>
+<div class="stat-card" id="statCardNeedsWork" style="cursor:pointer" title="Filter Needs Work videos"><div class="stat-num" id="statNeedsWork" style="color:var(--orange)">--</div><div class="stat-label">Need Work ⚠️</div></div>
 <div class="stat-card"><div class="stat-num" id="statPushed" style="color:var(--purple)">--</div><div class="stat-label">Pushed Today</div></div>
+</div>
+<div id="activeFilterBar" style="display:none;margin-bottom:12px;display:none">
+<div class="alert alert-info" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+<span id="activeFilterLabel">Showing filtered videos</span>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button class="btn btn-primary btn-sm" id="bulkFilteredBtn" style="background:var(--purple)">⚡ Bulk Update This Group</button>
+<button class="btn btn-ghost btn-sm" id="clearFilterBtn">✕ Show All Videos</button>
+</div>
+</div>
 </div>
 <div class="table-toolbar">
 <h2>Your Videos</h2>
@@ -279,9 +288,7 @@ textarea{resize:vertical}
 <button class="btn btn-ghost btn-sm" id="refreshBtn">Refresh View (Free)</button>
 <button class="btn btn-red btn-sm" id="syncBtn">Sync from YouTube</button>
 <button class="btn btn-primary btn-sm" id="bulkUpdateBtn" style="background:var(--purple)">⚡ Bulk Update All Videos</button>
-<button class="btn btn-ghost btn-sm" id="filterNeedsWork" style="border:1.5px solid var(--orange);color:var(--orange)">⚠️ Needs Work Only</button>
 <button class="btn btn-ghost btn-sm" id="filterQuickWin" style="border:1.5px solid var(--green);color:var(--green)">🎯 Quick Wins</button>
-<button class="btn btn-ghost btn-sm" id="filterAll" style="display:none">✕ Show All</button>
 </div>
 <div id="syncAlert" style="margin-bottom:12px"></div>
 <div class="table-wrap">
@@ -508,20 +515,16 @@ window.addEventListener("DOMContentLoaded",function(){
   document.getElementById("loadTipsBtn").addEventListener("click",loadSeoTips);
   document.getElementById("rotateTipsBtn").addEventListener("click",loadSeoTips);
   document.getElementById("bulkUpdateBtn").addEventListener("click",openBulkModal);
-  document.getElementById("filterNeedsWork").addEventListener("click",function(){
-    filterVideos(["C","D","F"]);
-    document.getElementById("filterAll").style.display="inline-flex";
-    document.getElementById("bulkUpdateBtn").textContent="⚡ Bulk Update Needs Work";
-  });
-  document.getElementById("filterQuickWin").addEventListener("click",function(){
-    filterQuickWins();
-    document.getElementById("filterAll").style.display="inline-flex";
-  });
-  document.getElementById("filterAll").addEventListener("click",function(){
-    document.getElementById("filterAll").style.display="none";
-    document.getElementById("bulkUpdateBtn").textContent="⚡ Bulk Update All Videos";
-    sortAndRender();
-  });
+  // Quick wins filter button
+  document.getElementById("filterQuickWin").addEventListener("click",function(){filterQuickWins("Quick Wins -- one fix from an A!");});
+  // Stat card filters
+  document.getElementById("statCardAll").addEventListener("click",function(){clearFilter();});
+  document.getElementById("statCardA").addEventListener("click",function(){filterVideos(["A"],"Grade A Videos");});
+  document.getElementById("statCardB").addEventListener("click",function(){filterVideos(["B"],"Grade B Videos");});
+  document.getElementById("statCardNeedsWork").addEventListener("click",function(){filterVideos(["C","D","F"],"Videos Needing Work (C, D, F)");});
+  // Bulk filtered and clear
+  document.getElementById("bulkFilteredBtn").addEventListener("click",function(){openBulkModal(true);});
+  document.getElementById("clearFilterBtn").addEventListener("click",clearFilter);
   document.getElementById("bulkCancelBtn").addEventListener("click",function(){document.getElementById("bulkModal").classList.remove("open");});
   document.getElementById("bulkProceedBtn").addEventListener("click",startBulkUpdate);
   document.getElementById("bulkDoneBtn").addEventListener("click",function(){document.getElementById("bulkProgressModal").classList.remove("open");});
@@ -665,10 +668,11 @@ async function doSync(){
     }
     allVideos=details.map(function(v){
       var s=v.snippet||{},tags=s.tags||[],privacy=(v.status&&v.status.privacyStatus)||"public";
-      var dur=(v.contentDetails&&(v.contentDetails.duration||v.contentDetails.contentDetails&&v.contentDetails.contentDetails.duration))||"";
+      var cdObj=v.contentDetails||null;
+      var dur=(cdObj&&cdObj.duration)||""; // e.g. PT4M30S
       var durationSecs=parseDuration(dur);
       var ts=scoreTitle(s.title||""),ds=scoreDesc(s.description||""),tagsS=scoreTags(tags);
-      var ls=scoreLengthForKids(durationSecs);
+      var ls=durationSecs>0?scoreLengthForKids(durationSecs):50; // 50=neutral if unknown
       var overall=Math.round((ts*0.35)+(ds*0.25)+(tagsS*0.25)+(ls*0.15));
       return {id:v.id,title:s.title||"",description:s.description||"",tags:tags,thumbUrl:s.thumbnails&&s.thumbnails.medium?s.thumbnails.medium.url:"",publishedAt:s.publishedAt||"",categoryId:s.categoryId||"27",privacy:privacy,titleScore:ts,descScore:ds,tagsScore:tagsS,lengthScore:ls,durationSecs:durationSecs,overall:overall,grade:scoreToGrade(overall)};
     });
@@ -779,8 +783,8 @@ function getDescTip(s,desc){
 }
 function getLengthTip(s,secs){
   if(s>=85)return "Perfect length for kids YouTube!";
-  var mins=secs?Math.round(secs/60):0;
-  if(!secs)return "Length unknown -- add contentDetails to sync";
+  if(!secs||secs===0)return "Sync again to get video length data -- click Sync from YouTube";
+  var mins=Math.round(secs/60);
   if(mins<2)return "Too short ("+mins+"min) -- aim for 4-8 minutes for best watch time";
   if(mins>=2&&mins<4)return "A bit short ("+mins+"min) -- 4-8 minutes is the sweet spot for kids YouTube";
   if(mins>12&&mins<=20)return "Getting long ("+mins+"min) -- kids engagement drops after 8-10 minutes";
@@ -811,7 +815,15 @@ function howToGetA(v){
 var STOP=new Set(["for","the","a","an","and","or","but","in","on","at","to","of","is","it","with","this","that","are","was","be","by","as","up","do","so","we","they","what","when","how","why","who","not","all","can","will","from","about","than","then","like","have","has","get","go","too","also","more","some","any","out","off","see","been","their","its","me","my","our","your","his","her","us","them"]);
 
 function analyzeVideoTopic(title,desc){
-  var t=(title||"").toLowerCase(),d=(desc||"").toLowerCase(),combined=t+" "+d;
+  // Check for manual topic override
+  var overrideMatch=(desc||"").match(/TOPIC_OVERRIDE:(\w+)/);
+  if(overrideMatch){
+    var ov=overrideMatch[1];
+    var fakeTopic={primary:ov,topics:{},ageGroup:"all-kids",theme:null,titleLow:(title||"").toLowerCase(),descLow:(desc||"").toLowerCase()};
+    fakeTopic.topics[ov]=true;
+    return fakeTopic;
+  }
+  var t=(title||"").toLowerCase(),d=(desc||"").toLowerCase().replace(/TOPIC_OVERRIDE:\w+/g,""),combined=t+" "+d;
   var topics={
     breathing:/breath|breathe|breathing|calm|relax|mindful|meditation|yoga|inhale|exhale|belly breath/.test(combined),
     affirmations:/affirmation|positive thinking|self.esteem|confidence|believe|i am|mantra|self.love/.test(combined),
@@ -839,10 +851,21 @@ function analyzeVideoTopic(title,desc){
     community:/helper|police|doctor|firefighter|teacher|nurse|community/.test(combined),
     seasons:/spring|summer|fall|autumn|winter|season/.test(combined),
     worldCultures:/culture|world|carnival|kwanzaa|diwali|hanami|lunar|chinese new year|hanukkah|eid|ramadan|celebration|tradition|festival|around the world|multicultural|diverse|heritage/.test(combined),
-    geography:/country|continent|africa|asia|europe|america|australia|ocean|map|globe|flag/.test(combined)
+    geography:/country|continent|africa|asia|europe|america|australia|ocean|map|globe|flag/.test(combined),
+    blackHistory:/black history|african american|martin luther king|rosa parks|harriet tubman|civil rights|juneteenth|black excellence|black heroes|black culture|slavery|freedom/.test(combined),
+    sports:/sport|athlete|basketball|football|soccer|baseball|tennis|swim|run|jump|olympic|champion|team|game|play ball|throw|catch|kick|score|goal/.test(combined),
+    adventure:/adventure|explore|discover|mystery|quest|journey|travel|treasure|map|clue|solve|detective|secret|hidden|search|find|mission/.test(combined),
+    history:/history|ancient|egypt|roman|greek|medieval|dinosaur|prehistoric|past|long ago|historical|pharaoh|pyramid|castle|knight|viking/.test(combined),
+    reading:/read|book|story|tale|character|plot|comprehension|phonics|decode|fluency|vocabulary|word|sentence|paragraph|chapter/.test(combined),
+    math:/math|add|subtract|multiply|divide|fraction|shape|geometry|pattern|sort|measure|greater|less|equal|equation/.test(combined),
+    art:/art|draw|paint|color|craft|create|design|sculpt|clay|collage|sketch|imagination|creative/.test(combined),
+    cooking:/cook|bake|recipe|food|kitchen|ingredient|mix|stir|measure|healthy|meal|snack|fruit|vegetable/.test(combined),
+    family:/family|mom|dad|sister|brother|grandma|grandpa|parent|baby|sibling|home|house|love|hug|together/.test(combined),
+    fantasy:/magic|wizard|dragon|fairy|unicorn|princess|prince|kingdom|spell|enchant|fantasy|imagine|pretend/.test(combined),
+    diversity:/diverse|inclusion|different|same|unique|culture|identity|skin|hair|family|belong|accept|celebrate|proud/.test(combined)
   };
   // Priority order matters - check most specific first
-  var priority=["halloween","christmas","easter","thanksgiving","breathing","affirmations","worldCultures","geography","counting","colors","alphabet","shapes","bodyParts","bedtime","hygiene","emotions","socialSkills","animals","food","music","sentences","science","movement","community","seasons","paris","italy","general"];
+  var priority=["halloween","christmas","easter","thanksgiving","breathing","affirmations","blackHistory","sports","adventure","history","worldCultures","geography","diversity","fantasy","art","cooking","family","reading","math","counting","colors","alphabet","shapes","bodyParts","bedtime","hygiene","emotions","socialSkills","animals","food","music","sentences","science","movement","community","seasons","paris","italy","general"];
   var primary=priority.find(function(k){return topics[k];})||"general";
   var ageGroup=/toddler|babies|baby|infant/.test(combined)?"toddlers":/preschool|pre-k/.test(combined)?"preschool":/elementary|grade|school age/.test(combined)?"early-kids":"all-kids";
   var theme=topics.paris?"paris":topics.italy?"italy":topics.halloween?"halloween":topics.christmas?"christmas":null;
@@ -854,59 +877,94 @@ function generateSuggestedTitle(title,description){
   var t=title.trim().replace(/^"+|"+$/g,"").trim();
   var tL=t.toLowerCase();
   var info=analyzeVideoTopic(t,description||"");
-  var age=tL.indexOf("preschool")>-1?"Preschoolers":tL.indexOf("toddler")>-1?"Toddlers":tL.indexOf("baby")>-1||tL.indexOf("babies")>-1?"Babies":"Kids";
+  var p=info.primary;
+
+  // Detect age from full title
+  var age=tL.indexOf("preschool")>-1?"Preschoolers":
+          tL.indexOf("toddler")>-1?"Toddlers":
+          tL.indexOf("baby")>-1||tL.indexOf("babies")>-1?"Babies":"Kids";
+
   var hasKidsKw=scoreChannelKeywords(t)===100;
   var goodLength=t.length>=30&&t.length<=60;
-  var hasHook=/^(learn|sing|meet|explore|discover|count|build|move|breathe|feel|be|let|join|welcome|get|watch|play)/i.test(t);
+  var hasHook=/^(learn|sing|meet|explore|discover|count|build|move|breathe|feel|let|join|get|watch|play|black|time|spot|happy|bongo|fun|celebrate|dance|create)/i.test(t);
 
-  // If already great, return as-is or minor trim
+  // If already solid - just return it (maybe with small cleanup)
   if(hasKidsKw&&goodLength&&hasHook){
-    return t.length>60?t.substring(0,60):t;
+    return t;
   }
 
-  // Extract CORE SUBJECT - preserve what the video is actually about
-  var core=t
-    .replace(/\s*[|:]\s*.*/g,"")
-    .replace(/\s*-\s*fun kids.*$/i,"")
-    .replace(/\s*for kids.*$/i,"")
-    .replace(/\s*for toddlers.*$/i,"")
-    .replace(/\s*for children.*$/i,"")
-    .replace(/\s*for babies.*$/i,"")
-    .replace(/\s*for preschoolers.*$/i,"")
-    .trim();
+  // SMART pipe handling - don't just strip, intelligently combine
+  var pipeParts=t.split(/\s*[|]\s*/);
+  var mainPart=pipeParts[0].trim();
+  var subPart=pipeParts.length>1?pipeParts[1].trim():"";
 
-  // Pick emoji based on detected topic
-  var p=info.primary;
-  var emojiMap={breathing:"",affirmations:"",emotions:"",socialSkills:"",counting:"",colors:"",alphabet:"",shapes:"",animals:"",bodyParts:"",food:"",music:"",sentences:"",science:"",movement:"",halloween:"",christmas:"",easter:"",thanksgiving:"",paris:"",italy:"",bedtime:"",hygiene:"",community:"",seasons:"",worldCultures:"",geography:"",general:""};
-  // Use text emoji fallbacks to avoid encoding issues
-  var emojiText={breathing:"(Calm Down!)",affirmations:"(You Are Amazing!)",emotions:"(Feelings!)",socialSkills:"(Friends!)",counting:"(Count with Me!)",colors:"(Rainbow!)",alphabet:"(ABCs!)",shapes:"(Shapes!)",animals:"(Animals!)",bodyParts:"(Body Parts!)",food:"(Yummy!)",music:"(Music!)",sentences:"(ELA!)",science:"(Science!)",movement:"(Move!)",halloween:"(Halloween!)",christmas:"(Christmas!)",easter:"(Easter!)",thanksgiving:"(Thanksgiving!)",paris:"(Paris!)",italy:"(Italy!)",bedtime:"(Bedtime!)",hygiene:"(Hygiene!)",community:"(Helpers!)",seasons:"(Seasons!)",worldCultures:"(World!)",geography:"(Geography!)",general:""};
-
+  // Build improved title based on what we have
   var improved="";
 
-  if(!hasKidsKw){
-    // Add kids keyword - preserve core subject
-    if(core.length<=45){
-      improved=core+" for "+age+"!";
+  if(t.length>60){
+    // Need to shorten - keep the most meaningful part
+    // If pipe separated, take first part + topic keyword
+    if(subPart.length>0){
+      // Try: mainPart for age if short enough
+      var candidate=mainPart+(hasKidsKw?"":" for "+age);
+      if(candidate.length<=60){
+        improved=candidate;
+      } else {
+        // Trim mainPart at word boundary
+        var words=mainPart.split(" ");
+        var trimmed="";
+        for(var wi=0;wi<words.length;wi++){
+          var test=trimmed+(trimmed?" ":"")+words[wi];
+          if(test.length>(hasKidsKw?58:52))break;
+          trimmed=test;
+        }
+        improved=trimmed+(hasKidsKw?"":" for "+age);
+      }
     } else {
-      improved=core.substring(0,48)+" for "+age;
+      // No pipe - trim at word boundary
+      var wordArr=t.split(" ");
+      var built="";
+      var maxLen=hasKidsKw?58:52;
+      for(var wj=0;wj<wordArr.length;wj++){
+        var testStr=built+(built?" ":"")+wordArr[wj];
+        if(testStr.length>maxLen)break;
+        built=testStr;
+      }
+      improved=built+(hasKidsKw?"":" for "+age);
     }
-  } else if(!goodLength&&t.length>60){
-    // Too long - trim but keep core subject
-    improved=core;
-    if(!hasKidsKw)improved+=" for "+age;
+  } else if(!hasKidsKw){
+    // Add kids keyword
+    if(t.length<=50){
+      improved=t+" for "+age;
+    } else {
+      // Trim to make room
+      var w2=t.split(" ");
+      var b2="";
+      for(var k=0;k<w2.length;k++){
+        if((b2+(b2?" ":"")+w2[k]).length>50)break;
+        b2+=( b2?" ":"")+w2[k];
+      }
+      improved=b2+" for "+age;
+    }
   } else if(!hasHook){
-    // Has kids kw but needs hook - just add a !
-    improved=core.indexOf("!")>-1?core:core+"!";
-    if(!hasKidsKw)improved+=" for "+age;
+    // Has kids kw but needs energy - just ensure it ends with !
+    improved=t.replace(/[!?]*$/,"")+"!";
   } else {
     improved=t;
   }
 
-  // Clean up
-  if(improved.length>60)improved=improved.replace(" and Toddlers","").replace("Preschoolers","Kids");
-  if(improved.length>60)improved=improved.substring(0,60);
-  improved=improved.replace(/\.\.$/,"").replace(/\s+/g," ").trim();
+  // Final cleanup - trim at word boundary if still too long
+  if(improved.length>60){
+    var finalWords=improved.split(" ");
+    var final="";
+    for(var fi=0;fi<finalWords.length;fi++){
+      if((final+(final?" ":"")+finalWords[fi]).length>60)break;
+      final+=(final?" ":"")+finalWords[fi];
+    }
+    improved=final;
+  }
 
+  improved=improved.replace(/\s+/g," ").trim();
   return improved;
 }
 
@@ -947,6 +1005,14 @@ function generateSuggestedDesc(title,existingDesc){
     geography:"The world is an amazing place -- and your little explorer is about to discover it! This fun video introduces countries, continents, and the incredible diversity of our planet in a totally age-appropriate way.",
     community:"The people who keep our communities safe and running are real-life heroes -- and this video helps little ones understand and appreciate them! Building community awareness is one of the most important early lessons.",
     hygiene:"Good hygiene habits built early last a lifetime! This fun video makes washing hands, brushing teeth, and staying clean feel like an adventure rather than a chore -- parents everywhere will thank you.",
+    blackHistory:"Black history is AMERICAN history -- and this video brings it to life for little ones in the most powerful, age-appropriate way! Celebrating the extraordinary achievements of Black leaders, athletes, artists, and everyday heroes who changed our world.",
+    sports:"Get ready to cheer! This fun video introduces little ones to the exciting world of sports and athletics -- building a love of movement, teamwork, and healthy competition that will serve them for life.",
+    adventure:"Adventure awaits! This exciting video takes little ones on a journey of discovery and exploration -- building curiosity, critical thinking, and a love of learning that goes way beyond the classroom.",
+    history:"History is the greatest story ever told -- and this video makes it accessible, exciting, and totally age-appropriate for little learners! Bringing the past to life in vivid, engaging detail.",
+    reading:"Reading opens every door -- and this video makes the journey to literacy fun, engaging, and something your child will actually WANT to do! Building the foundational skills that lead to a lifelong love of books.",
+    math:"Math is everywhere -- and this video proves it! Turning numbers, patterns, and mathematical thinking into an adventure that little ones will actually enjoy.",
+    art:"Creativity is one of the most important skills we can nurture in little ones -- and this video lets their imagination RUN WILD! Art, color, and creation at their finest.",
+    diversity:"Every child deserves to see themselves reflected in what they watch -- and to learn that our differences are our greatest strength. This warm, joyful video celebrates what makes each of us unique and special.",
     general:"This video is all about "+subject+" -- and we have made it as fun, colorful, and engaging as possible for little learners! Whether your child is a toddler, preschooler, or early elementary student, they will find something to love here."
   };
   
@@ -965,6 +1031,14 @@ function generateSuggestedDesc(title,existingDesc){
     movement:"- Fun, age-appropriate exercises for little bodies\n- Coordination, balance, and gross motor skill development\n- That staying active is one of the most fun things you can do",
     worldCultures:"- Beautiful traditions and celebrations from cultures around the globe\n- That our differences make the world a richer, more exciting place\n- Key vocabulary for talking about other cultures with curiosity and respect",
     geography:"- The names and locations of continents and countries\n- Fascinating facts about different parts of our amazing world\n- That every culture has something incredible to teach us",
+    blackHistory:"- The incredible stories of Black heroes who changed history\n- Why representation and celebrating achievements matters for every child\n- Age-appropriate history that builds pride, empathy, and understanding",
+    sports:"- The basics of different sports and how they are played\n- The values of teamwork, perseverance, and sportsmanship\n- That movement and athletics are for EVERYONE",
+    adventure:"- Problem-solving and critical thinking through exciting challenges\n- That curiosity and courage lead to amazing discoveries\n- Key vocabulary and concepts wrapped in an engaging narrative",
+    history:"- Key historical events and figures made age-appropriate\n- That the past shaped the world we live in today\n- Historical thinking skills -- cause, effect, and change over time",
+    reading:"- Key literacy skills in a fun, pressure-free environment\n- Story comprehension, vocabulary, and narrative understanding\n- That reading is one of the greatest adventures you can go on",
+    math:"- Mathematical concepts through colorful, concrete examples\n- Number sense, pattern recognition, and logical thinking\n- That math is not scary -- it is everywhere and it is fun",
+    art:"- Basic art techniques and creative expression skills\n- Color theory, shapes, and visual thinking\n- That there is no wrong way to create -- only your unique vision",
+    diversity:"- That every person is unique, beautiful, and worthy of respect\n- Stories and perspectives from different backgrounds and cultures\n- The language of inclusion, kindness, and celebrating differences",
     general:"- Everything they need to know about "+subject+" at an age-appropriate level\n- Key concepts presented through colorful, engaging visuals\n- Memorable lessons delivered at the perfect pace for little learners"
   };
   
@@ -981,6 +1055,11 @@ function generateSuggestedDesc(title,existingDesc){
     movement:"#ExerciseForKids #KidsMovement #GrossMotorKids #ActiveKids #KidsWorkout #MovementSong #BrainBreakKids #KidsPhysical #DanceToddlers #FunExerciseKids #KidsFitness #MoveAndGroove #KidsActivity #PhysicalEducationKids #KidsExercise",
     worldCultures:"#WorldCulturesKids #DiversityForKids #MulticulturalKids #CelebrationsAroundTheWorld #KidsCulture #GlobalLearningKids #KwanzaaForKids #DiwaliForKids #ChineseNewYearKids #KidsWorldTour #CulturalEducationKids #WorldFestivalsKids #MulticulturalEducation #KidsTraditions #DiverseKidsContent",
     geography:"#GeographyForKids #WorldForKids #KidsExplore #ContinentsForKids #MapForKids #AroundTheWorldKids #KidsGlobe #WorldLearningKids #KidsTravelVideo #ExploreTheWorldKids #CountriesForKids #KidsWorldVideo #GlobalKids #WorldCulturesKids #KidsGeography",
+    blackHistory:"#BlackHistoryKids #BlackExcellenceKids #AfricanAmericanKids #BlackHistoryMonth #KidsBlackHistory #RepresentationMatters #BlackKidsYouTube #BlackHistoryForChildren #DiverseKidsContent #BlackHeroesKids #CivilRightsKids #JuneteenthKids #BlackHistoryEducation #KidsHistory #DiverseEducation",
+    sports:"#SportsForKids #KidsSports #AthleteKids #TeamworkKids #KidsFitness #SportsLearning #KidsAthletics #ActiveKids #SportsVideo #KidsSportsVideo #HealthyKids #KidsSportsChannel #PlayBall #FunSports #KidsChampion",
+    adventure:"#AdventureKids #KidsAdventure #ExploreKids #DiscoverKids #KidsMystery #QuestForKids #KidsExplorer #LearningAdventure #KidsQuestVideo #ProblemSolvingKids #CriticalThinkingKids #KidsDetective #AdventureLearn #KidsMission #ExploreAndLearn",
+    history:"#HistoryForKids #KidsHistory #AncientHistory #HistoryKids #KidsHistoryVideo #TimeTravel #AncientEgyptKids #HistoricalKids #KidsHistoryChannel #LearnHistory #HistoryFun #KidsLearnHistory #HistoricalFacts #AncientCivilizations #HistoryMadeSimple",
+    diversity:"#DiversityKids #InclusionKids #RepresentationMatters #DiverseKidsContent #MulticulturalKids #KidsDiversity #CelebrateDifferences #EveryChildMatters #InclusiveKids #KidsIdentity #UniqueAndBeautiful #KidsBelong #DiverseEducation #InclusionForAll #CelebrateKids",
     general:"#KidsLearning #ChildrensYouTube #ToddlerLearning #FamilyFriendly #EducationalKidsVideo #EarlyChildhood #PreschoolLearning #KidsEducation #LittleLearnersNetwork #KidsChannel #ToddlerVideo #EducationalKids #KidsYouTube #LearningForKids #FunKidsVideo"
   };
   
@@ -1017,6 +1096,11 @@ function generateSuggestedTags(title,existingTags,existingDesc){
     bedtime:["bedtime songs for kids","lullaby for babies","kids bedtime video","sleep songs children","calming songs kids","kids goodnight video","bedtime routine kids","relax kids video","sleepy song toddlers","kids bedtime routine","goodnight song kids","toddler bedtime video","sleep music children","kids lullaby video","calm bedtime kids"],
     worldCultures:["world cultures for kids","celebrations around the world","multicultural kids video","diversity for kids","cultural learning children","kwanzaa for kids","diwali for kids","chinese new year kids","carnival for kids","kids world tour","traditions for toddlers","around the world kids","cultural celebrations kids","global learning kids","diverse kids content"],
     geography:["geography for kids","world for kids","continents for kids","countries for kids","map for kids","explore the world kids","kids globe video","world learning kids","kids travel video","flags of the world kids","kids geography song","around the world children","world cultures kids","global kids education","kids world video"],
+    blackHistory:["black history for kids","african american history kids","black history month kids","black heroes for children","black excellence kids","civil rights for kids","black history month video","representation kids","diverse kids content","black kids youtube","inspiring black stories kids","black history education","black history preschool","celebrate black history","black role models kids"],
+    sports:["sports for kids","kids sports video","athletes for kids","teamwork for kids","kids fitness","sports learning video","kids athletics","active kids","sports song kids","healthy lifestyle kids","team sports kids","kids sports channel","play ball kids","fun sports kids","sports heroes kids"],
+    adventure:["adventure for kids","kids adventure video","explore and discover kids","kids mystery","quest for kids","kids explorer","learning adventure","adventure learning kids","problem solving kids","critical thinking kids","kids detective","adventure education","explore kids video","kids mission video","discovery kids"],
+    history:["history for kids","kids history video","ancient history kids","history for children","kids history channel","time travel kids","ancient egypt kids","historical kids video","learn history kids","history fun kids","kids learn history","historical facts kids","ancient civilizations kids","history made simple","world history kids"],
+    diversity:["diversity for kids","inclusion for kids","representation matters","diverse kids content","multicultural kids","kids diversity video","celebrate differences","every child matters","inclusive kids video","kids identity","unique and beautiful","kids belong","diverse education","inclusion for all","celebrate kids"],
     general:["kids learning videos","educational videos for kids","toddler learning","children youtube","preschool learning","kids educational content","learning for toddlers","fun kids videos","early childhood education","family friendly youtube","kids youtube channel","toddler educational videos","learning videos for kids","kids songs and learning","children educational channel"]
   };
   return (tagSets[p]||tagSets.general).slice(0,15);
@@ -1043,6 +1127,11 @@ function generateExistingThumbPrompt(title,description){
     science:"with wide excited eyes looking at a colorful science experiment, wearing a mini lab coat, surrounded by bubbles and chemistry symbols",
     worldCultures:"surrounded by colorful flags and symbols from different cultures around the world, wearing a fun explorer outfit, with mini landmarks like the Eiffel Tower, pyramids, and lanterns in the background",
     geography:"holding a colorful globe or map, surrounded by miniature landmarks from different continents, explorer hat on, wide excited eyes",
+    blackHistory:"wearing an outfit inspired by a historical Black hero, surrounded by books, stars, and symbols of achievement -- radiating pride, power, and inspiration",
+    sports:"in action pose mid-play with a sports prop (ball, bat, racket), wearing athletic gear, huge competitive excited energy, stadium or field background",
+    adventure:"in explorer gear (hat, map, backpack) with wide amazed eyes discovering something exciting, dramatic adventure scene background",
+    history:"dressed in a fun age-appropriate historical costume, surrounded by era-specific props, wide amazed eyes as if discovering the past",
+    diversity:"surrounded by children of different backgrounds and appearances, all smiling and celebrating together, rainbow of colors and joy",
     general:"looking directly at camera with a huge excited smile, arms outstretched wide, radiating pure joy and curiosity"
   };
   var scene=scenes[p]||scenes.general;
@@ -1144,6 +1233,21 @@ function toggleDetail(id){
     panel.innerHTML=buildDetailPanel(id);panel.classList.add("open");row.classList.add("expanded");
     var p=document.getElementById("pushBtn-"+id);if(p)p.addEventListener("click",function(e){e.stopPropagation();initiatePush(id);});
     var cl=document.getElementById("closeBtn-"+id);if(cl)cl.addEventListener("click",function(e){e.stopPropagation();toggleDetail(id);});
+    var regen=document.getElementById("regenBtn-"+id);if(regen)regen.addEventListener("click",function(e){
+      e.stopPropagation();
+      var override=document.getElementById("topicOverride-"+id);
+      var overrideVal=override?override.value:"";
+      var panel=document.getElementById("detail-"+id);
+      panel.innerHTML=buildDetailPanel(id,overrideVal);
+      // Re-wire buttons
+      var p2=document.getElementById("pushBtn-"+id);if(p2)p2.addEventListener("click",function(e2){e2.stopPropagation();initiatePush(id);});
+      var cl2=document.getElementById("closeBtn-"+id);if(cl2)cl2.addEventListener("click",function(e2){e2.stopPropagation();toggleDetail(id);});
+      var ct2=document.getElementById("cpTitle-"+id);if(ct2)ct2.addEventListener("click",function(e2){e2.stopPropagation();copyField("editTitle-"+id);});
+      var cd2=document.getElementById("cpDesc-"+id);if(cd2)cd2.addEventListener("click",function(e2){e2.stopPropagation();copyField("editDesc-"+id);});
+      var ctg2=document.getElementById("cpTags-"+id);if(ctg2)ctg2.addEventListener("click",function(e2){e2.stopPropagation();copyField("editTags-"+id);});
+      var cth2=document.getElementById("cpThumb-"+id);if(cth2)cth2.addEventListener("click",function(e2){e2.stopPropagation();copyEl("thumbPrompt-"+id);});
+      loadPlaylistsForVideo(id);
+    });
     var ct=document.getElementById("cpTitle-"+id);if(ct)ct.addEventListener("click",function(e){e.stopPropagation();copyField("editTitle-"+id);});
     var cd=document.getElementById("cpDesc-"+id);if(cd)cd.addEventListener("click",function(e){e.stopPropagation();copyField("editDesc-"+id);});
     var ctg=document.getElementById("cpTags-"+id);if(ctg)ctg.addEventListener("click",function(e){e.stopPropagation();copyField("editTags-"+id);});
@@ -1152,11 +1256,14 @@ function toggleDetail(id){
   }
 }
 
-function buildDetailPanel(id){
+function buildDetailPanel(id,topicOverride){
   var v=allVideos.find(function(x){return x.id===id;});if(!v)return "";
-  var sugTitle=generateSuggestedTitle(v.title,v.description);
-  var sugDesc=generateSuggestedDesc(v.title,v.description);
-  var sugTags=generateSuggestedTags(v.title,v.tags,v.description);
+  // Apply topic override if set
+  var effectiveDesc=topicOverride?v.description+" TOPIC_OVERRIDE:"+topicOverride:v.description;
+  var info=analyzeVideoTopic(v.title,effectiveDesc);
+  var sugTitle=generateSuggestedTitle(v.title,effectiveDesc);
+  var sugDesc=generateSuggestedDesc(v.title,effectiveDesc);
+  var sugTags=generateSuggestedTags(v.title,v.tags,effectiveDesc);
   var thumbP=generateExistingThumbPrompt(v.title,v.description);
   var howTo=howToGetA(v);
   var html="<div style='display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px'>";
@@ -1530,9 +1637,10 @@ function renderHistory(){
   });
   document.querySelectorAll(".history-summary").forEach(function(s){s.addEventListener("click",function(){document.getElementById("hd-"+s.dataset.hi).classList.toggle("open");});});
 }
-function openBulkModal(){
+function openBulkModal(filteredOnly){
   if(!allVideos.length){showSyncAlert("Sync your videos first before bulk updating.","warn");return;}
-  var publicVids=allVideos.filter(function(v){return v.privacy==="public"||!v.privacy;});
+  var publicVids=filteredOnly&&currentFilteredVideos?currentFilteredVideos:allVideos.filter(function(v){return v.privacy==="public"||!v.privacy;});
+  var label=filteredOnly&&currentFilteredVideos?"filtered group ("+publicVids.length+" videos)":"all public videos ("+publicVids.length+")";
   var titleChecked=document.getElementById("bulkChkTitle")&&document.getElementById("bulkChkTitle").checked;
   var descChecked=document.getElementById("bulkChkDesc")&&document.getElementById("bulkChkDesc").checked;
   var tagsChecked=document.getElementById("bulkChkTags")&&document.getElementById("bulkChkTags").checked;
@@ -1554,7 +1662,7 @@ async function startBulkUpdate(){
   var doDesc=document.getElementById("bulkChkDesc").checked;
   var doTags=document.getElementById("bulkChkTags").checked;
   if(!doTitle&&!doDesc&&!doTags){alert("Please select at least one field to update.");return;}
-  var publicVids=allVideos.filter(function(v){return v.privacy==="public"||!v.privacy;});
+  var publicVids=currentFilteredVideos||allVideos.filter(function(v){return v.privacy==="public"||!v.privacy;});
   document.getElementById("bulkModal").classList.remove("open");
   document.getElementById("bulkProgressModal").classList.add("open");
   var log=document.getElementById("bulkProgressLog");
@@ -1612,25 +1720,36 @@ async function startBulkUpdate(){
   pushCount+=done;updateStats();sortAndRender();
 }
 
-function filterVideos(grades){
-  var filtered=allVideos.filter(function(v){return grades.includes(v.grade)&&(v.privacy==="public"||!v.privacy);});
-  renderTable(filtered);
-  showSyncAlert("Showing "+filtered.length+" videos graded "+grades.join(", ")+" (public only)","info");
+var currentFilteredVideos=null;
+
+function clearFilter(){
+  currentFilteredVideos=null;
+  document.getElementById("activeFilterBar").style.display="none";
+  sortAndRender();
 }
 
-function filterQuickWins(){
-  // Quick wins: videos scoring 65-84 that need just ONE fix to reach A
-  var qw=allVideos.filter(function(v){
+function filterVideos(grades,label){
+  currentFilteredVideos=allVideos.filter(function(v){return grades.includes(v.grade)&&(v.privacy==="public"||!v.privacy);});
+  renderTable(currentFilteredVideos);
+  var bar=document.getElementById("activeFilterBar");
+  bar.style.display="block";
+  document.getElementById("activeFilterLabel").textContent="Showing "+currentFilteredVideos.length+" videos: "+(label||grades.join(", "));
+}
+
+function filterQuickWins(label){
+  currentFilteredVideos=allVideos.filter(function(v){
     if(v.privacy!=="public"&&v.privacy)return false;
     if(v.overall<65||v.overall>=85)return false;
     var fixes=0;
     if(v.titleScore<85)fixes++;
     if(v.descScore<85)fixes++;
     if(v.tagsScore<85)fixes++;
-    return fixes<=1; // only one thing needs fixing
+    return fixes<=1;
   });
-  renderTable(qw);
-  showSyncAlert("Showing "+qw.length+" Quick Win videos -- one fix away from an A!","success");
+  renderTable(currentFilteredVideos);
+  var bar=document.getElementById("activeFilterBar");
+  bar.style.display="block";
+  document.getElementById("activeFilterLabel").textContent="Showing "+currentFilteredVideos.length+" Quick Win videos -- one fix from an A!";
 }
 
 async function revertPush(h){
