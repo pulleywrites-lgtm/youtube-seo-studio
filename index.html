@@ -53,7 +53,8 @@ h1,h2,h3,h4,h5{font-family:"Nunito",sans-serif}
 .channel-hh .ba-after{background:#1A2A1A;border-color:#10B98133}
 .channel-hh .thumb-prompt{background:#1A1535;border-color:#C084FC55;box-shadow:0 0 12px rgba(192,132,252,0.1)}
 .channel-hh .thumb-prompt p{color:#DDB6FC!important}
-.channel-hh .tag-chip{background:#C084FC22;color:#C084FC;border:1px solid #C084FC44}
+.channel-hh .tag-chip{background:#3D2A5A;color:#E9D5FF;border:1px solid #C084FC88;font-weight:700}
+.channel-hh .tag-chip-old{background:#252535;color:#B8B0D8;border:1px solid #3D3D5F}
 .channel-hh .alert-info{background:#1E3A5F;color:#90CAF9;border-color:#1565C0}
 .channel-hh .alert-success{background:#1A2A1A;color:#10B981;border-color:#10B98155}
 .channel-hh .alert-warn{background:#2A1F0A;color:#F59E0B;border-color:#F59E0B55}
@@ -275,6 +276,11 @@ textarea{resize:vertical}
 .thumb-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:300;align-items:center;justify-content:center;cursor:pointer}
 .thumb-lightbox.open{display:flex}
 .thumb-lightbox img{max-width:90vw;max-height:80vh;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.5)}
+.qs-option{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;cursor:pointer;font-size:13px;font-weight:600;font-family:"DM Sans",sans-serif;transition:background 0.15s}
+.qs-option:hover{background:var(--gray-50)}
+.qs-active{background:var(--blue-l)}
+.channel-hh .qs-option:hover{background:#252535}
+.channel-hh .qs-active{background:#1E1635}
 @media(max-width:768px){.table-head,.video-row{grid-template-columns:42px 1fr 60px 70px}.th:nth-child(5),.td:nth-child(5){display:none}.ba-grid,.h-ba{grid-template-columns:1fr}}
 </style>
 </head>
@@ -454,13 +460,21 @@ textarea{resize:vertical}
 <h3>Plan a New Video</h3>
 <p>For videos you have not uploaded yet. Describe your video and we will generate fully optimized metadata. No push button here -- upload first, then use this!</p>
 <div class="field"><label>What is your video about? Be specific -- include the theme, topic, and any unique angle!</label><textarea id="newVideoTopic" rows="3" placeholder="e.g. Teaching toddlers to count 1-10 using colorful Halloween characters, with a fun counting song..."></textarea></div>
-<div class="field"><label>Who is this video for?</label>
+<div class="field" id="ageFieldWrap"><label>Who is this video for?</label>
 <select id="newVideoAge">
 <option value="babies">Babies (0-2)</option>
 <option value="toddlers" selected>Toddlers (2-4)</option>
 <option value="preschool">Preschool (3-5)</option>
 <option value="early-kids">Early Kids (5-7)</option>
 <option value="all-kids">All Kids (0-8)</option>
+</select></div>
+<div class="field" id="durationFieldWrap" style="display:none"><label>Target video duration</label>
+<select id="newVideoDuration">
+<option value="30min">30 minutes</option>
+<option value="1hr" selected>1 hour</option>
+<option value="2hr">2 hours</option>
+<option value="3hr">3 hours</option>
+<option value="8hr">8 hours (sleep)</option>
 </select></div>
 <button class="btn btn-primary" id="newVideoBtn">Generate Metadata</button>
 </div>
@@ -542,7 +556,7 @@ textarea{resize:vertical}
 <div class="modal-overlay" id="bulkModal">
 <div class="modal" style="max-width:600px">
 <div class="modal-icon modal-warn-icon">&#9889;</div>
-<h3>Bulk Update All Videos</h3>
+<h3 id="bulkModalTitle">Bulk Update All Videos</h3>
 <p>Select which fields to update across ALL your public videos at once.</p>
 <div style="margin-bottom:16px">
 <div style="font-size:12px;font-weight:700;color:var(--gray-700);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Update these fields:</div>
@@ -704,7 +718,10 @@ window.addEventListener("DOMContentLoaded",function(){
   document.getElementById("statCardB").addEventListener("click",function(){filterVideos(["B"],"Grade B Videos");});
   document.getElementById("statCardNeedsWork").addEventListener("click",function(){filterVideos(["C","D","F"],"Videos Needing Work (C, D, F)");});
   // Bulk filtered and clear
-  document.getElementById("bulkFilteredBtn").addEventListener("click",function(){openBulkModal(true);});
+  document.getElementById("bulkFilteredBtn").addEventListener("click",function(){
+    window._bulkFilteredOnly=true;
+    openBulkModal(true);
+  });
   document.getElementById("clearFilterBtn").addEventListener("click",clearFilter);
   document.getElementById("bulkCancelBtn").addEventListener("click",function(){document.getElementById("bulkModal").classList.remove("open");});
   document.getElementById("bulkProceedBtn").addEventListener("click",function(){startBulkUpdate(window._bulkFilteredOnly);});
@@ -781,6 +798,13 @@ function selectUser(user){
 function selectChannel(channel){
   currentChannel=channel;
   localStorage.setItem("llnChannel",channel);
+  // Clear channel-specific data so it reloads fresh
+  playlists=[];
+  allVideos=[];
+  pushHistory=[];
+  drafts=[];
+  accessToken=null;
+  setAuthStatus(false);
   // Apply dark mode for Hush Hour
   if(channel==="HH"){
     document.documentElement.classList.add("channel-hh");
@@ -789,6 +813,14 @@ function selectChannel(channel){
   }
   updateUserBadge();
   updateLogoForChannel();
+  // Reload cached data for this channel
+  var cached=localStorage.getItem(storageKey("videoCache"));
+  if(cached){try{allVideos=JSON.parse(cached);}catch(e){allVideos=[];}}
+  try{
+    var hData=localStorage.getItem(storageKey("history_v2"))||"[]";
+    pushHistory=JSON.parse(hData);
+  }catch(e){pushHistory=[];}
+  try{drafts=JSON.parse(localStorage.getItem(storageKey("drafts"))||"[]");}catch(e){drafts=[];}
   showScreen("screenConnect");
 }
 
@@ -806,8 +838,69 @@ function updateUserBadge(){
   var isMP=currentUser==="MP";
   var cfg=getConfig();
   el.style.display="inline-flex";
+  el.style.cursor="pointer";
+  el.style.userSelect="none";
   el.className="active-user-badge "+(isMP?"badge-mp":"badge-ap");
-  el.innerHTML=(isMP?"✨ MP 🐱":"🌿 AP 🪴")+" <span style='margin-left:4px;opacity:0.8'>"+cfg.emoji+" "+cfg.name.split(" ")[0]+"</span>";
+  el.innerHTML=(isMP?"✨ MP 🐱":"🌿 AP 🪴")+" <span style='margin-left:4px;opacity:0.8'>"+cfg.emoji+" "+cfg.name.split(" ")[0]+"</span> <span style='margin-left:4px;opacity:0.6;font-size:10px'>▼</span>";
+  el.onclick=function(e){e.stopPropagation();toggleQuickSwitch();};
+}
+
+function toggleQuickSwitch(){
+  var existing=document.getElementById("quickSwitchPopup");
+  if(existing){existing.remove();return;}
+  var badge=document.getElementById("activeUserBadge");
+  var rect=badge.getBoundingClientRect();
+  var popup=document.createElement("div");
+  popup.id="quickSwitchPopup";
+  popup.style.cssText="position:fixed;top:"+(rect.bottom+8)+"px;right:"+(window.innerWidth-rect.right)+"px;background:white;border:1.5px solid var(--gray-200);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);z-index:300;min-width:220px;overflow:hidden";
+  var isMP=currentUser==="MP";
+  var isHH=currentChannel==="HH";
+  // Build popup with DOM
+  [
+    {type:"h",text:"Switch User"},
+    {type:"u",lbl:"MP (sparkles cat)",u:"MP",active:isMP},
+    {type:"u",lbl:"AP (plant)",u:"AP",active:!isMP},
+    {type:"h",text:"Switch Channel"},
+    {type:"ch",lbl:"Little Learners Network",u:"LLN",active:!isHH},
+    {type:"ch",lbl:"The Hush Hour",u:"HH",active:isHH},
+    {type:"b"}
+  ].forEach(function(sec){
+    var row=document.createElement("div");
+    if(sec.type==="h"){
+      row.style.cssText="padding:8px 16px;font-size:11px;font-weight:800;text-transform:uppercase;color:#9CA3AF;background:#F9FAFB";
+      row.textContent=sec.text;
+    } else if(sec.type==="u"||sec.type==="ch"){
+      var icon=sec.type==="u"?(sec.u==="MP"?"✨ MP 🐱":"🌿 AP 🪴"):(sec.u==="LLN"?"🎓 Little Learners":"🌙 The Hush Hour");
+      row.style.cssText="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;cursor:pointer;font-size:13px;font-weight:600;"+(sec.active?"background:#EEF2FF":"");
+      var lbl=document.createElement("span");lbl.textContent=icon;row.appendChild(lbl);
+      if(sec.active){var chk=document.createElement("span");chk.style.cssText="color:#10B981;font-weight:900";chk.textContent="✓";row.appendChild(chk);}
+      row.addEventListener("mouseover",function(){if(!sec.active)this.style.background="#F3F4F6";});
+      row.addEventListener("mouseout",function(){if(!sec.active)this.style.background="";});
+      (function(s){row.addEventListener("click",function(){popup.remove();switchQuick(s.type==="u"?"user":"channel",s.u);});})(sec);
+    } else {
+      row.style.cssText="padding:8px 16px;border-top:1px solid #F3F4F6";
+      var btn3=document.createElement("button");
+      btn3.style.cssText="background:none;border:none;color:#6B7280;font-size:12px;cursor:pointer;font-family:Nunito,sans-serif;font-weight:700";
+      btn3.textContent="Back to full selector";
+      btn3.addEventListener("click",function(){popup.remove();currentUser=null;currentChannel=null;localStorage.removeItem("llnUser");localStorage.removeItem("llnChannel");showScreen("screenSister");});
+      row.appendChild(btn3);
+    }
+    popup.appendChild(row);
+  });
+    document.body.appendChild(popup);
+  // Close on outside click
+  setTimeout(function(){document.addEventListener("click",function h(){popup.remove();document.removeEventListener("click",h);},{once:true});},10);
+}
+
+function switchQuick(type,value){
+  document.getElementById("quickSwitchPopup")&&document.getElementById("quickSwitchPopup").remove();
+  if(type==="user"){
+    currentUser=value;
+    localStorage.setItem("llnUser",value);
+    updateUserBadge();
+  } else {
+    selectChannel(value);
+  }
 }
 
 function saveAndConnect(){
@@ -837,7 +930,14 @@ function showTab(id){
   ["tabVideos","tabStrategy","tabPulse","tabNew","tabAnalytics","tabHistory"].forEach(function(t){document.getElementById(t).style.display=t===id?"block":"none";});
   ["navVideos","navStrategy","navPulse","navNew","navAnalytics","navHistory"].forEach(function(n,i){document.getElementById(n).classList.toggle("active",["tabVideos","tabStrategy","tabPulse","tabNew","tabAnalytics","tabHistory"][i]===id);});
   if(id==="tabHistory")renderHistory();
-  if(id==="tabNew"){renderDrafts();loadNewVideoPlaylists();}
+  if(id==="tabNew"){
+    renderDrafts();loadNewVideoPlaylists();
+    var isHH=getConfig().audience!=="kids";
+    var ageWrap=document.getElementById("ageFieldWrap");
+    var durWrap=document.getElementById("durationFieldWrap");
+    if(ageWrap)ageWrap.style.display=isHH?"none":"block";
+    if(durWrap)durWrap.style.display=isHH?"block":"none";
+  }
 }
 
 function updateQuotaMeter(){
@@ -1079,9 +1179,17 @@ function getDescTip(s,desc){
   return tips.length?"Warning: "+tips.join(" and "):"Needs improvement";
 }
 function getLengthTip(s,secs){
-  if(s>=85)return "Perfect length for kids YouTube!";
+  var isHH=getConfig().audience!=="kids";
+  if(s>=85)return isHH?"Perfect length for ambient YouTube!":"Perfect length for kids YouTube!";
   if(!secs||secs===0)return "Sync again to get video length data -- click Sync from YouTube";
   var mins=Math.round(secs/60);
+  if(isHH){
+    if(mins<10)return "Too short ("+mins+"min) for ambient content -- aim for 1+ hours for best ad revenue";
+    if(mins>=10&&mins<20)return "Short for HH ("+mins+"min) -- 1-2 hour videos earn significantly more";
+    if(mins>=20&&mins<60)return "Getting there ("+mins+"min) -- 1+ hour videos dominate in this niche";
+    if(mins>=60&&mins<120)return "Good length ("+mins+"min) -- 2 hour versions would earn even more";
+    return "Great length!";
+  }
   if(mins<2)return "Too short ("+mins+"min) -- aim for 4-8 minutes for best watch time";
   if(mins>=2&&mins<4)return "A bit short ("+mins+"min) -- 4-8 minutes is the sweet spot for kids YouTube";
   if(mins>12&&mins<=20)return "Getting long ("+mins+"min) -- kids engagement drops after 8-10 minutes";
@@ -1120,7 +1228,11 @@ function analyzeVideoTopic(title,desc){
     fakeTopic.topics[ov]=true;
     return fakeTopic;
   }
-  var t=(title||"").toLowerCase(),d=(desc||"").toLowerCase().replace(/TOPIC_OVERRIDE:\w+/g,""),combined=t+" "+d;
+  var t=(title||"").toLowerCase();
+  var d=(desc||"").toLowerCase().replace(/TOPIC_OVERRIDE:\w+/g,"");
+  // Weight title 3x more than description for topic detection
+  // This prevents existing descriptions from overriding clear title signals
+  var combined=t+" "+t+" "+t+" "+d;
   var topics={
     breathing:/breath|breathe|breathing|calm|relax|mindful|meditation|yoga|inhale|exhale|belly breath/.test(combined),
     affirmations:/affirmation|positive thinking|self.esteem|confidence|believe|i am|mantra|self.love/.test(combined),
@@ -1844,16 +1956,18 @@ function buildDetailPanel(id,topicOverride){
   var html="<div style='display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px'>";
   html+="<h3 style='font-size:16px;font-weight:900'>Full SEO Breakdown and Improvements</h3>";
   html+="<button class='btn btn-ghost btn-sm' id='closeBtn-"+id+"'>Close</button></div>";
+  var isHHChannel=getConfig().audience!=="kids";
   html+="<div class='score-breakdown'>";
-  html+=scoreItem("Title",v.titleScore,getTitleTip(v.titleScore,v.title));
-  html+=scoreItem("Description",v.descScore,getDescTip(v.descScore,v.description));
+  html+=scoreItem(isHHChannel?"Title (45-70 chars)":"Title",v.titleScore,getTitleTip(v.titleScore,v.title));
+  html+=scoreItem(isHHChannel?"Description (timestamps?)":"Description",v.descScore,getDescTip(v.descScore,v.description));
   html+=scoreItem("Tags",v.tagsScore,getTagsTip(v.tagsScore,v.tags));
   var ls=v.lengthScore||scoreLengthForKids(v.durationSecs||0);
   var durMin=v.durationSecs?Math.round(v.durationSecs/60)+"min":"";
-  html+=scoreItem("Video Length"+(durMin?" ("+durMin+")":""),ls,getLengthTip(ls,v.durationSecs));
+  html+=scoreItem(isHHChannel?"Video Length (longer=better)"+(durMin?" ("+durMin+")":""):"Video Length"+(durMin?" ("+durMin+")":""),ls,getLengthTip(ls,v.durationSecs));
   html+="</div>";
-  if(v.grade==="A"){
-    html+="<div class='how-to-a'><h4>This video is already an A! Keep it up!</h4></div>";
+  var isAlreadyA=v.overall>=85;
+  if(isAlreadyA){
+    html+="<div class='how-to-a'><h4>This video is already scoring an A! Great work!</h4></div>";
   } else if(howTo.length>0){
     html+="<div class='how-to-a'><h4>How to get this video to an A:</h4><ul>";
     howTo.forEach(function(h){html+="<li>"+esc(h)+"</li>";});
@@ -2054,7 +2168,83 @@ function showChannelTrend(){
   document.getElementById("backToStratBtn").addEventListener("click",generateStrategy);
 }
 
+function generateHHStrategy(){
+  var publicVideos=allVideos.filter(function(v){return v.privacy==="public"||!v.privacy;});
+  var el=document.getElementById("strategyContent");
+  if(!publicVideos.length){
+    el.innerHTML="<div class='strategy-card' style='text-align:center;padding:40px'><p style='color:var(--gray-500)'>Sync your Hush Hour videos first!</p></div>";
+    return;
+  }
+  var total=publicVideos.length;
+  var avgScore=Math.round(publicVideos.reduce(function(a,v){return a+v.overall;},0)/total);
+  var grades={A:0,B:0,C:0,D:0,F:0};
+  publicVideos.forEach(function(v){grades[v.grade]=(grades[v.grade]||0)+1;});
+  var worst=[].concat(publicVideos).sort(function(a,b){return a.overall-b.overall;}).slice(0,5);
+  var lowTitle=publicVideos.filter(function(v){return v.titleScore<50;}).length;
+  var lowDesc=publicVideos.filter(function(v){return v.descScore<50;}).length;
+  var html="";
+  // Channel description alert - always flag for HH
+  html+="<div style='background:linear-gradient(135deg,#2A1F0A,#1F1A08);border:2px solid #F59E0B55;border-radius:var(--r-lg);padding:20px;margin-bottom:16px'>";
+  html+="<div style='font-size:13px;font-weight:800;text-transform:uppercase;color:#F4A261;margin-bottom:8px'>⚠️ PRIORITY: FIX YOUR CHANNEL DESCRIPTION</div>";
+  html+="<p style='font-size:14px;color:#E8D5C0;line-height:1.6'>Your channel description has zero SEO keywords. YouTube uses this to understand what your channel is about -- every video you upload benefits when this is optimized. Add: lofi music, ambient music, study music, sleep music, relaxing sounds, no copyright music, chill beats. Do this TODAY.</p>";
+  html+="</div>";
+  // Health
+  html+="<div class='strategy-card'>";
+  html+="<div style='display:flex;align-items:center;gap:16px;flex-wrap:wrap'>";
+  html+="<div style='text-align:center;min-width:80px'><div style='font-size:48px;font-weight:900;font-family:Nunito,sans-serif;color:"+barColor(avgScore)+"'>"+avgScore+"</div><div style='font-size:12px;color:var(--gray-500);font-weight:600'>Avg SEO Score</div></div>";
+  html+="<div style='flex:1'><h3 style='font-size:18px;font-weight:900;margin-bottom:4px'>Channel Health</h3><p style='font-size:14px;line-height:1.6'>"+total+" public videos -- Average SEO score "+avgScore+"/100. "+(avgScore>=70?"Solid foundation.":"Significant improvements available.")+"</p></div>";
+  html+="</div><div style='display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:16px'>";
+  ["A","B","C","D","F"].forEach(function(g){html+="<div style='text-align:center;background:var(--gray-50);border-radius:8px;padding:8px'><div style='font-size:22px;font-weight:900;font-family:Nunito,sans-serif;color:"+gradeColor(g)+"'>"+(grades[g]||0)+"</div><div style='font-size:11px;color:var(--gray-500)'>Grade "+g+"</div></div>";});
+  html+="</div></div>";
+  // Seasonal insights for HH
+  var month=new Date().getMonth();
+  var seasonal={
+    8:"Fall cozy season is COMING -- upload rain, fireplace, and autumn lofi content NOW so it indexes before October.",
+    9:"Peak cozy season! Rain, storm, and autumn lofi content spikes October through December. Upload aggressively.",
+    10:"Holiday study season -- students are grinding for finals. Study beats and focus music see massive traffic spikes now.",
+    11:"December finals and holiday ambience -- dual audience of students and holiday mood seekers. Great time to upload.",
+    0:"New Year motivation content -- people want focus music for resolutions. Study beats and productivity ambience.",
+    5:"Summer study sessions -- students studying for summer courses. Consistent demand through August.",
+    6:"Back to school prep begins -- start building your library for the September traffic spike.",
+    7:"Back to school is HERE -- study music and focus beats peak now. Most important month for HH growth."
+  };
+  if(seasonal[month]){
+    html+="<div style='background:linear-gradient(135deg,#1E1635,#251840);border:1.5px solid #C084FC55;border-radius:var(--r-lg);padding:16px;margin-bottom:16px'>";
+    html+="<div style='font-size:13px;font-weight:800;color:#C084FC;margin-bottom:6px'>📅 SEASONAL OPPORTUNITY RIGHT NOW</div>";
+    html+="<p style='font-size:13px;color:#E8E4F4;line-height:1.6'>"+seasonal[month]+"</p>";
+    html+="</div>";
+  }
+  // Top fixes
+  html+="<div class='strategy-card'><h3>Top Things to Fix Right Now</h3>";
+  var fixes=[];
+  if(lowTitle>0)fixes.push({action:"Add duration keywords to "+lowTitle+" titles -- 1 Hour, 2 Hours, 8 Hours. This is the #1 search modifier in the ambient niche.",effort:"Easy"});
+  fixes.push({action:"Create these playlists immediately if they don't exist: Study Beats, Sleep Sounds, Rainy Vibes, Nature Ambience, Cozy Focus, Dark Academia",effort:"Easy"});
+  if(lowDesc>0)fixes.push({action:"Add timestamps to "+lowDesc+" descriptions -- every 15-20 minutes. YouTube rewards videos where viewers can navigate.",effort:"Medium"});
+  fixes.push({action:"Fix your channel description -- add lofi, ambient, study, sleep, no copyright as keywords",effort:"Easy"});
+  fixes.forEach(function(f,i){
+    var ec={Easy:"#059669",Medium:"#D97706"}[f.effort]||"#6B7280";
+    html+="<div class='fix-item'><span class='fix-num'>"+(i+1)+"</span><div style='flex:1'><div style='font-size:14px;font-weight:700;margin-bottom:3px'>"+esc(f.action)+"</div><span style='font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:"+ec+"20;color:"+ec+"'>"+f.effort+" effort</span></div></div>";
+  });
+  html+="</div>";
+  // Worst videos
+  html+="<div class='strategy-card'><h3>Videos to Update First -- Click to fix!</h3>";
+  worst.forEach(function(v){html+="<div class='priority-video' data-vid='"+v.id+"'><div style='display:flex;align-items:center;justify-content:space-between;margin-bottom:3px'><div style='font-size:13px;font-weight:700'>"+esc(v.title)+"</div><span style='font-size:11px;color:var(--red);font-weight:700;white-space:nowrap;margin-left:8px'>Fix it</span></div><div style='font-size:12px;color:var(--gray-500)'>Score: "+v.overall+"/100 Grade "+v.grade+"</div></div>";});
+  html+="</div>";
+  // HH video ideas
+  var hhIdeas=generateHHVideoIdeas();
+  html+="<div class='strategy-card'><h3>New Video Ideas -- Click to generate metadata!</h3>";
+  hhIdeas.forEach(function(v,i){html+="<div class='idea-item' data-topic='"+esc(v.title)+"'><span style='font-size:18px;font-weight:900;color:var(--purple);font-family:Nunito,sans-serif;min-width:24px'>"+(i+1)+"</span><div><div style='font-size:13px;font-weight:700;margin-bottom:2px'>"+esc(v.title)+"</div><div style='font-size:12px;color:var(--gray-500)'>"+esc(v.why)+"</div></div></div>";});
+  html+="</div>";
+  html+="<button class='btn btn-ghost btn-sm' id='regenStratBtn'>Regenerate Report</button>";
+  el.innerHTML=html;
+  document.getElementById("regenStratBtn").addEventListener("click",generateStrategy);
+  document.querySelectorAll(".priority-video[data-vid]").forEach(function(el2){el2.addEventListener("click",function(){jumpToVideoDetail(el2.dataset.vid);});});
+  document.querySelectorAll(".idea-item[data-topic]").forEach(function(el2){el2.addEventListener("click",function(){jumpToNewVideo(el2.dataset.topic);});});
+}
+
 function generateStrategy(){
+  if(getConfig().audience!=="kids"){generateHHStrategy();return;}
+
   var publicVideos=allVideos.filter(function(v){return v.privacy==="public"||!v.privacy;});
   if(!publicVideos.length){document.getElementById("strategyContent").innerHTML="<div class='strategy-card' style='text-align:center;padding:40px'><p style='color:var(--gray-500)'>Sync your videos first!</p></div>";return;}
   var total=publicVideos.length,grades={A:0,B:0,C:0,D:0,F:0};
@@ -2206,11 +2396,22 @@ function generateNewVideoMeta(){
     var proceed=confirm("⚠️ Content Warning: This topic may not be appropriate for a kids YouTube channel. YouTube Kids has strict content guidelines and videos with this content could be removed or demonetized. Are you sure you want to continue?");
     if(!proceed)return;
   }
-  var title=buildStrongKidsTitle(topic,ageGroup);
-  var desc=buildStrongDescription(topic,title,ageGroup);
-  var tags=buildStrongTags(topic,title);
-  var thumbP=buildThumbPrompt(topic,title,ageGroup);
-  var cat=getCategoryForTopic(topic);
+  var title,desc,tags,thumbP,cat;
+  if(getConfig().audience!=="kids"){
+    var dur=document.getElementById("newVideoDuration")?document.getElementById("newVideoDuration").value:"1hr";
+    var durLabel={"30min":"30 Minutes","1hr":"1 Hour","2hr":"2 Hours","3hr":"3 Hours","8hr":"8 Hours"}[dur]||"1 Hour";
+    title=generateHHTitle(topic+" "+durLabel);
+    desc=generateHHDesc(title,topic);
+    tags=generateHHTags(title,topic);
+    thumbP=generateHHThumbPrompt(title);
+    cat={id:"10",name:"Music"};
+  } else {
+    title=buildStrongKidsTitle(topic,ageGroup);
+    desc=buildStrongDescription(topic,title,ageGroup);
+    tags=buildStrongTags(topic,title);
+    thumbP=buildThumbPrompt(topic,title,ageGroup);
+    cat=getCategoryForTopic(topic);
+  }
   document.getElementById("newTitle").value=title;
   document.getElementById("newTitleCount").textContent=title.length+"/60 characters";
   document.getElementById("newTitleCount").style.color=title.length>60?"var(--red)":"var(--gray-400)";
@@ -2311,9 +2512,10 @@ async function startBulkUpdate(filteredOnly){
     countEl.textContent=(i+1)+" / "+total;
     bar.style.width=Math.round(((i+1)/total)*100)+"%";
     try{
-      var newTitle=doTitle?generateSuggestedTitle(v.title,v.description):v.title;
-      var newDesc=doDesc?generateSuggestedDesc(v.title,v.description):v.description;
-      var newTagsArr=doTags?generateSuggestedTags(v.title,[],v.description):v.tags;
+      var newTitle=v.title,newDesc=v.description,newTagsArr=v.tags||[];
+      try{if(doTitle)newTitle=generateSuggestedTitle(v.title,v.description)||v.title;}catch(te){newTitle=v.title;}
+      try{if(doDesc)newDesc=generateSuggestedDesc(v.title,v.description)||v.description;}catch(de){newDesc=v.description;}
+      try{if(doTags)newTagsArr=generateSuggestedTags(v.title,[],v.description)||v.tags||[];}catch(tge){newTagsArr=v.tags||[];}
       var r=await fetch("https://www.googleapis.com/youtube/v3/videos?part=snippet&key="+savedApiKey(),{
         method:"PUT",
         headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"},
