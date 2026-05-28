@@ -41,7 +41,7 @@ h1,h2,h3,h4,h5{font-family:"Nunito",sans-serif}
 .channel-hh .table-head{background:#252535;border-color:#3D3D5F}
 .channel-hh .video-row{border-color:#2D2D3F}
 .channel-hh .video-row:hover{background:#252540}
-.channel-hh *{color:#E8E4F4}.channel-hh .vid-title-text{color:#F0EEF8!important}
+.channel-hh *{color:#E8E4F4!important}.channel-hh .vid-title-text{color:#F0EEF8!important}
 .channel-hh .vid-date,.channel-hh .bar-num,.channel-hh .th,.channel-hh .stat-label{color:#B8B0D8!important}
 .channel-hh h1,.channel-hh h2,.channel-hh h3,.channel-hh h4{color:#F0EEF8}
 .channel-hh p,.channel-hh span,.channel-hh div,.channel-hh label{color:#E8E4F4}
@@ -286,6 +286,43 @@ textarea{resize:vertical}
 .channel-hh .grade-C{background:#3D2A0A!important;color:#FCD34D!important}
 .channel-hh .grade-D{background:#3D1A0A!important;color:#FCA572!important}
 .channel-hh .grade-F{background:#3D0A0A!important;color:#FCA5A5!important}
+.channel-hh .logo-text h1{color:#F0EEF8!important}
+.channel-hh .logo-text p{color:#B8B0D8!important}
+.channel-hh .quota-label{color:#B8B0D8!important}
+.channel-hh .quota-text{color:#B8B0D8!important}
+.channel-hh .quota-reset{color:#9990C0!important}
+.channel-hh .sync-info{color:#B8B0D8!important}
+.channel-hh .auth-pill span{color:#E8E4F4!important}
+.channel-hh .stat-num{color:#F0EEF8!important}
+.channel-hh .stat-label{color:#B8B0D8!important}
+.channel-hh .th{color:#9990C0!important}
+.channel-hh .vid-title-text{color:#F0EEF8!important}
+.channel-hh .vid-date{color:#9990C0!important}
+.channel-hh .bar-num{color:#9990C0!important}
+.channel-hh h1,.channel-hh h2,.channel-hh h3,.channel-hh h4,.channel-hh h5{color:#F0EEF8!important}
+.channel-hh p{color:#E0DCF0!important}
+.channel-hh .detail-label{color:#C084FC!important}
+.channel-hh .score-item-label{color:#B8B0D8!important}
+.channel-hh .how-to-a h4{color:#A0F0C0!important}
+.channel-hh .how-to-a li{color:#C0F0D0!important}
+.channel-hh .ba-label{color:#C084FC!important}
+.channel-hh .ba-before .ba-label{color:#9990C0!important}
+.channel-hh .info-row span:first-child{color:#B8B0D8!important}
+.channel-hh .info-row span:last-child{color:#F0EEF8!important}
+.channel-hh .fix-num{color:#C084FC!important}
+.channel-hh .trend-num{color:#F4A261!important}
+.channel-hh .tag-chip-old{background:#252535!important;color:#B8B0D8!important}
+.channel-hh .grade-badge{color:#F0EEF8!important}
+.channel-hh .alert-info *{color:#90CAF9!important}
+.channel-hh .alert-success *{color:#86EFAC!important}
+.channel-hh .alert-warn *{color:#FDE68A!important}
+.channel-hh .alert-danger *{color:#FCA5A5!important}
+.channel-hh .modal h3{color:#F0EEF8!important}
+.channel-hh .modal p{color:#B8B0D8!important}
+.channel-hh .new-badge{color:#F4A261!important}
+.channel-hh .detail-actions .copy-btn{color:#B8B0D8!important;border-color:#3D3A6A!important}
+.channel-hh .score-item-val{color:#C084FC!important}
+.channel-hh .active-user-badge *{color:white!important}
 @media(max-width:768px){.table-head,.video-row{grid-template-columns:42px 1fr 60px 70px}.th:nth-child(5),.td:nth-child(5){display:none}.ba-grid,.h-ba{grid-template-columns:1fr}}
 </style>
 </head>
@@ -384,6 +421,13 @@ textarea{resize:vertical}
 <button class="btn btn-primary btn-sm" id="bulkFilteredBtn" style="background:var(--purple)">⚡ Bulk Update This Group</button>
 <button class="btn btn-ghost btn-sm" id="clearFilterBtn">✕ Show All Videos</button>
 </div>
+</div>
+</div>
+<div style="margin-bottom:10px">
+<div style="display:flex;align-items:center;gap:10px;background:white;border:1.5px solid var(--gray-200);border-radius:var(--r-sm);padding:8px 14px">
+<span style="font-size:16px">🔍</span>
+<input type="text" id="videoSearch" placeholder="Search your videos by title, description, or tags..." style="border:none;outline:none;flex:1;font-size:14px;background:transparent"/>
+<button id="clearSearch" style="display:none;background:none;border:none;font-size:16px;cursor:pointer;color:var(--gray-400)">✕</button>
 </div>
 </div>
 <div class="table-toolbar">
@@ -569,6 +613,7 @@ textarea{resize:vertical}
 <label style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--gray-50);border-radius:8px;margin-bottom:6px;cursor:pointer"><input type="checkbox" id="bulkChkTitle" checked style="width:16px;height:16px"/><div><div style="font-size:13px;font-weight:700">Titles</div><div style="font-size:11px;color:var(--gray-500)">Rewrite all titles with optimized kids YouTube SEO</div></div></label>
 <label style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--gray-50);border-radius:8px;margin-bottom:6px;cursor:pointer"><input type="checkbox" id="bulkChkDesc" checked style="width:16px;height:16px"/><div><div style="font-size:13px;font-weight:700">Descriptions</div><div style="font-size:11px;color:var(--gray-500)">Update all descriptions with searchable first lines and CTAs</div></div></label>
 <label style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--gray-50);border-radius:8px;margin-bottom:6px;cursor:pointer"><input type="checkbox" id="bulkChkTags" checked style="width:16px;height:16px"/><div><div style="font-size:13px;font-weight:700">Tags</div><div style="font-size:11px;color:var(--gray-500)">Replace all tags with topic-specific optimized sets</div></div></label>
+<div style="margin-top:8px;padding:8px 0;border-top:1px solid var(--gray-200)"><button class="btn btn-ghost btn-sm" id="descOnlyBtn" style="width:100%;justify-content:center;border-color:var(--purple);color:var(--purple)">📝 Description Only Update (Recommended)</button><div style="font-size:11px;color:var(--gray-400);margin-top:4px;text-align:center">Updates ONLY descriptions across all videos -- safest bulk action</div></div>
 </div>
 <div id="bulkQuotaEstimate" style="margin-bottom:16px"></div>
 <p style="font-size:12px;color:var(--orange);font-weight:600;margin-bottom:16px;text-align:center">This will update ALL your public videos! You can undo individual changes from your History tab.</p>
@@ -694,6 +739,27 @@ window.addEventListener("DOMContentLoaded",function(){
   document.getElementById("refreshBtn").addEventListener("click",dailyRefresh);
   document.getElementById("emptySync").addEventListener("click",confirmSync);
   document.getElementById("sortSel").addEventListener("change",sortAndRender);
+  document.getElementById("videoSearch").addEventListener("input",function(){
+    var q=this.value.trim().toLowerCase();
+    var clearBtn=document.getElementById("clearSearch");
+    if(clearBtn)clearBtn.style.display=q?"inline":"none";
+    if(!q){sortAndRender();return;}
+    var filtered=allVideos.filter(function(v){
+      return v.title.toLowerCase().indexOf(q)>-1||
+        (v.description||"").toLowerCase().indexOf(q)>-1||
+        (v.tags||[]).some(function(t){return t.toLowerCase().indexOf(q)>-1;});
+    });
+    renderTable(filtered);
+    document.getElementById("syncAlert").innerHTML=filtered.length>0?
+      "<div class='alert alert-info'>Showing "+filtered.length+" results for: "+esc(q)+"</div>":
+      "<div class='alert alert-warn'>No videos found for: "+esc(q)+"</div>";
+  });
+  document.getElementById("clearSearch").addEventListener("click",function(){
+    document.getElementById("videoSearch").value="";
+    this.style.display="none";
+    document.getElementById("syncAlert").innerHTML="";
+    sortAndRender();
+  });
   document.getElementById("modalProceedBtn").addEventListener("click",handleModalProceed);
   document.getElementById("modalCancelBtn").addEventListener("click",function(){document.getElementById("quotaModal").classList.remove("open");pendingModalAction=null;});
   document.getElementById("doSyncBtn").addEventListener("click",doSync);
@@ -730,6 +796,15 @@ window.addEventListener("DOMContentLoaded",function(){
   });
   document.getElementById("clearFilterBtn").addEventListener("click",clearFilter);
   document.getElementById("bulkCancelBtn").addEventListener("click",function(){document.getElementById("bulkModal").classList.remove("open");});
+  document.getElementById("descOnlyBtn").addEventListener("click",function(){
+    document.getElementById("bulkChkTitle").checked=false;
+    document.getElementById("bulkChkDesc").checked=true;
+    document.getElementById("bulkChkTags").checked=false;
+    var titleEl=document.getElementById("bulkModalTitle");
+    if(titleEl)titleEl.textContent="Bulk Update Descriptions Only";
+    startBulkUpdate(window._bulkFilteredOnly);
+    document.getElementById("bulkModal").classList.remove("open");
+  });
   document.getElementById("bulkProceedBtn").addEventListener("click",function(){startBulkUpdate(window._bulkFilteredOnly);});
   document.getElementById("bulkDoneBtn").addEventListener("click",function(){document.getElementById("bulkProgressModal").classList.remove("open");});
   document.getElementById("bulkModal").addEventListener("click",function(e){if(e.target===this)this.classList.remove("open");});
@@ -763,6 +838,7 @@ window.addEventListener("DOMContentLoaded",function(){
   document.getElementById("thumbUsedBtn").addEventListener("click",function(){incrementThumbCount();});
   document.getElementById("thumbResetBtn").addEventListener("click",function(){resetThumbCount();});
   document.getElementById("exportAllDataBtn").addEventListener("click",exportCSV);
+  document.getElementById("exportMetaBtn").addEventListener("click",exportMetadataCSV);
   document.getElementById("clearCacheBtn").addEventListener("click",function(){if(confirm("Clear video cache? You will need to sync again.")){localStorage.removeItem(storageKey("videoCache"));allVideos=[];updateStats();renderTable([]);showSyncAlert("Cache cleared -- click Sync from YouTube to reload","info");}});
   document.getElementById("settingsModal").addEventListener("click",function(e){if(e.target===this)this.classList.remove("open");});
   // Analytics
@@ -827,6 +903,10 @@ function selectChannel(channel){
     pushHistory=JSON.parse(hData);
   }catch(e){pushHistory=[];}
   try{drafts=JSON.parse(localStorage.getItem(storageKey("drafts"))||"[]");}catch(e){drafts=[];}
+  // Clear strategy content so it rebuilds for new channel
+  var stratContent=document.getElementById("strategyContent");
+  if(stratContent)stratContent.innerHTML="<div class='strategy-card' style='text-align:center;padding:48px'><div style='font-size:48px;margin-bottom:16px'>&#129504;</div><h3 style='font-size:20px;margin-bottom:8px'>Ready to analyze your channel</h3><p style='font-size:14px;color:var(--gray-500);margin-bottom:20px'>Generate your strategy report below.</p><button class='btn btn-primary' id='genStrategyBtn2'>Generate My Strategy Report</button></div>";
+  setTimeout(function(){var b=document.getElementById("genStrategyBtn2");if(b)b.addEventListener("click",generateStrategy);},100);
   showScreen("screenConnect");
 }
 
@@ -1226,6 +1306,9 @@ function howToGetA(v){
 var STOP=new Set(["for","the","a","an","and","or","but","in","on","at","to","of","is","it","with","this","that","are","was","be","by","as","up","do","so","we","they","what","when","how","why","who","not","all","can","will","from","about","than","then","like","have","has","get","go","too","also","more","some","any","out","off","see","been","their","its","me","my","our","your","his","her","us","them"]);
 
 function analyzeVideoTopic(title,desc){
+  // Check for channel context tag
+  var channelMatch=(desc||"").match(/CHANNEL:(LLN|HH)/);
+  var forcedChannel=channelMatch?channelMatch[1]:null;
   // Check for manual topic override
   var overrideMatch=(desc||"").match(/TOPIC_OVERRIDE:(\w+)/);
   if(overrideMatch){
@@ -1235,10 +1318,9 @@ function analyzeVideoTopic(title,desc){
     return fakeTopic;
   }
   var t=(title||"").toLowerCase();
-  var d=(desc||"").toLowerCase().replace(/TOPIC_OVERRIDE:\w+/g,"");
-  // Weight title 3x more than description for topic detection
-  // This prevents existing descriptions from overriding clear title signals
-  var combined=t+" "+t+" "+t+" "+d;
+  var d=(desc||"").toLowerCase().replace(/TOPIC_OVERRIDE:\w+/g,"").replace(/CHANNEL:(LLN|HH)/g,"").trim();
+  // Weight title 4x more than description - title is ALWAYS primary signal
+  var combined=t+" "+t+" "+t+" "+t+" "+d;
   var topics={
     breathing:/breath|breathe|breathing|calm|relax|mindful|meditation|yoga|inhale|exhale|belly breath/.test(combined),
     affirmations:/affirmation|positive thinking|self.esteem|confidence|believe|i am|mantra|self.love/.test(combined),
@@ -1254,7 +1336,7 @@ function analyzeVideoTopic(title,desc){
     music:/song|music|sing|dance|rhythm|beat|melody|nursery|row row|itsy bitsy|twinkle|wheels on the bus|old macdonald|humpty|jack and jill|mary had|baa baa|hickory dickory/.test(combined),
     sentences:/sentence|grammar|ela|sequenc|write|writing|read|reading|phonics|language arts/.test(combined),
     science:/science|experiment|nature|plant|grow|weather|solar|planet|space|earth/.test(combined),
-    movement:/exercise|move|jump|run|stretch|active|physical|dance|gross motor/.test(combined),
+    movement:/exercise|move|jump|run|hop|skip|stretch|active|physical|dance|gross motor|wiggle|shake|freeze dance/.test(combined),
     halloween:/halloween|pumpkin|ghost|witch|bat|costume|trick|treat|spooky/.test(combined),
     christmas:/christmas|santa|reindeer|elf|holiday|xmas/.test(combined),
     easter:/easter|bunny|egg hunt/.test(combined),
@@ -1268,7 +1350,7 @@ function analyzeVideoTopic(title,desc){
     worldCultures:/culture|world|carnival|kwanzaa|diwali|hanami|lunar|chinese new year|hanukkah|eid|ramadan|celebration|tradition|festival|around the world|multicultural|diverse|heritage/.test(combined),
     geography:/country|continent|africa|asia|europe|america|australia|ocean|map|globe|flag/.test(combined),
     blackHistory:/black history|african american|martin luther king|rosa parks|harriet tubman|civil rights|juneteenth|black excellence|black heroes|black culture|slavery|freedom/.test(combined),
-    sports:/sport|athlete|basketball|football|soccer|baseball|tennis|swim|run|jump|olympic|champion|team|game|play ball|throw|catch|kick|score|goal/.test(combined),
+    sports:/sport|athlete|basketball|football|soccer|baseball|tennis|swimming|olympic|champion|play ball|throw and catch|kick the ball|score a goal|touchdown|home run|slam dunk/.test(combined),
     adventure:/adventure|explore|discover|mystery|quest|journey|travel|treasure|map|clue|solve|detective|secret|hidden|search|find|mission/.test(combined),
     history:/history|ancient|egypt|roman|greek|medieval|dinosaur|prehistoric|past|long ago|historical|pharaoh|pyramid|castle|knight|viking/.test(combined),
     reading:/read|book|story|tale|character|plot|comprehension|phonics|decode|fluency|vocabulary|word|sentence|paragraph|chapter/.test(combined),
@@ -1583,7 +1665,9 @@ function buildChannelHashtags(topicInfo, title) {
 }
 
 function generateSuggestedDesc(title, existingDesc) {
-  if(getConfig().audience !== "kids") return generateHHDesc(title, existingDesc||"");
+  // Check for explicit channel context tag in desc
+  var isHHChannel=(existingDesc||"").indexOf("CHANNEL:HH")>-1||(getConfig().audience!=="kids"&&(existingDesc||"").indexOf("CHANNEL:LLN")===-1);
+  if(isHHChannel) return generateHHDesc(title,(existingDesc||"").replace(/CHANNEL:(LLN|HH)/g,"").trim());
   
   var info = analyzeVideoTopic(title||"", existingDesc||"");
   var p = info.primary;
@@ -1902,6 +1986,12 @@ function generateHHSeoTips(){
   return pools;
 }
 
+function getLastOptimizedDate(videoId){
+  // Check push history for this video
+  var entry=pushHistory.find(function(h){return h.videoId===videoId;});
+  return entry?new Date(entry.date).getTime():null;
+}
+
 function updateStats(){
   document.getElementById("statTotal").textContent=allVideos.length;
   document.getElementById("statA").textContent=allVideos.filter(function(v){return v.grade==="A";}).length;
@@ -1956,7 +2046,12 @@ function renderTable(videos){
     // Score
     var td4=document.createElement("div");td4.className="td";td4.innerHTML=bar(v.overall);row.appendChild(td4);
     // Date
-    var td5=document.createElement("div");td5.className="td";td5.style.cssText="font-size:11px;color:var(--gray-400)";td5.textContent=pub;row.appendChild(td5);
+    var td5=document.createElement("div");td5.className="td";
+    var lastOpt=getLastOptimizedDate(v.id);
+    var freshnessHtml=pub+"<br>";
+    if(lastOpt){var daysAgo=Math.floor((Date.now()-lastOpt)/(86400000));freshnessHtml+="<span style='color:"+(daysAgo<7?"#10B981":daysAgo<30?"#F59E0B":"#EF4444")+"'>✓ "+( daysAgo===0?"Today":daysAgo===1?"1 day ago":daysAgo+" days ago")+"</span>";}
+    else{freshnessHtml+="<span style='color:#9CA3AF'>Never optimized</span>";}
+    td5.style.cssText="font-size:11px;color:var(--gray-400);line-height:1.6";td5.innerHTML=freshnessHtml;row.appendChild(td5);
     // Detail panel
     var detail=document.createElement("div");detail.className="detail-panel";detail.id="detail-"+v.id;
     row.addEventListener("click",function(){toggleDetail(v.id);});
@@ -2035,6 +2130,9 @@ function buildDetailPanel(id,topicOverride){
   var v=allVideos.find(function(x){return x.id===id;});if(!v)return "";
   // Apply topic override if set
   var effectiveDesc=topicOverride?v.description+" TOPIC_OVERRIDE:"+topicOverride:v.description;
+  // Force channel context in description to prevent cross-channel routing
+  var channelTag=getConfig().audience!=="kids"?" CHANNEL:HH":" CHANNEL:LLN";
+  effectiveDesc=effectiveDesc+channelTag;
   var info=analyzeVideoTopic(v.title,effectiveDesc);
   var sugTitle=generateSuggestedTitle(v.title,effectiveDesc);
   var sugDesc=generateSuggestedDesc(v.title,effectiveDesc);
@@ -2058,7 +2156,7 @@ function buildDetailPanel(id,topicOverride){
   html+="<div style=\'display:flex;align-items:center;gap:8px;margin-bottom:10px\'>";
   html+="<span style=\'font-size:14px\'>✨</span>";
   html+="<span style=\'font-size:13px;font-weight:700;color:#5B21B6\'>AI-Powered Suggestions</span>";
-  html+="<span style='font-size:11px;color:#7C3AED;background:#EDE9FE;padding:2px 8px;border-radius:999px'>Free &middot; Uses keyword for better results</span>";
+  html+="<span style='font-size:11px;color:#7C3AED;background:#EDE9FE;padding:2px 8px;border-radius:999px'>Free &middot; Keyword-enhanced</span>";
   html+="</div>";
   html+="<div style=\'display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px\'>";
   html+="<input type=\'text\' id=\'targetKeyword-"+id+"\'  placeholder=\'Target keyword (optional) e.g. row row row your boat\' style=\'flex:1;min-width:160px;padding:7px 12px;border:1.5px solid #C4B5FD;border-radius:var(--r-sm);font-size:12px;background:white\'/>";
@@ -2345,11 +2443,180 @@ function generateHHStrategy(){
   html+="<div class='strategy-card'><h3>New Video Ideas -- Click to generate metadata!</h3>";
   hhIdeas.forEach(function(v,i){html+="<div class='idea-item' data-topic='"+esc(v.title)+"'><span style='font-size:18px;font-weight:900;color:var(--purple);font-family:Nunito,sans-serif;min-width:24px'>"+(i+1)+"</span><div><div style='font-size:13px;font-weight:700;margin-bottom:2px'>"+esc(v.title)+"</div><div style='font-size:12px;color:var(--gray-500)'>"+esc(v.why)+"</div></div></div>";});
   html+="</div>";
+  // Playlist health
+  if(playlists.length){
+    html+="<div class='strategy-card'><h3>🎵 Playlist Health</h3>";
+    playlists.forEach(function(pl){
+      var plVids=allVideos.filter(function(v){return v.privacy==="public"||!v.privacy;});
+      html+="<div style='display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-100)'><span style='font-size:13px;font-weight:600'>"+esc(pl.title)+"</span><span style='font-size:11px;color:var(--gray-400)'>"+plVids.length+" videos</span></div>";
+    });
+    html+="</div>";
+  } else {
+    html+="<div class='strategy-card'><h3>🎵 Playlist Health</h3><p style='font-size:13px;color:var(--orange)'>⚠️ No playlists found. Creating themed playlists is one of the highest-impact things you can do -- they autoplay and dramatically increase session time.</p></div>";
+  }
   html+="<button class='btn btn-ghost btn-sm' id='regenStratBtn'>Regenerate Report</button>";
   el.innerHTML=html;
   document.getElementById("regenStratBtn").addEventListener("click",generateStrategy);
   document.querySelectorAll(".priority-video[data-vid]").forEach(function(el2){el2.addEventListener("click",function(){jumpToVideoDetail(el2.dataset.vid);});});
   document.querySelectorAll(".idea-item[data-topic]").forEach(function(el2){el2.addEventListener("click",function(){jumpToNewVideo(el2.dataset.topic);});});
+}
+
+
+// ============================================================
+// CHANNEL CONSISTENCY SCORE
+// ============================================================
+function getChannelConsistencyScore(videos){
+  if(!videos||!videos.length)return {score:0,issues:[]};
+  var pub=videos.filter(function(v){return v.privacy==="public"||!v.privacy;});
+  if(!pub.length)return {score:0,issues:[]};
+  var issues=[];
+  var noKwTitle=pub.filter(function(v){return scoreChannelKeywords(v.title)===0;});
+  var noTags=pub.filter(function(v){return !v.tags||v.tags.length===0;});
+  var noDesc=pub.filter(function(v){return !v.description||v.description.length<50;});
+  var noSubscribe=pub.filter(function(v){return v.description&&v.description.toLowerCase().indexOf("subscribe")===-1;});
+  var score=100;
+  if(noKwTitle.length){score-=Math.round((noKwTitle.length/pub.length)*30);issues.push(noKwTitle.length+" videos missing channel keywords in title");}
+  if(noTags.length){score-=Math.round((noTags.length/pub.length)*25);issues.push(noTags.length+" videos have no tags");}
+  if(noDesc.length){score-=Math.round((noDesc.length/pub.length)*25);issues.push(noDesc.length+" videos have no description");}
+  if(noSubscribe.length){score-=Math.round((noSubscribe.length/pub.length)*20);issues.push(noSubscribe.length+" descriptions missing Subscribe CTA");}
+  return {score:Math.max(0,score),issues:issues};
+}
+
+// ============================================================
+// WHAT'S MISSING SCAN
+// ============================================================
+function buildWhatsMissing(videos){
+  var pub=videos.filter(function(v){return v.privacy==="public"||!v.privacy;});
+  if(!pub.length)return "";
+  var noTags=pub.filter(function(v){return !v.tags||v.tags.length===0;});
+  var noDesc=pub.filter(function(v){return !v.description||v.description.length<50;});
+  var noKw=pub.filter(function(v){return scoreChannelKeywords(v.title)===0;});
+  var neverOpt=pub.filter(function(v){return !getLastOptimizedDate(v.id);});
+  var stale=pub.filter(function(v){var d=getLastOptimizedDate(v.id);return d&&(Date.now()-d)>90*86400000;});
+  var html="<div class='strategy-card'><h3>🔍 What's Missing -- Quick Scan</h3>";
+  var items=[
+    {count:noTags.length,label:"videos with NO tags at all",color:"var(--red)",videos:noTags},
+    {count:noDesc.length,label:"videos with no description",color:"var(--red)",videos:noDesc},
+    {count:noKw.length,label:"titles missing channel keywords",color:"var(--orange)",videos:noKw},
+    {count:neverOpt.length,label:"videos never optimized with this tool",color:"var(--orange)",videos:neverOpt},
+    {count:stale.length,label:"videos not optimized in 90+ days",color:barColor(40),videos:stale}
+  ];
+  items.forEach(function(item){
+    if(item.count>0){
+      html+="<div style='display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-100)'>";
+      html+="<div style='display:flex;align-items:center;gap:10px'><span style='font-size:22px;font-weight:900;color:"+item.color+";font-family:Nunito,sans-serif;min-width:36px'>"+item.count+"</span><span style='font-size:13px;font-weight:600'>"+item.label+"</span></div>";
+      html+="<button class='btn btn-ghost btn-sm' onclick='filterVideos([\"A\",\"B\",\"C\",\"D\",\"F\"],\""+item.label+"\")' style='font-size:11px'>Show →</button>";
+      html+="</div>";
+    }
+  });
+  if(items.every(function(i){return i.count===0;})){html+="<p style='color:var(--green);font-weight:700;padding:12px 0'>✅ Nothing critical missing! Your channel is in great shape.</p>";}
+  html+="</div>";
+  return html;
+}
+
+// ============================================================
+// SEASONAL CONTENT CALENDAR
+// ============================================================
+function buildSeasonalCalendar(){
+  var now=new Date();
+  var month=now.getMonth();
+  var day=now.getDate();
+  var isHH=getConfig().audience!=="kids";
+  
+  var llnEvents=[
+    {month:0,name:"New Year",date:"Jan 1",tip:"New Year countdown, resolutions, fresh start themes",urgent:day<15&&month===0},
+    {month:1,name:"Black History Month",date:"All Feb",tip:"Black heroes, civil rights, African American culture -- your most impactful content",urgent:month===1},
+    {month:1,name:"Valentine's Day",date:"Feb 14",tip:"Kindness, friendship, love -- emotions and social skills content",urgent:month===1&&day<10},
+    {month:2,name:"St. Patrick's Day",date:"Mar 17",tip:"Irish culture, lucky themes, rainbow colors",urgent:month===2&&day<12},
+    {month:3,name:"Earth Day",date:"Apr 22",tip:"Nature, environment, recycling, science content",urgent:month===3&&day<17},
+    {month:4,name:"Asian Pacific Heritage",date:"All May",tip:"Asian and Pacific Islander culture celebrations",urgent:month===4},
+    {month:5,name:"Juneteenth",date:"Jun 19",tip:"Freedom, African American history, celebration",urgent:month===5&&day<14},
+    {month:6,name:"Back to School Prep",date:"Jul-Aug",tip:"School readiness, ABC, counting, colors -- parents start searching NOW",urgent:month===6},
+    {month:7,name:"Back to School",date:"Aug",tip:"Peak school readiness search traffic -- upload aggressively",urgent:month===7},
+    {month:8,name:"Hispanic Heritage Month",date:"Sep 15-Oct 15",tip:"Latino culture, Spanish language, diverse celebrations",urgent:month===8||month===9},
+    {month:9,name:"Halloween",date:"Oct 31",tip:"Halloween learning -- counting, colors, costumes -- HUGE traffic",urgent:month===9&&day<20},
+    {month:10,name:"Thanksgiving",date:"Nov",tip:"Gratitude, family, Native American culture, harvest themes",urgent:month===10&&day<20},
+    {month:11,name:"Christmas/Kwanzaa/Hanukkah",date:"Dec",tip:"Holiday counting, songs, multicultural winter celebrations",urgent:month===11}
+  ];
+  
+  var hhEvents=[
+    {month:7,name:"Back to School Study Season",date:"Aug-Sep",tip:"Biggest study music spike of the year -- upload aggressively",urgent:month===7||month===8},
+    {month:8,name:"Fall Cozy Season Begins",date:"Sep",tip:"Rain, fireplace, autumn lofi -- start building your library",urgent:month===8},
+    {month:9,name:"Peak Cozy Season",date:"Oct",tip:"Rain + lofi + cozy = maximum traffic. Best month for HH.",urgent:month===9},
+    {month:10,name:"Finals Study Season",date:"Nov",tip:"Students grinding for finals -- study beats spike hard",urgent:month===10},
+    {month:11,name:"December Finals + Holiday",date:"Dec",tip:"Double audience -- students and holiday mood seekers",urgent:month===11},
+    {month:0,name:"New Year Focus Season",date:"Jan",tip:"Resolution-driven study and focus content performs well",urgent:month===0},
+    {month:4,name:"Spring Finals",date:"May",tip:"End of year finals -- second biggest study music spike",urgent:month===4}
+  ];
+  
+  var events=isHH?hhEvents:llnEvents;
+  var upcoming=events.filter(function(e){
+    if(e.month===month)return true;
+    var diff=((e.month-month)+12)%12;
+    return diff<=2;
+  }).slice(0,4);
+  
+  if(!upcoming.length)return "";
+  
+  var html="<div class='strategy-card'><h3>📅 Seasonal Content Calendar</h3><p style='font-size:12px;color:var(--gray-500);margin-bottom:12px'>What to create NOW and what's coming up -- upload 2-4 weeks before each event for best indexing.</p>";
+  upcoming.forEach(function(e){
+    var isNow=e.month===month;
+    var bg=e.urgent?"var(--red-l)":isNow?"var(--orange-l)":"var(--gray-50)";
+    var border=e.urgent?"var(--red)":isNow?"var(--orange)":"var(--gray-200)";
+    html+="<div style='padding:10px 12px;background:"+bg+";border-left:3px solid "+border+";border-radius:var(--r-sm);margin-bottom:8px'>";
+    html+="<div style='display:flex;align-items:center;justify-content:space-between;margin-bottom:4px'>";
+    html+="<div style='font-size:13px;font-weight:700'>"+e.name+"</div>";
+    html+="<span style='font-size:11px;font-weight:700;color:"+border+"'>"+e.date+(e.urgent?" ⚡ NOW":"")+"</span>";
+    html+="</div>";
+    html+="<div style='font-size:12px;color:var(--gray-600)'>"+e.tip+"</div>";
+    html+="</div>";
+  });
+  html+="</div>";
+  return html;
+}
+
+// ============================================================
+// TAG OVERLAP DETECTOR
+// ============================================================
+function buildTagOverlapReport(videos){
+  var pub=videos.filter(function(v){return v.privacy==="public"||!v.privacy;});
+  if(pub.length<2)return "";
+  var tagCount={};
+  pub.forEach(function(v){(v.tags||[]).forEach(function(t){var tc=t.toLowerCase().trim();tagCount[tc]=(tagCount[tc]||0)+1;});});
+  var overlapping=Object.keys(tagCount).filter(function(t){return tagCount[t]>5&&t.split(" ").length>1;}).sort(function(a,b){return tagCount[b]-tagCount[a];}).slice(0,8);
+  if(!overlapping.length)return "";
+  var html="<div class='strategy-card'><h3>🏷️ Tag Overlap Alert</h3><p style='font-size:12px;color:var(--gray-500);margin-bottom:12px'>These tags appear on many videos -- your videos may be competing with each other in search. Consider making tags more specific.</p>";
+  overlapping.forEach(function(tag){
+    html+="<div style='display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-100)'>";
+    html+="<span class='tag-chip-old'>"+esc(tag)+"</span>";
+    html+="<span style='font-size:12px;color:var(--orange);font-weight:700'>Used on "+tagCount[tag]+" videos</span>";
+    html+="</div>";
+  });
+  html+="</div>";
+  return html;
+}
+
+// ============================================================
+// DESCRIPTION FIRST LINE GRADER
+// ============================================================
+function buildFirstLineGrade(videos){
+  var pub=videos.filter(function(v){return v.privacy==="public"||!v.privacy;});
+  var poor=pub.filter(function(v){
+    var fl=(v.description||"").split("\n")[0].substring(0,200);
+    return scoreDescFirstLine(v.description||"")<50;
+  }).slice(0,5);
+  if(!poor.length)return "";
+  var html="<div class='strategy-card'><h3>📋 Description First Line Grader</h3><p style='font-size:12px;color:var(--gray-500);margin-bottom:4px'>YouTube shows only the first ~150 chars in search results. These videos need a stronger opening line:</p><p style='font-size:11px;color:var(--gray-400);margin-bottom:12px'>Search preview: <strong>Video Title</strong> • <em>first 150 chars of description</em></p>";
+  poor.forEach(function(v){
+    var fl=(v.description||"No description").substring(0,150);
+    html+="<div style='padding:10px 0;border-bottom:1px solid var(--gray-100);cursor:pointer' onclick='jumpToVideoDetail(\""+v.id+"\")'>";
+    html+="<div style='font-size:12px;font-weight:700;color:var(--gray-700);margin-bottom:3px'>"+esc(v.title.substring(0,50))+"</div>";
+    html+="<div style='font-size:11px;color:var(--gray-500);background:var(--gray-50);padding:6px 8px;border-radius:4px;font-style:italic'>"+esc(fl)+"...</div>";
+    html+="<div style='font-size:10px;color:var(--red);margin-top:3px;font-weight:600'>⚠️ First line has no searchable keywords -- click to fix</div>";
+    html+="</div>";
+  });
+  html+="</div>";
+  return html;
 }
 
 function generateStrategy(){
@@ -2394,6 +2661,26 @@ function generateStrategy(){
   html+="<div class='strategy-card'><h3>New Video Ideas -- Click to generate metadata!</h3><p style='font-size:12px;color:var(--gray-500);margin-bottom:12px'>Click any idea to jump to New Video tab with it pre-filled!</p>";
   ideas.forEach(function(v,i){html+="<div class='idea-item' data-topic='"+esc(v.title)+"'><span style='font-size:18px;font-weight:900;color:var(--purple);font-family:Nunito,sans-serif;min-width:24px'>"+(i+1)+"</span><div><div style='font-size:13px;font-weight:700;margin-bottom:2px'>"+esc(v.title)+"</div><div style='font-size:12px;color:var(--gray-500)'>"+esc(v.why)+"</div><div style='font-size:10px;color:var(--blue);font-weight:700;margin-top:2px'>Click to generate metadata</div></div></div>";});
   html+="</div>";
+  // Add new sections
+  html+=buildWhatsMissing(publicVideos);
+  html+=buildSeasonalCalendar();
+  html+=buildTagOverlapReport(publicVideos);
+  html+=buildFirstLineGrade(publicVideos);
+  
+  // Channel consistency score - add to health card
+  var consistency=getChannelConsistencyScore(publicVideos);
+  
+  // Playlist health
+  if(playlists.length){
+    html+="<div class='strategy-card'><h3>🎵 Playlist Health</h3>";
+    playlists.forEach(function(pl){
+      var plVids=allVideos.filter(function(v){return v.privacy==="public"||!v.privacy;});
+      html+="<div style='display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-100)'><span style='font-size:13px;font-weight:600'>"+esc(pl.title)+"</span><span style='font-size:11px;color:var(--gray-400)'>"+plVids.length+" videos</span></div>";
+    });
+    html+="</div>";
+  } else {
+    html+="<div class='strategy-card'><h3>🎵 Playlist Health</h3><p style='font-size:13px;color:var(--orange)'>⚠️ No playlists found. Creating themed playlists is one of the highest-impact things you can do -- they autoplay and dramatically increase session time.</p></div>";
+  }
   html+="<button class='btn btn-ghost btn-sm' id='regenStratBtn'>Regenerate Report</button>";
   document.getElementById("strategyContent").innerHTML=html;
   document.getElementById("regenStratBtn").addEventListener("click",generateStrategy);
@@ -2436,11 +2723,13 @@ var TREND_POOLS=[
 ];
 
 function rotateTrends(){
-  // Show/hide HH cheat sheet
+  // Show/hide HH cheat sheet - always rebuild to reflect current channel
   var cheatSheet=document.getElementById("hhCheatSheet");
-  if(cheatSheet)cheatSheet.style.display=getConfig().audience!=="kids"?"block":"none";
-  if(getConfig().audience!=="kids"&&cheatSheet&&!cheatSheet.innerHTML){
-    cheatSheet.innerHTML=buildHHCheatSheet();
+  var isHHNow=currentChannel==="HH";
+  if(cheatSheet){
+    cheatSheet.style.display=isHHNow?"block":"none";
+    if(isHHNow)cheatSheet.innerHTML=buildHHDummiesGuide();
+    else cheatSheet.innerHTML="";
   }
   var activePools=getConfig().audience!=="kids"?generateHHTrendingTopics():TREND_POOLS;
   var pool=activePools[trendIdx%activePools.length];trendIdx++;
@@ -2556,7 +2845,7 @@ function renderHistory(){
   pushHistory.forEach(function(h,i){
     html+="<div class='history-entry'><div class='history-summary' data-hi='"+i+"'>";
     var userBadgeHtml=h.user?"<span style='font-size:10px;font-weight:700;padding:1px 6px;border-radius:999px;margin-left:6px;"+(h.user==="MP"?"background:#FF69B4;color:white":"background:#1a1a2e;color:white")+"'>"+h.user+(h.user==="MP"?" 🐱":" 🪴")+"</span>":"";
-    html+="<div><div style='font-size:13px;font-weight:700'>"+esc(h.newTitle)+(h.bulkUpdate?"<span style='font-size:10px;background:var(--purple-l);color:var(--purple);padding:1px 6px;border-radius:999px;margin-left:6px;font-weight:700'>bulk</span>":"")+userBadgeHtml+"</div><div style='font-size:11px;color:var(--gray-400);margin-top:2px'>"+new Date(h.date).toLocaleString()+" -- <a href='https://youtube.com/watch?v="+h.videoId+"' target='_blank' style='color:var(--blue)'>View on YouTube</a></div></div>";
+    html+="<div><div style='font-size:13px;font-weight:700'>"+esc(h.newTitle)+(h.bulkUpdate?"<span style='font-size:10px;background:var(--purple-l);color:var(--purple);padding:1px 6px;border-radius:999px;margin-left:6px;font-weight:700'>bulk</span>":"")+userBadgeHtml+(h.oldTitle&&h.oldTitle!==h.newTitle?"<span style='font-size:10px;background:var(--yellow-l);color:#B45309;padding:1px 6px;border-radius:999px;margin-left:6px;font-weight:700'>title changed</span>":"")+"</div><div style='font-size:11px;color:var(--gray-400);margin-top:2px'>"+new Date(h.date).toLocaleString()+" -- <a href='https://youtube.com/watch?v="+h.videoId+"' target='_blank' style='color:var(--blue)'>View on YouTube</a></div></div>";
     html+="<span style='color:"+gradeColor(h.oldGrade||"F")+";font-weight:900;font-size:16px;font-family:Nunito,sans-serif'>"+(h.oldGrade||"?")+"</span>";
     html+="<span style='font-size:14px;color:var(--gray-400)'>to</span>";
     html+="<span style='color:"+gradeColor(h.newGrade||"A")+";font-weight:900;font-size:16px;font-family:Nunito,sans-serif'>"+(h.newGrade||"?")+"</span>";
@@ -2875,9 +3164,9 @@ function openThumbnailInChatGPT(promptText){
   updateThumbCountDisplay();
 }
 
-function buildHHCheatSheet(){
+function buildHHDummiesGuide(){
   return "<div class='pulse-card' style='margin-bottom:16px'>" +
-  "<h3 style='font-size:16px;font-weight:900;margin-bottom:4px'>🎯 The Hush Hour Fast Creation Guide</h3>" +
+  "<h3 style='font-size:16px;font-weight:900;margin-bottom:4px'>🎯 The Hush Hour Dummies Guide</h3>" +
   "<p class='sub'>Everything you need to create a great ambient video fast, using mostly free or Canva Pro tools.</p>" +
 
   "<div style='font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:var(--gray-500);margin:16px 0 8px'>STEP 1: GET YOUR AUDIO (FREE)</div>" +
@@ -3002,7 +3291,18 @@ function generateNewVideoMetaAI(topic, ageGroup){
   generateNewVideoMeta();
   return;
 
-}function exportCSV(){if(!pushHistory.length){alert("No history to export yet.");return;}var rows=[["Date","Video ID","Old Title","New Title","Old Grade","New Grade","Old Score","New Score"]];pushHistory.forEach(function(h){rows.push([h.date,h.videoId,h.oldTitle,h.newTitle,h.oldGrade,h.newGrade,h.oldScore,h.newScore]);});var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c||"").replace(/"/g,'""')+'"';}).join(",");}).join("\n");var a=document.createElement("a");a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);a.download="youtube-push-history.csv";a.click();}
+}function exportMetadataCSV(){
+  if(!allVideos.length){alert("No videos to export. Sync first.");return;}
+  var rows=[["Title","Description","Tags","Category","Published","Grade","Score","Last Optimized"]];
+  allVideos.forEach(function(v){
+    var lastOpt=getLastOptimizedDate(v.id);
+    rows.push([v.title,v.description||"",(v.tags||[]).join("; "),v.categoryId||"27",v.publishedAt||"",v.grade||"",v.overall||"",lastOpt?new Date(lastOpt).toLocaleDateString():""]);
+  });
+  var csv=rows.map(function(r){return r.map(function(cell){return '"'+String(cell||"").replace(/"/g,'""')+'"';}).join(",");}).join("\n");
+  var a=document.createElement("a");a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);a.download="channel-metadata-export.csv";a.click();
+}
+
+function exportCSV(){if(!pushHistory.length){alert("No history to export yet.");return;}var rows=[["Date","Video ID","Old Title","New Title","Old Grade","New Grade","Old Score","New Score"]];pushHistory.forEach(function(h){rows.push([h.date,h.videoId,h.oldTitle,h.newTitle,h.oldGrade,h.newGrade,h.oldScore,h.newScore]);});var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c||"").replace(/"/g,'""')+'"';}).join(",");}).join("\n");var a=document.createElement("a");a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);a.download="youtube-push-history.csv";a.click();}
 function copyField(id){var el=document.getElementById(id);if(!el)return;navigator.clipboard.writeText(el.value).then(function(){el.style.background="#DCFCE7";setTimeout(function(){el.style.background="";},800);});}
 function copyEl(id){var el=document.getElementById(id);if(!el)return;navigator.clipboard.writeText(el.textContent).then(function(){el.style.background="#DCFCE7";setTimeout(function(){el.style.background="";},800);});}
 </script>
@@ -3033,7 +3333,8 @@ function copyEl(id){var el=document.getElementById(id);if(!el)return;navigator.c
 </div>
 <div style="margin-bottom:20px">
 <div style="font-size:13px;font-weight:700;color:var(--gray-700);margin-bottom:12px;font-family:Nunito,sans-serif;text-transform:uppercase;letter-spacing:0.05em">Data Management</div>
-<button class="btn btn-ghost btn-sm" id="exportAllDataBtn" style="margin-bottom:8px;width:100%;justify-content:center">⬇️ Export All History to CSV</button>
+<button class="btn btn-ghost btn-sm" id="exportAllDataBtn" style="margin-bottom:8px;width:100%;justify-content:center">⬇️ Export Push History to CSV</button>
+<button class="btn btn-ghost btn-sm" id="exportMetaBtn" style="margin-bottom:8px;width:100%;justify-content:center">📊 Export All Video Metadata to CSV</button>
 <button class="btn btn-ghost btn-sm" id="clearCacheBtn" style="width:100%;justify-content:center;color:var(--red);border-color:var(--red)">🗑️ Clear Video Cache (forces re-sync)</button>
 </div>
 </div>
