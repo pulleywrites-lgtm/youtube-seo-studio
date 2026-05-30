@@ -371,55 +371,6 @@ textarea{resize:vertical}
 .channel-hh .detail-actions .copy-btn{color:#B8B0D8!important;border-color:#3D3A6A!important}
 .channel-hh .score-item-val{color:#C084FC!important}
 .channel-hh .active-user-badge *{color:white!important}
-
-/* HH inline style overrides for JS-generated content */
-.channel-hh .table-toolbar h2{color:#F0EEF8!important}
-.channel-hh #filterQuickWin{color:#34D399!important;border-color:#34D399!important;background:transparent!important}
-.channel-hh #refreshViewBtn,
-.channel-hh .btn-ghost{background:#1E1E38!important;color:#B8B0D8!important;border-color:#3D3A6A!important}
-.channel-hh .btn-ghost:hover{background:#252550!important;color:#E8E4F4!important}
-.channel-hh .sync-info{background:#1E1E38!important;color:#9990C0!important;border-color:#3D3A6A!important}
-.channel-hh .sync-info span{color:#9990C0!important}
-.channel-hh #syncAlert .alert-info{background:#1A2040!important;color:#93C5FD!important;border-color:#2D4A8A!important}
-.channel-hh #syncAlert .alert-warn{background:#2A200A!important;color:#FDE68A!important;border-color:#6B500A!important}
-.channel-hh #syncAlert .alert-success{background:#0A2A0A!important;color:#86EFAC!important;border-color:#1A5A1A!important}
-.channel-hh .quota-bar-wrap *{color:#9990C0!important}
-.channel-hh .active-user-badge{color:white!important}
-.channel-hh .active-user-badge *{color:white!important}
-.channel-hh .detail-panel *{color:#E8E4F4}
-.channel-hh .detail-label{color:#C084FC!important}
-.channel-hh .detail-label *{color:#C084FC!important}
-.channel-hh .ba-label{color:#9090B8!important}
-.channel-hh .ba-after .ba-label{color:#86EFAC!important}
-.channel-hh .ba-val{color:#F0EEF8!important}
-.channel-hh .score-item-label{color:#B8B0D8!important}
-.channel-hh .score-item-val{color:#C084FC!important}
-.channel-hh .how-to-a{background:linear-gradient(135deg,#162616,#0A2010)!important;border-color:#2D5A2D!important}
-.channel-hh .how-to-a h4{color:#86EFAC!important}
-.channel-hh .how-to-a li{color:#A0DFA8!important}
-/* Strategy grade boxes */
-.channel-hh [style*="background:var(--gray-50)"]{background:#1E1E38!important}
-.channel-hh [style*="background:var(--gray-100)"]{background:#252535!important}
-.channel-hh [style*="color:var(--gray-900)"]{color:#F0EEF8!important}
-.channel-hh [style*="color:var(--gray-700)"]{color:#D0CCE8!important}
-.channel-hh [style*="color:var(--gray-600)"]{color:#B8B0D8!important}
-.channel-hh [style*="color:var(--gray-500)"]{color:#9990C0!important}
-.channel-hh [style*="color:var(--gray-400)"]{color:#7870A0!important}
-.channel-hh [style*="background:white"]{background:#1E1E38!important}
-/* AI suggestion box */
-.channel-hh [style*="background:linear-gradient(135deg,#EEF2FF"]{background:linear-gradient(135deg,#1E1635,#251840)!important;border-color:#C084FC55!important}
-.channel-hh [style*="color:#5B21B6"]{color:#C084FC!important}
-.channel-hh [style*="color:#7C3AED"]{color:#A78BFA!important}
-.channel-hh [style*="background:#EDE9FE"]{background:#3D2A5A!important;color:#DDB6FC!important}
-.channel-hh [style*="background:#F5F3FF"]{background:#1E1635!important}
-/* Thumbnail checkbox */
-.channel-hh .thumb-check-wrap{background:#1E1E38!important;border-color:#3D3A6A!important;color:#B8B0D8!important}
-.channel-hh .thumb-check-wrap *{color:#B8B0D8!important}
-/* Analytics */
-.channel-hh #analyticsContent [style*="background:var(--gray-50)"]{background:#1E1E38!important}
-.channel-hh #analyticsContent .strategy-card{background:#16162A!important;border-color:#2A2A45!important}
-.channel-hh .insight-item{background:#1E1E38!important;border-color:#2A2A45!important}
-.channel-hh .insight-item *{color:#B8B0D8!important}
 @media(max-width:768px){.table-head,.video-row{grid-template-columns:42px 1fr 60px 70px}.th:nth-child(5),.td:nth-child(5){display:none}.ba-grid,.h-ba{grid-template-columns:1fr}}
 </style>
 </head>
@@ -595,14 +546,7 @@ textarea{resize:vertical}
 <div id="videoIdeas"></div>
 </div>
 <div class="pulse-card">
-<h3>Playlist Ideas for Your Channel</h3>
-<p class="sub">Based on your videos -- click any to generate full playlist metadata!</p>
-<div id="playlistSuggestions"><p style="color:var(--gray-400);font-size:13px">Sync your videos first to see personalized suggestions.</p></div>
-<button class="btn btn-ghost btn-sm" id="loadPlaylistIdeasBtn" style="margin-top:10px">Generate Playlist Suggestions</button>
-</div>
-
-<div class="pulse-card">
-<h3 id="seoTipsTitle">Kids YouTube SEO Tips That Work Right Now</h3>
+<h3>Kids YouTube SEO Tips That Work Right Now</h3>
 <p class="sub">No quota needed.</p>
 <div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn btn-ghost btn-sm" id="loadTipsBtn">Load Tips</button><button class="btn btn-ghost btn-sm" id="rotateTipsBtn">Refresh Tips</button></div>
 <div id="seoTips"></div>
@@ -866,58 +810,6 @@ function getQKey(){return getPrefix()+"quota_"+new Date().toISOString().slice(0,
 function getQuotaUsed(){return parseInt(localStorage.getItem(getQKey())||"0");}
 function addQuota(n){var q=getQuotaUsed()+n;localStorage.setItem(getQKey(),q);updateQuotaMeter();}
 
-function loadVideoIdeas(){
-  if(currentChannel==="HH"){
-    var hhIdeas=generateHHVideoIdeas();
-    var html=hhIdeas.map(function(v,i){return "<div class='trend-item' data-topic='"+esc(v.title)+"'><span class='trend-num'>"+(i+1)+"</span><div><strong>"+esc(v.title)+"</strong><br><span style='color:var(--gray-500);font-size:12px'>"+esc(v.why)+"</span><div class='trend-click'>Click to generate metadata</div></div></div>";}).join("");
-    document.getElementById("videoIdeas").innerHTML=html;
-    document.querySelectorAll("#videoIdeas .trend-item").forEach(function(el){el.addEventListener("click",function(){jumpToNewVideo(el.dataset.topic);});});
-    return;
-  }
-
-  var ideas=[{title:"Halloween Counting 1-10 with Spooky Characters",why:"Seasonal + counting = double algorithm boost right now"},{title:"Learn ABCs with Jungle Animals! Alphabet Song for Kids",why:"Animals + alphabet = two top categories merged"},{title:"What Color Is It? Rainbow Food Learning for Toddlers",why:"Question-format titles get higher CTR"},{title:"Build Sentences! ELA Adventure for Little Learners",why:"ELA + adventure framing is the fastest-growing kids category"},{title:"5 Little Pumpkins Counting Song Halloween for Kids",why:"Nursery rhyme format performs consistently year after year"},{title:"Learn Feelings! Happy Sad Angry Song for Kids",why:"Social-emotional learning is the #1 growing kids category in 2025"}];
-  var html=ideas.map(function(v,i){return "<div class='trend-item' data-topic='"+esc(v.title)+"'><span class='trend-num'>"+(i+1)+"</span><div><strong>"+esc(v.title)+"</strong><br><span style='color:var(--gray-500);font-size:12px'>"+esc(v.why)+"</span><div class='trend-click'>Click to generate metadata</div></div></div>";}).join("");
-  document.getElementById("videoIdeas").innerHTML=html;
-  document.querySelectorAll("#videoIdeas .trend-item").forEach(function(el){el.addEventListener("click",function(){jumpToNewVideo(el.dataset.topic);});});
-}
-
-function loadSeoTips(){
-  if(currentChannel==="HH"){
-    var hhPools=generateHHSeoTips();
-    var pool=hhPools[seoTipIdx%hhPools.length];seoTipIdx++;
-    var html=pool.map(function(t,i){return "<div class='trend-item trend-static'><span class='trend-num'>"+(i+1)+"</span><div><strong>"+esc(t.tip)+"</strong><br><span style='color:var(--gray-500);font-size:12px'>"+esc(t.why)+"</span></div></div>";}).join("");
-    document.getElementById("seoTips").innerHTML=html;
-    return;
-  }
-
-  var pool=SEO_TIP_POOLS[seoTipIdx%SEO_TIP_POOLS.length];seoTipIdx++;
-  var html=pool.map(function(t,i){return "<div class='trend-item trend-static'><span class='trend-num'>"+(i+1)+"</span><div><strong>"+esc(t.tip)+"</strong><br><span style='color:var(--gray-500);font-size:12px'>"+esc(t.why)+"</span></div></div>";}).join("");
-  document.getElementById("seoTips").innerHTML=html;
-}
-
-function rotateTrends(){
-  var isHHNow=currentChannel==="HH";
-  // Update section titles
-  var tt=document.getElementById("trendingTitle");
-  if(tt)tt.textContent="What is Trending on "+(isHHNow?"The Hush Hour":"YouTube Kids");
-  var st=document.getElementById("seoTipsTitle");
-  if(st)st.textContent=isHHNow?"Hush Hour SEO Tips That Work Right Now":"Kids YouTube SEO Tips That Work Right Now";
-  // Show/hide HH-only tabs
-  var gb=document.getElementById("navGuide");var cb=document.getElementById("navHHCalc");
-  if(gb)gb.style.display=isHHNow?"inline-flex":"none";
-  if(cb)cb.style.display=isHHNow?"inline-flex":"none";
-  // Hide old cheat sheet (now its own tab)
-  var cheatSheet=document.getElementById("hhCheatSheet");
-  if(cheatSheet)cheatSheet.style.display="none";
-  var activePools=isHHNow?generateHHTrendingTopics():TREND_POOLS;
-  var pool=activePools[trendIdx%activePools.length];trendIdx++;
-  var banner=getHolidayBanner();
-  var bHtml=banner?"<div class='holiday-banner' style='background:"+banner.color+"20;border:1.5px solid "+banner.color+"'><strong style='color:"+banner.color+"'>"+banner.text+"</strong><br><span style='font-size:12px;color:#374151'>"+banner.tip+"</span></div>":"";
-  var html=pool.map(function(t,i){return "<div class='trend-item' data-topic='"+esc(t.topic)+"'><span class='trend-num'>"+(i+1)+"</span><div><strong>"+esc(t.topic)+"</strong><br><span style='color:var(--gray-500);font-size:12px'>"+esc(t.why)+"</span><div class='trend-click'>Click to generate metadata</div></div></div>";}).join("");
-  document.getElementById("trendingList").innerHTML=bHtml+html;
-  document.querySelectorAll("#trendingList .trend-item").forEach(function(el){el.addEventListener("click",function(){jumpToNewVideo(el.dataset.topic);});});
-}
-
 window.addEventListener("DOMContentLoaded",function(){
   try{
     var h1=JSON.parse(localStorage.getItem(storageKey("history_v2"))||"[]");
@@ -1053,7 +945,6 @@ window.addEventListener("DOMContentLoaded",function(){
   document.getElementById("navHHCalc").addEventListener("click",function(){showTab("tabHHCalc");});
   document.getElementById("calcBtn").addEventListener("click",runHHCalc);
   document.getElementById("loadAnalyticsBtn").addEventListener("click",loadAnalytics);
-  document.getElementById("loadPlaylistIdeasBtn").addEventListener("click",buildPlaylistSuggestions);
   // If user and channel already selected this session, skip selector
   if(currentUser&&currentChannel){
     if(currentChannel==="HH")document.documentElement.classList.add("channel-hh");
@@ -1090,18 +981,13 @@ function selectUser(user){
 function selectChannel(channel){
   currentChannel=channel;
   localStorage.setItem("llnChannel",channel);
-  // Clear ALL channel-specific state
+  // Clear channel-specific data so it reloads fresh
   playlists=[];
   allVideos=[];
   pushHistory=[];
   drafts=[];
   accessToken=null;
-  currentFilteredVideos=null;
-  window._bulkFilteredOnly=false;
   setAuthStatus(false);
-  // Clear any lingering alerts
-  var sa=document.getElementById("syncAlert");
-  if(sa)sa.innerHTML="";
   // Apply dark mode for Hush Hour
   if(channel==="HH"){
     document.documentElement.classList.add("channel-hh");
@@ -1248,23 +1134,12 @@ async function verifyChannelAndProceed(){
 }
 
 function proceedToMain(){
-  setAuthStatus(true);
-  // Apply channel theme BEFORE showing screen
-  if(currentChannel==="HH"){
-    document.documentElement.classList.add("channel-hh");
-  } else {
-    document.documentElement.classList.remove("channel-hh");
-  }
-  showScreen("screenMain");
+  setAuthStatus(true);showScreen("screenMain");
   loadPlaylistsBg();
   updateLogoForChannel();
-  // Show/hide HH-only tabs
+  // Show correct tabs for channel
   var guideBtn=document.getElementById("navGuide");
   if(guideBtn)guideBtn.style.display=currentChannel==="HH"?"inline-flex":"none";
-  var calcBtn=document.getElementById("navHHCalc");
-  if(calcBtn)calcBtn.style.display=currentChannel==="HH"?"inline-flex":"none";
-  // Reset trending to correct channel pools
-  trendIdx=0;
   var calcBtn2=document.getElementById("navHHCalc");
   if(calcBtn2)calcBtn2.style.display=currentChannel==="HH"?"inline-flex":"none";
   // Load cached data
@@ -2434,16 +2309,7 @@ function toggleDetail(id){
     var ct=document.getElementById("cpTitle-"+id);if(ct)ct.addEventListener("click",function(e){e.stopPropagation();copyField("editTitle-"+id);});
     var cd=document.getElementById("cpDesc-"+id);if(cd)cd.addEventListener("click",function(e){e.stopPropagation();copyField("editDesc-"+id);});
     var ctg=document.getElementById("cpTags-"+id);if(ctg)ctg.addEventListener("click",function(e){e.stopPropagation();copyField("editTags-"+id);});
-    var cth=document.getElementById("cpThumb-"+id);
-    var dtImg=document.getElementById("dThumb-"+id);
-    if(dtImg)dtImg.addEventListener("click",function(){document.getElementById("thumbLightboxImg").src=dtImg.src;document.getElementById("thumbLightbox").classList.add("open");});if(cth)cth.addEventListener("click",function(e){e.stopPropagation();copyEl("thumbPrompt-"+id);});
-    var dtp2=document.getElementById("detailThumbPrev-"+id);
-    if(dtp2)dtp2.addEventListener("click",function(){document.getElementById("thumbLightboxImg").src=dtp2.src;document.getElementById("thumbLightbox").classList.add("open");});
-    var dti=document.getElementById("detailThumbImg-"+id);
-    if(dti)dti.addEventListener("click",function(){
-      document.getElementById("thumbLightboxImg").src=dti.src;
-      document.getElementById("thumbLightbox").classList.add("open");
-    });
+    var cth=document.getElementById("cpThumb-"+id);if(cth)cth.addEventListener("click",function(e){e.stopPropagation();copyEl("thumbPrompt-"+id);});
     var cgpt0=document.getElementById("openChatGPT-"+id);if(cgpt0)cgpt0.addEventListener("click",function(e){e.stopPropagation();var tp=document.getElementById("thumbPrompt-"+id);if(tp)openThumbnailInChatGPT(tp.textContent);});
     loadPlaylistsForVideo(id);
   }
@@ -2466,15 +2332,6 @@ function buildDetailPanel(id,topicOverride){
   html+="<h3 style='font-size:16px;font-weight:900'>Full SEO Breakdown and Improvements</h3>";
   html+="<button class='btn btn-ghost btn-sm' id='closeBtn-"+id+"'>Close</button></div>";
   var isHHChannel=getConfig().audience!=="kids";
-  // Thumbnail preview
-  if(v.thumbUrl){
-    html+="<div style=\'text-align:center;margin-bottom:14px\'>";
-    html+="<div style=\'font-size:11px;font-weight:600;text-transform:uppercase;color:var(--gray-400);margin-bottom:6px\'>Current Thumbnail</div>";
-    html+="<img id=\'dThumb-"+id+"\' src=\'"+v.thumbUrl+"\' style=\'width:100%;max-width:300px;border-radius:8px;cursor:zoom-in;box-shadow:var(--shadow)\'/>";
-    html+="<div style=\'font-size:10px;color:var(--gray-400);margin-top:3px\'>Click to expand</div>";
-    html+="</div>";
-  }
-
   html+="<div class='score-breakdown'>";
   html+=scoreItem(isHHChannel?"Title (45-70 chars)":"Title",v.titleScore,getTitleTip(v.titleScore,v.title));
   html+=scoreItem(isHHChannel?"Description (timestamps?)":"Description",v.descScore,getDescTip(v.descScore,v.description));
@@ -2749,75 +2606,6 @@ function buildWhatsMissing(videos){
   return html+"</div>";
 }
 
-
-
-function buildPlaylistSuggestions(){
-  var el=document.getElementById("playlistSuggestions");
-  if(!el)return;
-  if(!allVideos.length){el.innerHTML="<p style='color:var(--gray-400);font-size:13px'>Sync your videos first!</p>";return;}
-  var isHH=currentChannel==="HH";
-  var suggestions=[];
-  if(isHH){
-    var hasRain=allVideos.some(function(v){return /rain|storm|thunder/i.test(v.title);});
-    var hasSleep=allVideos.some(function(v){return /sleep|bedtime|insomnia/i.test(v.title);});
-    var hasStudy=allVideos.some(function(v){return /study|focus|work|concentration/i.test(v.title);});
-    var hasNature=allVideos.some(function(v){return /nature|forest|ocean|bird/i.test(v.title);});
-    var hasLofi=allVideos.some(function(v){return /lofi|lo-fi|chill|beats/i.test(v.title);});
-    var hasFire=allVideos.some(function(v){return /fireplace|fire|crackling/i.test(v.title);});
-    if(hasRain)suggestions.push({name:"Rain and Storm Ambience",desc:"Hours of soothing rain, thunderstorms, and storm sounds for sleep, study, and relaxation. No ads, no interruptions.",tags:["rain sounds for sleep","thunderstorm ambience","rain sounds study","rain ambience 1 hour","rain sounds no ads","rain white noise","storm sounds sleep","rain sounds lofi","cozy rain sounds","rain sounds relaxing"]});
-    if(hasSleep)suggestions.push({name:"Sleep Music and Relaxing Sounds",desc:"Peaceful sleep music and calming sounds designed to help you fall asleep faster and sleep deeper. No ads, no copyright.",tags:["sleep music","deep sleep music","music for sleep","sleep sounds","sleep meditation","no ads sleep music","peaceful sleep music","calming sleep music","sleep ambience","relaxing sleep music"]});
-    if(hasStudy)suggestions.push({name:"Study Beats and Focus Music",desc:"The perfect study music playlist for deep focus, concentration, and productivity. Lofi beats, ambient sounds, and instrumental music.",tags:["study music","lofi study beats","focus music","concentration music","dark academia music","study with me","background music studying","study music 1 hour","lofi beats study","music for focus"]});
-    if(hasNature)suggestions.push({name:"Nature Sounds for Focus",desc:"Immersive nature sounds for focus, relaxation, and stress relief. Forest, ocean, birds, and more.",tags:["nature sounds","forest sounds","bird sounds nature","nature ambience","peaceful nature sounds","nature sounds study","nature sounds sleep","ocean waves sounds","nature sounds focus","healing nature sounds"]});
-    if(hasLofi)suggestions.push({name:"Lofi Beats to Chill and Study",desc:"The best lofi hip hop beats for studying, chilling, and relaxing. Smooth vibes and warm textures.",tags:["lofi hip hop","lofi beats","chill lofi music","lo-fi hip hop","lofi study beats","lofi chill beats","lofi girl beats","lofi hip hop mix","chill beats lofi","lofi mix"]});
-    if(hasFire)suggestions.push({name:"Cozy Fireplace and Winter Ambience",desc:"Warm, crackling fireplace sounds and cozy winter ambience for relaxation, study, and sleep.",tags:["fireplace sounds","crackling fire ambience","cozy fireplace","fireplace ambience","fire sounds relaxing","winter ambience","cozy winter sounds","fireplace white noise","warm fire sounds","fireplace study"]});
-    if(!suggestions.length)suggestions.push({name:"Lofi Beats to Chill and Study",desc:"Your home for lofi hip hop, ambient music, and relaxing sounds.",tags:["lofi hip hop","lofi beats","chill music","ambient music","relaxing music"]});
-  } else {
-    // LLN - analyze video topics
-    var topics={};
-    allVideos.forEach(function(v){
-      var info=analyzeVideoTopic(v.title,v.description||"");
-      topics[info.primary]=(topics[info.primary]||0)+1;
-    });
-    var sorted=Object.keys(topics).sort(function(a,b){return topics[b]-topics[a];}).slice(0,8);
-    var llnPlaylists={
-      alphabet:{name:"ABC Songs and Alphabet Learning",desc:"Fun alphabet songs, letter recognition, and phonics videos for toddlers and preschoolers. Help your little one learn their ABCs!",tags:["abc songs","alphabet for kids","learn abc","alphabet learning","phonics kids","letter songs kids","abc learning video","toddler alphabet","preschool abc","alphabet song children"]},
-      counting:{name:"Counting Songs and Number Learning",desc:"Exciting counting videos, number songs, and math basics for young children. Making numbers fun!",tags:["counting songs","numbers for kids","learn to count","number songs kids","math for toddlers","counting for kids","preschool math","number learning","1 2 3 song","counting video kids"]},
-      colors:{name:"Colors Songs and Color Learning",desc:"Colorful videos teaching little ones all the colors of the rainbow through fun songs and activities.",tags:["colors for kids","learn colors","color songs kids","rainbow colors","what color is it","colors toddlers","color learning video","preschool colors","colors and shapes","colors song children"]},
-      animals:{name:"Animal Songs and Learning",desc:"Discover amazing animals through fun songs, facts, and videos. Perfect for curious little learners!",tags:["animal songs","animals for kids","learn animals","animal sounds","zoo animals kids","farm animals song","animal facts kids","animal learning video","kids animal songs","animals preschool"]},
-      emotions:{name:"Feelings and Emotions for Kids",desc:"Helping little ones understand and manage their emotions through engaging, age-appropriate videos.",tags:["emotions for kids","feelings for kids","big feelings kids","social emotional learning","SEL kids","emotions preschool","managing feelings kids","kids feelings video","emotional learning","feelings song kids"]},
-      worldCultures:{name:"World Cultures and Diversity",desc:"Celebrating cultures from around the world and the beautiful diversity of our global community.",tags:["world cultures kids","diversity for kids","multicultural kids","cultures around world","celebrate diversity","global learning kids","world holidays kids","cultural celebrations","diversity education","multicultural education"]},
-      blackHistory:{name:"Black History and Black Excellence",desc:"Inspiring Black history content celebrating the extraordinary achievements and stories that shaped our world.",tags:["black history for kids","black history month","black excellence kids","african american history","black heroes kids","civil rights kids","representation matters","black history education","inspiring black stories","black history learning"]},
-      breathing:{name:"Breathing and Calm Down Strategies",desc:"Helping little ones find their calm through breathing exercises and mindfulness activities.",tags:["breathing for kids","calm down kids","mindfulness kids","deep breathing kids","calming kids","SEL breathing","relaxation kids","calm kids video","breathing exercises children","calm down strategies"]},
-      general:{name:"Learning and Educational Videos",desc:"A collection of our best educational videos for curious little learners ages 0-8.",tags:["educational videos kids","learning videos toddlers","kids educational","preschool learning","toddler learning","fun learning kids","early childhood education","kids learning channel","educational for kids","learning for toddlers"]}
-    };
-    sorted.forEach(function(topic){
-      if(llnPlaylists[topic]&&topics[topic]>=2){
-        suggestions.push(llnPlaylists[topic]);
-      }
-    });
-    if(suggestions.length<3)suggestions.push(llnPlaylists.general);
-  }
-  var html="";
-  suggestions.slice(0,6).forEach(function(pl,i){
-    html+="<div style='padding:12px;background:var(--gray-50);border-radius:var(--r-sm);margin-bottom:8px;cursor:pointer' onclick='openPlaylistMetadata("+i+")'>";
-    html+="<div style='font-size:13px;font-weight:700;margin-bottom:3px'>"+esc(pl.name)+"</div>";
-    html+="<div style='font-size:11px;color:var(--gray-500)'>"+pl.tags.slice(0,3).join(", ")+" + more...</div>";
-    html+="<div style='font-size:11px;color:var(--blue);margin-top:3px;font-weight:600'>Click to generate full metadata</div>";
-    html+="</div>";
-  });
-  el.innerHTML=html;
-  window._playlistSuggestions=suggestions;
-}
-
-function openPlaylistMetadata(idx){
-  var pl=window._playlistSuggestions&&window._playlistSuggestions[idx];
-  if(!pl)return;
-  var modal=document.createElement("div");
-  modal.style.cssText="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px";
-  modal.innerHTML="<div style='background:white;border-radius:var(--r-lg);padding:24px;max-width:520px;width:100%;max-height:80vh;overflow-y:auto'><h3 style='font-size:16px;font-weight:900;margin-bottom:16px'>Playlist Metadata</h3><div style='margin-bottom:12px'><div style='font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gray-500);margin-bottom:4px'>Playlist Title</div><div style='padding:8px;background:var(--gray-50);border-radius:6px;font-size:13px;font-weight:600'>"+esc(pl.name)+"</div></div><div style='margin-bottom:12px'><div style='font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gray-500);margin-bottom:4px'>Playlist Description</div><div style='padding:8px;background:var(--gray-50);border-radius:6px;font-size:12px;line-height:1.6'>"+esc(pl.desc)+"</div></div><div style='margin-bottom:16px'><div style='font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gray-500);margin-bottom:4px'>Suggested Tags</div><div style='display:flex;flex-wrap:wrap;gap:4px'>"+pl.tags.map(function(t){return "<span style='background:var(--blue-l);color:var(--blue);padding:2px 8px;border-radius:999px;font-size:11px'>"+esc(t)+"</span>";}).join("")+"</div></div><div style='display:flex;gap:8px'><button onclick='navigator.clipboard.writeText(\"Title: "+esc(pl.name)+"\\nDescription: "+esc(pl.desc)+"\\nTags: "+esc(pl.tags.join(", "))+"\");this.textContent=\"Copied!\";' class='btn btn-primary btn-sm'>Copy All</button><button onclick='this.closest(\"div[style*=fixed]\").remove()' class='btn btn-ghost btn-sm'>Close</button></div></div>";
-  document.body.appendChild(modal);
-  modal.addEventListener("click",function(e){if(e.target===modal)modal.remove();});
-}
 
 function exportCSV(){if(!pushHistory.length){alert("No history to export yet.");return;}var rows=[["Date","Video ID","Old Title","New Title","Old Grade","New Grade","Old Score","New Score"]];pushHistory.forEach(function(h){rows.push([h.date,h.videoId,h.oldTitle,h.newTitle,h.oldGrade,h.newGrade,h.oldScore,h.newScore]);});var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c||"").replace(/"/g,'""')+'"';}).join(",");}).join("\n");var a=document.createElement("a");a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);a.download="youtube-push-history.csv";a.click();}
 
