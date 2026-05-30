@@ -1034,15 +1034,25 @@ window.addEventListener("DOMContentLoaded",function(){
   document.getElementById("btnHH").addEventListener("click",function(){selectChannel("HH");});
   document.getElementById("btnBackToSister").addEventListener("click",function(){showScreen("screenSister");});
   // Settings
-  document.getElementById("settingsBtn").addEventListener("click",function(){openSettings();});
-  document.getElementById("closeSettingsBtn").addEventListener("click",function(){document.getElementById("settingsModal").classList.remove("open");});
-  document.getElementById("switchUserBtn").addEventListener("click",function(){document.getElementById("settingsModal").classList.remove("open");currentUser=null;currentChannel=null;localStorage.removeItem("llnUser");localStorage.removeItem("llnChannel");showScreen("screenSister");});
-  document.getElementById("thumbUsedBtn").addEventListener("click",function(){incrementThumbCount();});
-  document.getElementById("thumbResetBtn").addEventListener("click",function(){resetThumbCount();});
-  document.getElementById("exportAllDataBtn").addEventListener("click",exportCSV);
-  document.getElementById("exportMetaBtn").addEventListener("click",exportMetadataCSV);
-  document.getElementById("clearCacheBtn").addEventListener("click",function(){if(confirm("Clear video cache? You will need to sync again.")){localStorage.removeItem(storageKey("videoCache"));allVideos=[];updateStats();renderTable([]);showSyncAlert("Cache cleared -- click Sync from YouTube to reload","info");}});
-  document.getElementById("settingsModal").addEventListener("click",function(e){if(e.target===this)this.classList.remove("open");});
+  // Settings panel wiring - null safe
+  var _settingsBtn=document.getElementById("settingsBtn");
+  var _settingsModal=document.getElementById("settingsModal");
+  var _closeSettingsBtn=document.getElementById("closeSettingsBtn");
+  var _switchUserBtn=document.getElementById("switchUserBtn");
+  var _thumbUsedBtn=document.getElementById("thumbUsedBtn");
+  var _thumbResetBtn=document.getElementById("thumbResetBtn");
+  var _exportAllDataBtn=document.getElementById("exportAllDataBtn");
+  var _exportMetaBtn=document.getElementById("exportMetaBtn");
+  var _clearCacheBtn=document.getElementById("clearCacheBtn");
+  if(_settingsBtn)_settingsBtn.addEventListener("click",function(){openSettings();});
+  if(_closeSettingsBtn)_closeSettingsBtn.addEventListener("click",function(){if(_settingsModal)_settingsModal.classList.remove("open");});
+  if(_switchUserBtn)_switchUserBtn.addEventListener("click",function(){if(_settingsModal)_settingsModal.classList.remove("open");currentUser=null;currentChannel=null;localStorage.removeItem("llnUser");localStorage.removeItem("llnChannel");showScreen("screenSister");});
+  if(_thumbUsedBtn)_thumbUsedBtn.addEventListener("click",function(){incrementThumbCount();});
+  if(_thumbResetBtn)_thumbResetBtn.addEventListener("click",function(){resetThumbCount();});
+  if(_exportAllDataBtn)_exportAllDataBtn.addEventListener("click",exportCSV);
+  if(_exportMetaBtn)_exportMetaBtn.addEventListener("click",exportMetadataCSV);
+  if(_clearCacheBtn)_clearCacheBtn.addEventListener("click",function(){if(confirm("Clear video cache? You will need to sync again.")){localStorage.removeItem(storageKey("videoCache"));allVideos=[];updateStats();renderTable([]);showSyncAlert("Cache cleared -- click Sync from YouTube to reload","info");}});
+  if(_settingsModal)_settingsModal.addEventListener("click",function(e){if(e.target===this)this.classList.remove("open");});
   // Analytics
   document.getElementById("navAnalytics").addEventListener("click",function(){showTab("tabAnalytics");});
   document.getElementById("navGuide").addEventListener("click",function(){
@@ -2941,5 +2951,42 @@ function scoreItem(label,score,tip){
 }
 
 </script>
+
+<div class="modal-overlay" id="settingsModal">
+<div class="modal" style="max-width:520px">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+<h3 style="font-size:20px;font-weight:900">Settings</h3>
+<button class="btn btn-ghost btn-sm" id="closeSettingsBtn">Close</button>
+</div>
+<div style="margin-bottom:20px">
+<div style="font-size:13px;font-weight:700;color:var(--gray-700);margin-bottom:12px;font-family:Nunito,sans-serif;text-transform:uppercase;letter-spacing:0.05em">Current Session</div>
+<div class="info-row"><span>Active User</span><span id="settingsUser">--</span></div>
+<div class="info-row"><span>Active Channel</span><span id="settingsChannel">--</span></div>
+<button class="btn btn-ghost btn-sm" id="switchUserBtn" style="margin-top:8px">Switch User / Channel</button>
+</div>
+<div style="margin-bottom:20px">
+<div style="font-size:13px;font-weight:700;color:var(--gray-700);margin-bottom:12px;font-family:Nunito,sans-serif;text-transform:uppercase;letter-spacing:0.05em">Thumbnail Generator</div>
+<div style="font-size:12px;color:var(--gray-500);margin-bottom:10px;line-height:1.6">Track your ChatGPT DALL-E thumbnail generations. Free tier usually ~10-15 per session.</div>
+<div class="info-row"><span>Generated today</span><span id="thumbCount">0 / 15</span></div>
+<div style="background:var(--gray-100);border-radius:999px;height:8px;overflow:hidden;margin:8px 0"><div id="thumbCountBar" style="height:100%;background:var(--green);border-radius:999px;transition:width 0.3s;width:0%"></div></div>
+<div style="display:flex;gap:8px;margin-top:8px">
+<button class="btn btn-ghost btn-sm" id="thumbUsedBtn">+1 I Used One</button>
+<button class="btn btn-ghost btn-sm" id="thumbResetBtn">Reset Counter</button>
+</div>
+<div id="thumbWarning" style="display:none;margin-top:8px"></div>
+</div>
+<div>
+<div style="font-size:13px;font-weight:700;color:var(--gray-700);margin-bottom:12px;font-family:Nunito,sans-serif;text-transform:uppercase;letter-spacing:0.05em">Data Management</div>
+<button class="btn btn-ghost btn-sm" id="exportAllDataBtn" style="margin-bottom:8px;width:100%;justify-content:center">Export Push History to CSV</button>
+<button class="btn btn-ghost btn-sm" id="exportMetaBtn" style="margin-bottom:8px;width:100%;justify-content:center">Export All Video Metadata to CSV</button>
+<button class="btn btn-ghost btn-sm" id="clearCacheBtn" style="width:100%;justify-content:center;color:var(--red);border-color:var(--red)">Clear Video Cache</button>
+</div>
+</div>
+</div>
+
+<div class="thumb-lightbox" id="thumbLightbox" onclick="document.getElementById('thumbLightbox').classList.remove('open')">
+<img id="thumbLightboxImg" src="" alt="Thumbnail preview"/>
+</div>
+
 </body>
 </html>
