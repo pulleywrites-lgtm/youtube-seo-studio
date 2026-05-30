@@ -1151,7 +1151,16 @@ function updateUserBadge(){
   el.style.userSelect="none";
   el.className="active-user-badge "+(isMP?"badge-mp":"badge-ap");
   el.innerHTML=(isMP?"✨ MP 🐱":"🌿 AP 🪴")+" <span style='margin-left:4px;opacity:0.8'>"+cfg.emoji+" "+cfg.name.split(" ")[0]+"</span> <span style='margin-left:4px;opacity:0.6;font-size:10px'>▼</span>";
-  el.onclick=function(e){e.stopPropagation();toggleQuickSwitch();};
+  el.onclick=function(e){
+    e.stopPropagation();
+    // On connect screen, badge click should proceed to auth
+    var connectScreen=document.getElementById("screenConnect");
+    if(connectScreen&&connectScreen.classList.contains("active")){
+      handleAuthClick();
+      return;
+    }
+    toggleQuickSwitch();
+  };
 }
 
 function toggleQuickSwitch(){
@@ -1229,17 +1238,13 @@ async function verifyChannelAndProceed(){
     var selectedHH=currentChannel==="HH";
     var mismatch=(selectedHH&&!isHHChannel&&isLLNChannel)||((!selectedHH)&&!isLLNChannel&&isHHChannel);
     if(mismatch){
-      var msg="Channel Mismatch! You selected "+(selectedHH?"The Hush Hour":"Little Learners Network")+" but connected to \""+channelTitle+"\". Switch to correct channel?";
-      var switchIt=confirm(msg);
-      if(switchIt){
-        // Auto-switch to correct channel
-        currentChannel=isHHChannel?"HH":"LLN";
-        localStorage.setItem("llnChannel",currentChannel);
-        if(currentChannel==="HH"){document.documentElement.classList.add("channel-hh");}
-        else{document.documentElement.classList.remove("channel-hh");}
-        updateLogoForChannel();
-        updateUserBadge();
-      }
+      // Auto-switch silently to match connected account
+      currentChannel=isHHChannel?"HH":"LLN";
+      localStorage.setItem("llnChannel",currentChannel);
+      if(currentChannel==="HH"){document.documentElement.classList.add("channel-hh");}
+      else{document.documentElement.classList.remove("channel-hh");}
+      updateLogoForChannel();
+      updateUserBadge();
     }
     proceedToMain();
   }catch(e){
@@ -1263,6 +1268,8 @@ function proceedToMain(){
   if(guideBtn)guideBtn.style.display=currentChannel==="HH"?"inline-flex":"none";
   var calcBtn=document.getElementById("navHHCalc");
   if(calcBtn)calcBtn.style.display=currentChannel==="HH"?"inline-flex":"none";
+  // Default to videos tab
+  showTab("tabVideos");
   // Reset trending to correct channel pools
   trendIdx=0;
   var calcBtn2=document.getElementById("navHHCalc");
@@ -1309,8 +1316,8 @@ function showScreen(id){document.querySelectorAll(".screen").forEach(function(s)
 function showConnectMsg(msg,type){document.getElementById("connectMsg").innerHTML="<div class='alert alert-"+type+"'>"+msg+"</div>";}
 
 function showTab(id){
-  ["tabVideos","tabStrategy","tabPulse","tabNew","tabAnalytics","tabHistory","tabGuide","tabHHCalc"].forEach(function(t){document.getElementById(t).style.display=t===id?"block":"none";});
-  ["navVideos","navStrategy","navPulse","navNew","navAnalytics","navHistory","navGuide","navHHCalc"].forEach(function(n,i){document.getElementById(n).classList.toggle("active",["tabVideos","tabStrategy","tabPulse","tabNew","tabAnalytics","tabHistory","tabGuide","tabHHCalc"][i]===id);});
+  ["tabVideos","tabStrategy","tabPulse","tabNew","tabAnalytics","tabHistory","tabGuide","tabHHCalc"].forEach(function(t){var el=document.getElementById(t);if(el)el.style.display=t===id?"block":"none";});
+  ["navVideos","navStrategy","navPulse","navNew","navAnalytics","navHistory","navGuide","navHHCalc"].forEach(function(n,i){var el=document.getElementById(n);if(el)el.classList.toggle("active",["tabVideos","tabStrategy","tabPulse","tabNew","tabAnalytics","tabHistory","tabGuide","tabHHCalc"][i]===id);});
   if(id==="tabHistory")renderHistory();
   if(id==="tabNew"){
     renderDrafts();loadNewVideoPlaylists();
